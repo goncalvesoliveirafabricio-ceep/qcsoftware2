@@ -7,6 +7,7 @@ import models, schemas
 from database import engine, get_db
 import logging
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +15,7 @@ logger = logging.getLogger(__name__)
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Q.C Software", version="1.0.0")
+app.mount("/front", StaticFiles(directory="telas", html=True), name="front")
 
 # Configura as origens permitidas
 origins = [
