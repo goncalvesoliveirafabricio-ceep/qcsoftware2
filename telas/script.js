@@ -10,6 +10,7 @@ const ITENS_POR_PAGINA = 10;
 // 1. LISTAR PRODUTOS (READ com Filtro e Paginação)
 // =========================================================================
 async function listarProdutosCRUD() {
+    const tabela = document.getElementById('tabela-produtos');
     try {
         const res = await fetch(`${API_URL}/produtos/`);
         
@@ -27,7 +28,6 @@ async function listarProdutosCRUD() {
 
     } catch (e) { 
         console.error("Erro detalhado na requisição dos Produtos:", e); 
-        const tabela = document.getElementById('tabela-produtos');
         if (tabela) {
             tabela.innerHTML = `
                 <tr>
@@ -66,11 +66,12 @@ function filtrarEAtualizarTabela() {
     atualizarControlesPaginacao(totalPaginas);
 }
 
-// FUNÇÃO INTERNA: Renderiza as linhas visíveis na tabela (CORRIGIDO PARA id_produtos)
+// FUNÇÃO INTERNA: Renderiza as linhas visíveis na tabela
 function renderizarTabela(produtos) {
     const tabela = document.getElementById('tabela-produtos');
     if (!tabela) return;
 
+    // CORREÇÃO: Remove o texto "Carregando produtos..." se a lista vier vazia da API
     if (!produtos || produtos.length === 0) {
         tabela.innerHTML = `
             <tr>
@@ -81,7 +82,6 @@ function renderizarTabela(produtos) {
     }
 
     tabela.innerHTML = produtos.map(p => {
-        // CORREÇÃO EXATA: Captura o ID baseado na estrutura real do seu banco (id_produtos)
         let idBruto = undefined;
         
         if (p) {
@@ -90,10 +90,8 @@ function renderizarTabela(produtos) {
             else if (p._id !== undefined && p._id !== null) idBruto = p._id;
         }
         
-        // Converte o ID encontrado (ex: 11) em uma String limpa
         const produtoId = idBruto !== undefined ? idBruto.toString().trim() : "";
 
-        // Se mesmo assim não encontrar nada, exibe o aviso
         if (!produtoId) {
             console.warn("Produto sem ID detectado. Estrutura recebida do banco:", p);
             return `
@@ -106,7 +104,6 @@ function renderizarTabela(produtos) {
             `;
         }
 
-        // Mapeamento automático da Situação/Ativo (Sua API usa 'ativo: true')
         let situacaoTratada = "Ativo"; 
         if (p.ativo !== undefined && p.ativo !== null) {
             situacaoTratada = p.ativo;
@@ -114,7 +111,6 @@ function renderizarTabela(produtos) {
             situacaoTratada = p.situacao;
         }
 
-        // Se o ativo for boolean (true/false), converte para texto amigável
         if (typeof situacaoTratada === 'boolean') {
             situacaoTratada = situacaoTratada ? "Ativo" : "Inativo";
         }
@@ -123,7 +119,6 @@ function renderizarTabela(produtos) {
             situacaoTratada = situacaoTratada.charAt(0).toUpperCase() + situacaoTratada.slice(1).toLowerCase();
         }
 
-        // IMPORTANTE: Unifica a propriedade para o resto do script entender como 'id' e 'situacao'
         p.id = produtoId;
         p.situacao = situacaoTratada;
 
@@ -155,7 +150,6 @@ function renderizarTabela(produtos) {
     }).join('');
 }
 
-// FUNÇÃO INTERNA: Bloqueia ou libera os botões de controle de paginação
 function atualizarControlesPaginacao(totalPaginas) {
     const btnAnterior = document.getElementById('btn-anterior');
     const btnProximo = document.getElementById('btn-proximo');
@@ -178,7 +172,6 @@ document.getElementById('formProdutos')?.addEventListener('submit', async (e) =>
     const campoId = document.getElementById('prod-id');
     let id = campoId ? campoId.value.toString().trim() : "";
     
-    // CORREÇÃO DA EDIÇÃO: Tratamento estrito do ID fantasma. Se for nulo ou texto vazio vira POST
     if (!id || id === "" || id === "undefined" || id === "null") {
         id = null;
     }
@@ -187,7 +180,6 @@ document.getElementById('formProdutos')?.addEventListener('submit', async (e) =>
     const categoriaInput = document.getElementById('produtos-categoria')?.value || "";
     const situacaoInput = document.getElementById('produtos-situacao')?.value || "";
 
-    // DEFINIÇÃO DA ROTA E MÉTODO HTTP (Se id existe de verdade faz PUT, senão faz POST)
     const url = id ? `${API_URL}/produtos/${id}` : `${API_URL}/produtos/`;
     const metodo = id ? 'PUT' : 'POST';
 
@@ -195,7 +187,6 @@ document.getElementById('formProdutos')?.addEventListener('submit', async (e) =>
         let options = {};
         const fileInput = document.getElementById('foto-arquivo');
 
-        // Estratégia multipart/form-data ou JSON puro baseado em anexos
         if (fileInput && fileInput.files.length > 0) {
             const formData = new FormData();
             formData.append('nome', nomeInput);
@@ -203,10 +194,7 @@ document.getElementById('formProdutos')?.addEventListener('submit', async (e) =>
             formData.append('situacao', situacaoInput);
             formData.append('file', fileInput.files[0]);
 
-            options = {
-                method: metodo,
-                body: formData
-            };
+            options = { method: metodo, body: formData };
         } else {
             const payloadJSON = {
                 nome: nomeInput,
@@ -216,9 +204,7 @@ document.getElementById('formProdutos')?.addEventListener('submit', async (e) =>
 
             options = {
                 method: metodo,
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payloadJSON)
             };
         }
@@ -227,18 +213,17 @@ document.getElementById('formProdutos')?.addEventListener('submit', async (e) =>
         
         if (res.ok) {
             e.target.reset(); 
-            if (campoId) campoId.value = ""; // Limpa completamente o id oculto
+            if (campoId) campoId.value = ""; 
             
             const tituloForm = document.getElementById('titulo-form-prod');
             if (tituloForm) {
                 tituloForm.innerHTML = '<i class="bi bi-box-seam text-primary me-2"></i>Novo Produto';
             }
             
-            // DISPARO DA NOTIFICAÇÃO DE SUCESSO
             if (metodo === 'POST') {
                 dispararNotificacao("Novo cadastro criado com sucesso!", "criar");
             } else {
-                dispararNotificacao("Cadastro alteredo com sucesso!", "atualizar");
+                dispararNotificacao("Cadastro alterado com sucesso!", "atualizar");
             }
             
             listarProdutosCRUD();
@@ -317,7 +302,7 @@ function prepararEdicaoProduto(p) {
 }
 
 // =========================================================================
-// 5. FUNÇÃO AUXILIAR: Disparar Toast no Canto Inferior Direito (CORRIGIDA)
+// 5. FUNÇÃO AUXILIAR: Disparar Toast no Canto Inferior Direito
 // =========================================================================
 function dispararNotificacao(mensagem, acao = 'sucesso') {
     const elementoToast = document.getElementById('toast-cadastro');
@@ -338,7 +323,6 @@ function dispararNotificacao(mensagem, acao = 'sucesso') {
         if (iconeToast) iconeToast.innerHTML = '<i class="bi bi-check-circle-fill fs-5"></i>';
     }
 
-    // CORREÇÃO: Sintaxe limpa de atribuição de texto
     textoToast.innerText = mensagem;
 
     const bootstrapToast = new bootstrap.Toast(elementoToast, { delay: 3500 });
@@ -346,16 +330,23 @@ function dispararNotificacao(mensagem, acao = 'sucesso') {
 }
 
 // =========================================================================
-// 6. OUVINTES DE EVENTOS DA PÁGINA (INPUTS E CLIQUES)
+// 6. OUVINTES DE EVENTOS DA PÁGINA (EXECUTA QUANDO O HTML ESTIVER PRONTO)
 // =========================================================================
 document.addEventListener('DOMContentLoaded', () => {
+    // Inicializa a listagem de produtos da API
     listarProdutosCRUD();
 
+    // CORREÇÃO: Garante que o relógio só comece a rodar após o HTML carregar por completo
+    atualizarRelogioBrasilia();
+    setInterval(atualizarRelogioBrasilia, 10000);
+
+    // Evento de digitação na caixa de pesquisa
     document.getElementById('pesquisa-produto')?.addEventListener('input', () => {
         paginaAtual = 1; 
         filtrarEAtualizarTabela();
     });
 
+    // Evento de clique para o botão "Anterior"
     document.getElementById('btn-anterior')?.addEventListener('click', () => {
         if (paginaAtual > 1) {
             paginaAtual--;
@@ -363,6 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Evento de clique para o botão "Próximo"
     document.getElementById('btn-proximo')?.addEventListener('click', () => {
         const totalPaginas = Math.ceil(produtosFiltrados.length / ITENS_POR_PAGINA) || 1;
         if (paginaAtual < totalPaginas) {
@@ -371,25 +363,20 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
-    
-// -- DEFINIR DATA E HORA DE BRASÍLIA --
-(function() {
-    function atualizarRelogio() {
-        const agora = new Date();
-        
-        const opcoesData = { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric' };
-        const opcoesHora = { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hour12: false };
-        
-        const dataStr = agora.toLocaleDateString('pt-BR', opcoesData);
-        const horaStr = agora.toLocaleTimeString('pt-BR', opcoesHora);
-        
-        const elData = document.getElementById('data-brasilia');
-        const elHora = document.getElementById('hora-brasilia');
-        
-        if (elData) elData.textContent = dataStr;
-        if (elHora) elHora.textContent = horaStr;
-    }
 
-    atualizarRelogio();
-    setInterval(atualizarRelogio, 10000);
-})();
+// FUNÇÃO AUXILIAR: Mantém a Data e Hora Sincronizadas no Menu Lateral
+function atualizarRelogioBrasilia() {
+    const agora = new Date();
+    
+    const opcoesData = { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric' };
+    const opcoesHora = { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hour12: false };
+    
+    const dataStr = agora.toLocaleDateString('pt-BR', opcoesData);
+    const horaStr = agora.toLocaleTimeString('pt-BR', opcoesHora);
+    
+    const elData = document.getElementById('data-brasilia');
+    const elHora = document.getElementById('hora-brasilia');
+    
+    if (elData) elData.textContent = dataStr;
+    if (elHora) elHora.textContent = `${horaStr} horas`;
+}
