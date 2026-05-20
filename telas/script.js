@@ -234,11 +234,11 @@ document.getElementById('formProdutos')?.addEventListener('submit', async (e) =>
                 tituloForm.innerHTML = '<i class="bi bi-box-seam text-primary me-2"></i>Novo Produto';
             }
             
-            // DISPARO DA NOTIFICAÇÃO DE SUCESSO (Canto inferior direito)
+            // DISPARO DA NOTIFICAÇÃO DE SUCESSO
             if (metodo === 'POST') {
                 dispararNotificacao("Novo cadastro criado com sucesso!", "criar");
             } else {
-                dispararNotificacao("Cadastro alterado com sucesso!", "atualizar");
+                dispararNotificacao("Cadastro alteredo com sucesso!", "atualizar");
             }
             
             listarProdutosCRUD();
@@ -257,7 +257,6 @@ document.getElementById('formProdutos')?.addEventListener('submit', async (e) =>
 // 3. EXCLUIR CADASTRO DO BANCO DE DADOS (DELETE)
 // =========================================================================
 async function deletarItemGeral(endpoint, id, callbackSucesso) {
-    // CORREÇÃO DA EXCLUSÃO: Validação estrita do parâmetro recebido
     if (!id || id === undefined || id === null || id.toString().trim() === "" || id.toString() === "undefined" || id.toString() === "null") {
         alert("Não é possível deletar este item: ID inválido ou ausente.");
         return;
@@ -273,9 +272,7 @@ async function deletarItemGeral(endpoint, id, callbackSucesso) {
         });
 
         if (res.ok) {
-            // DISPARO DA NOTIFICAÇÃO DE EXCLUSÃO (Canto inferior direito)
             dispararNotificacao("Cadastro excluído com sucesso!", "excluir");
-            
             callbackSucesso();
         } else {
             alert(`Não foi possível deletar o item. Código do servidor: ${res.status}`);
@@ -304,7 +301,6 @@ function prepararEdicaoProduto(p) {
     const campoCategoria = document.getElementById('produtos-categoria');
     const campoSituacao = document.getElementById('produtos-situacao');
     
-    // Força a extração do ID correto convertido em string limpa
     const idLimpo = (p.id !== undefined ? p.id : (p._id || "")).toString().trim();
     
     if (campoId) campoId.value = idLimpo;
@@ -321,7 +317,7 @@ function prepararEdicaoProduto(p) {
 }
 
 // =========================================================================
-// 5. FUNÇÃO AUXILIAR: Disparar Toast no Canto Inferior Direito
+// 5. FUNÇÃO AUXILIAR: Disparar Toast no Canto Inferior Direito (CORRIGIDA)
 // =========================================================================
 function dispararNotificacao(mensagem, acao = 'sucesso') {
     const elementoToast = document.getElementById('toast-cadastro');
@@ -330,10 +326,8 @@ function dispararNotificacao(mensagem, acao = 'sucesso') {
     
     if (!elementoToast || !textoToast) return;
 
-    // Configura o fundo verde padrão (Sucesso)
     elementoToast.className = "toast align-items-center text-white bg-success border-0 shadow";
     
-    // Altera o ícone do Bootstrap conforme o evento
     if (acao === 'criar') {
         if (iconeToast) iconeToast.innerHTML = '<i class="bi bi-plus-circle-fill fs-5"></i>';
     } else if (acao === 'atualizar') {
@@ -344,9 +338,9 @@ function dispararNotificacao(mensagem, acao = 'sucesso') {
         if (iconeToast) iconeToast.innerHTML = '<i class="bi bi-check-circle-fill fs-5"></i>';
     }
 
-    textoToast.innerText = message = mensagem;
+    // CORREÇÃO: Sintaxe limpa de atribuição de texto
+    textoToast.innerText = mensagem;
 
-    // Inicializa e exibe o Toast (configurado para sumir sozinho em 3.5 segundos)
     const bootstrapToast = new bootstrap.Toast(elementoToast, { delay: 3500 });
     bootstrapToast.show();
 }
@@ -357,13 +351,11 @@ function dispararNotificacao(mensagem, acao = 'sucesso') {
 document.addEventListener('DOMContentLoaded', () => {
     listarProdutosCRUD();
 
-    // Evento de digitação na caixa de pesquisa
     document.getElementById('pesquisa-produto')?.addEventListener('input', () => {
-        paginaAtual = 1; // Força retorno à página 1 a cada busca realizada
+        paginaAtual = 1; 
         filtrarEAtualizarTabela();
     });
 
-    // Evento de clique para o botão "Anterior"
     document.getElementById('btn-anterior')?.addEventListener('click', () => {
         if (paginaAtual > 1) {
             paginaAtual--;
@@ -371,7 +363,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Evento de clique para o botão "Próximo"
     document.getElementById('btn-proximo')?.addEventListener('click', () => {
         const totalPaginas = Math.ceil(produtosFiltrados.length / ITENS_POR_PAGINA) || 1;
         if (paginaAtual < totalPaginas) {
@@ -381,30 +372,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
     
-    // -- DEFINIR DATA E HORA DE BRASÍLIA --
-     (function() {
-        function atualizarRelogio() {
-            const agora = new Date();
-            
-            // Força o fuso horário de Brasília de forma nativa no navegador
-            const opcoesData = { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric' };
-            const opcoesHora = { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hour12: false };
-            
-            const dataStr = agora.toLocaleDateString('pt-BR', opcoesData);
-            const horaStr = agora.toLocaleTimeString('pt-BR', opcoesHora);
-            
-            // Captura os elementos do HTML
-            const elData = document.getElementById('data-brasilia');
-            const elHora = document.getElementById('hora-brasilia');
-            
-            // Aplica os valores se eles existirem na tela
-            if (elData) elData.textContent = dataStr;
-            if (elHora) elHora.textContent = horaStr;
-        }
-
-        // Executa imediatamente assim que o HTML chega nesse ponto
-        atualizarRelogio();
+// -- DEFINIR DATA E HORA DE BRASÍLIA --
+(function() {
+    function atualizarRelogio() {
+        const agora = new Date();
         
-        // Mantém atualizando a cada 10 segundos
-        setInterval(atualizarRelogio, 10000);
-    })();
+        const opcoesData = { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric' };
+        const opcoesHora = { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hour12: false };
+        
+        const dataStr = agora.toLocaleDateString('pt-BR', opcoesData);
+        const horaStr = agora.toLocaleTimeString('pt-BR', opcoesHora);
+        
+        const elData = document.getElementById('data-brasilia');
+        const elHora = document.getElementById('hora-brasilia');
+        
+        if (elData) elData.textContent = dataStr;
+        if (elHora) elHora.textContent = horaStr;
+    }
+
+    atualizarRelogio();
+    setInterval(atualizarRelogio, 10000);
+})();
