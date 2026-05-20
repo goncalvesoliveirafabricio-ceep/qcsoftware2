@@ -1,32 +1,52 @@
 const API_URL = "http://127.0.0.1:8000";
 
-// VARIÁVEIS DE CONTROLE DE ESTADO
 let todosProdutos = [];
 let produtosFiltrados = [];
+
 let paginaAtual = 1;
 
 const ITENS_POR_PAGINA = 10;
 
-// =========================================================================
-// 1. LISTAR PRODUTOS
-// =========================================================================
+// ==========================================================
+// LISTAR PRODUTOS
+// ==========================================================
 async function listarProdutosCRUD() {
 
-    const tabela = document.getElementById('tabela-produtos');
+    const tabela =
+        document.getElementById('tabela-produtos');
 
     try {
 
-        const res = await fetch(`${API_URL}/produtos/`);
+        const res =
+            await fetch(`${API_URL}/produtos/`);
 
         if (!res.ok) {
-            throw new Error(`Erro no servidor: Status ${res.status}`);
+            throw new Error(`Erro ${res.status}`);
         }
 
         const dados = await res.json();
 
-        todosProdutos = Array.isArray(dados) ? dados : [];
+        console.log("RETORNO API:", dados);
 
-        const totalBadge = document.getElementById('total-produtos');
+        if (Array.isArray(dados)) {
+
+            todosProdutos = dados;
+
+        } else if (Array.isArray(dados.produtos)) {
+
+            todosProdutos = dados.produtos;
+
+        } else if (Array.isArray(dados.data)) {
+
+            todosProdutos = dados.data;
+
+        } else {
+
+            todosProdutos = [];
+        }
+
+        const totalBadge =
+            document.getElementById('total-produtos');
 
         if (totalBadge) {
             totalBadge.innerText = todosProdutos.length;
@@ -36,44 +56,45 @@ async function listarProdutosCRUD() {
 
     } catch (e) {
 
-        console.error(
-            "Erro detalhado na requisição dos Produtos:",
-            e
-        );
+        console.error(e);
 
-        if (tabela) {
+        tabela.innerHTML = `
+            <tr>
+                <td colspan="4"
+                    class="text-center text-danger py-4">
 
-            tabela.innerHTML = `
-                <tr>
-                    <td colspan="4" class="text-center text-danger py-4">
-                        ⚠️ Erro ao carregar produtos.<br>
-                        <small class="text-muted">
-                            Motivo: ${e.message}
-                        </small>
-                    </td>
-                </tr>
-            `;
-        }
+                    ⚠️ Erro ao carregar produtos.<br>
+
+                    <small class="text-muted">
+                        ${e.message}
+                    </small>
+
+                </td>
+            </tr>
+        `;
     }
 }
 
-// =========================================================================
-// FILTRO E PAGINAÇÃO
-// =========================================================================
+// ==========================================================
+// FILTRO
+// ==========================================================
 function filtrarEAtualizarTabela() {
 
     const termoPesquisa =
         document.getElementById('pesquisa-produto')
         ?.value.toLowerCase() || "";
 
-    produtosFiltrados = todosProdutos.filter(p =>
-        p.nome &&
-        p.nome.toLowerCase().includes(termoPesquisa)
-    );
+    produtosFiltrados =
+        todosProdutos.filter(p =>
+            p.nome &&
+            p.nome.toLowerCase()
+                .includes(termoPesquisa)
+        );
 
     const totalPaginas =
         Math.ceil(
-            produtosFiltrados.length / ITENS_POR_PAGINA
+            produtosFiltrados.length /
+            ITENS_POR_PAGINA
         ) || 1;
 
     if (paginaAtual > totalPaginas) {
@@ -81,7 +102,8 @@ function filtrarEAtualizarTabela() {
     }
 
     const indiceInicial =
-        (paginaAtual - 1) * ITENS_POR_PAGINA;
+        (paginaAtual - 1) *
+        ITENS_POR_PAGINA;
 
     const indiceFinal =
         indiceInicial + ITENS_POR_PAGINA;
@@ -97,9 +119,9 @@ function filtrarEAtualizarTabela() {
     atualizarControlesPaginacao(totalPaginas);
 }
 
-// =========================================================================
-// RENDERIZAR TABELA
-// =========================================================================
+// ==========================================================
+// RENDER TABELA
+// ==========================================================
 function renderizarTabela(produtos) {
 
     const tabela =
@@ -113,7 +135,9 @@ function renderizarTabela(produtos) {
             <tr>
                 <td colspan="4"
                     class="text-center py-4 text-muted">
+
                     Nenhum produto encontrado.
+
                 </td>
             </tr>
         `;
@@ -123,102 +147,55 @@ function renderizarTabela(produtos) {
 
     tabela.innerHTML = produtos.map(p => {
 
-        let idBruto = undefined;
+        let idBruto = null;
 
-        if (p) {
+        if (p.id_produtos != null) {
+            idBruto = p.id_produtos;
+        }
 
-            if (p.id_produtos !== undefined && p.id_produtos !== null) {
-                idBruto = p.id_produtos;
-            }
+        else if (p.id_produto != null) {
+            idBruto = p.id_produto;
+        }
 
-            else if (p.id !== undefined && p.id !== null) {
-                idBruto = p.id;
-            }
+        else if (p.id != null) {
+            idBruto = p.id;
+        }
 
-            else if (p._id !== undefined && p._id !== null) {
-                idBruto = p._id;
-            }
+        else if (p._id != null) {
+            idBruto = p._id;
         }
 
         const produtoId =
-            idBruto !== undefined
+            idBruto
                 ? idBruto.toString().trim()
                 : "";
 
-        if (!produtoId) {
-
-            console.warn(
-                "Produto sem ID detectado:",
-                p
-            );
-
-            return `
-                <tr class="table-warning">
-
-                    <td>
-                        <strong>
-                            ${p.nome || "Sem Nome"}
-                        </strong>
-                    </td>
-
-                    <td>
-                        ${p.categoria || "Sem Categoria"}
-                    </td>
-
-                    <td>
-                        <span class="badge bg-warning text-dark">
-                            Erro de ID
-                        </span>
-                    </td>
-
-                    <td class="text-end text-muted small">
-                        ⚠️ ID ausente
-                    </td>
-
-                </tr>
-            `;
-        }
-
         let situacaoTratada = "Ativo";
 
-        if (p.ativo !== undefined && p.ativo !== null) {
-            situacaoTratada = p.ativo;
-        }
-
-        else if (p.situacao !== undefined && p.situacao !== null) {
+        if (p.situacao != null) {
             situacaoTratada = p.situacao;
         }
 
-        if (typeof situacaoTratada === 'boolean') {
-
+        if (p.ativo != null) {
             situacaoTratada =
-                situacaoTratada
+                p.ativo
                     ? "Ativo"
                     : "Inativo";
         }
 
-        if (
-            typeof situacaoTratada === 'string' &&
-            situacaoTratada.length > 0
-        ) {
-
-            situacaoTratada =
-                situacaoTratada.charAt(0).toUpperCase() +
-                situacaoTratada.slice(1).toLowerCase();
-        }
+        const badgeClasse =
+            situacaoTratada === "Ativo"
+                ? "bg-success-subtle text-success"
+                : "bg-secondary-subtle text-secondary";
 
         p.id = produtoId;
+
         p.situacao = situacaoTratada;
 
         const produtoEncoded =
             encodeURIComponent(
                 JSON.stringify(p)
             );
-
-        const badgeClasse =
-            situacaoTratada === 'Ativo'
-                ? 'bg-success-subtle text-success'
-                : 'bg-secondary-subtle text-secondary';
 
         return `
             <tr class="align-middle">
@@ -243,8 +220,7 @@ function renderizarTabela(produtos) {
 
                     <button
                         class="btn btn-sm btn-outline-primary me-1 border-0"
-                        onclick="prepararEdicaoSegura('${produtoEncoded}')"
-                        title="Editar produto">
+                        onclick="prepararEdicaoSegura('${produtoEncoded}')">
 
                         <i class="bi bi-pencil"></i>
 
@@ -256,8 +232,7 @@ function renderizarTabela(produtos) {
                             'produtos',
                             '${produtoId}',
                             listarProdutosCRUD
-                        )"
-                        title="Excluir produto">
+                        )">
 
                         <i class="bi bi-trash"></i>
 
@@ -271,69 +246,56 @@ function renderizarTabela(produtos) {
     }).join('');
 }
 
-// =========================================================================
-// CONTROLES PAGINAÇÃO
-// =========================================================================
+// ==========================================================
+// PAGINAÇÃO
+// ==========================================================
 function atualizarControlesPaginacao(totalPaginas) {
 
-    const btnAnterior =
-        document.getElementById('btn-anterior');
-
-    const btnProximo =
-        document.getElementById('btn-proximo');
-
-    const infoPaginacao =
+    const info =
         document.getElementById('info-paginacao');
 
-    if (infoPaginacao) {
+    const anterior =
+        document.getElementById('btn-anterior');
 
-        infoPaginacao.innerText =
+    const proximo =
+        document.getElementById('btn-proximo');
+
+    if (info) {
+        info.innerText =
             `Página ${paginaAtual} de ${totalPaginas}`;
     }
 
-    if (btnAnterior) {
-        btnAnterior.disabled = (paginaAtual === 1);
+    if (anterior) {
+        anterior.disabled = (paginaAtual === 1);
     }
 
-    if (btnProximo) {
-        btnProximo.disabled = (paginaAtual === totalPaginas);
+    if (proximo) {
+        proximo.disabled = (paginaAtual === totalPaginas);
     }
 }
 
-// =========================================================================
+// ==========================================================
 // RELÓGIO
-// =========================================================================
+// ==========================================================
 function atualizarRelogioBrasilia() {
 
     const agora = new Date();
 
-    const opcoesData = {
-
-        timeZone: 'America/Sao_Paulo',
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-    };
-
-    const opcoesHora = {
-
-        timeZone: 'America/Sao_Paulo',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false
-    };
-
     const dataStr =
         agora.toLocaleDateString(
             'pt-BR',
-            opcoesData
+            {
+                timeZone: 'America/Sao_Paulo'
+            }
         );
 
     const horaStr =
         agora.toLocaleTimeString(
             'pt-BR',
-            opcoesHora
+            {
+                timeZone: 'America/Sao_Paulo',
+                hour12: false
+            }
         );
 
     const elData =
@@ -351,9 +313,9 @@ function atualizarRelogioBrasilia() {
     }
 }
 
-// =========================================================================
-// LOAD DA PÁGINA
-// =========================================================================
+// ==========================================================
+// LOAD
+// ==========================================================
 document.addEventListener('DOMContentLoaded', () => {
 
     listarProdutosCRUD();
