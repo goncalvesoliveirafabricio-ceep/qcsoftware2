@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q.C Software - Cargos</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="bg-body-tertiary text-body">
+
+    <div class="d-flex">
+    <nav class="sidebar d-flex flex-column flex-shrink-0 position-fixed">
+        <button class="toggle-btn" onclick="toggleSidebar()">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+
+        <div class="logo">
+            <img src="/telas/imagens/logo.png" alt="Logo">            
+        </div>
+
+       <div class="nav flex-column">
+            <a href="#" class="sidebar-link text-decoration-none p-3">
+                <i class="sidebar-texto fas fa-area-chart me-3"></i>
+                <span class="sidebar-texto">Dashboard</span>
+            </a>           
+
+            <a href="/telas/produtos.html" class="sidebar-link text-decoration-none p-3">
+                <i class="sidebar-texto fas fa-box me-3"></i>
+                <span class="sidebar-texto">Produtos</span>
+            </a> 
+            
+             <a href="/telas/maquinas.html" class="sidebar-link text-decoration-none p-3">
+                <i class="sidebar-texto fas fa-industry me-2"></i>
+                <span class="sidebar-texto">Máquinas</span>
+            </a>  
+
+                <a href="/telas/colaboradores.html" class="sidebar-link text-decoration-none p-3">
+                <i class="sidebar-texto fa fa-user me-2"></i>
+                <span class="sidebar-texto">Colaboradores</span>
+            </a>
+
+             <a href="/telas/cargos.html" class="sidebar-link text-decoration-none p-3">
+                <i class="sidebar-texto fa fa-address-card me-2"></i>
+                <span class="sidebar-texto">Cargos</span>
+            </a>
+            
+       <div class="profile-section p-4">
+        <div class="d-flex align-items-center">            
+            <div class="ms-3 profile-info">
+                <h5 class="text-white mb-1"> <i class=" fa fa-user-circle"></i> Bianca Santos</h5>
+                <h6 class="text-black mb-1"> <i class=" fa fa-address-card"></i> $Cargo</h6>
+                <h6 class="text-black mb-1"><i class=" fa fa-calendar"></i> <span id="data-brasilia"> --/--/----</span></h6>
+                <h6 class="text-black mb-0"> <i class=" fa fa-clock"></i> <span id="hora-brasilia"> --:--</span> horas</h6>                
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+    <div class="container-fluid mb-4">
+        <i class="sidebar-texto2 fas fa fa-address-card me-3 fw-bold"></i>
+        <span class="sidebar-texto2 fw-bold">Cargos</span>
+    </div>
+
+    <section class="mb-4">            
+        <div class="col-12">
+            <div class="card shadow-sm p-4 border-0 bg-body">
+                
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="mb-0 fw-bold text-body" id="titulo-form">
+                        <i class="sidebar-texto fas fa fa-address-card me-3"></i> Novo Cargo
+                    </h4>
+                    
+                    <div class="d-flex gap-2">
+                        <button type="submit" form="formCliente" class="btn btn-success px-4 fw-bold">
+                            💾 Salvar
+                        </button>
+                        <a asp-action="Index" class="btn btn-secondary px-4 fw-bold">
+                            ⬅️ Voltar
+                        </a>
+                    </div>
+                </div>
+                
+                <form id="formCliente" class="row g-3 align-items-end">
+                    <input type="hidden" id="cli-id">
+                    
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold text-body">Nome</label>
+                        <input type="text" id="cli-nome" class="form-control bg-body text-body shadow-none" required placeholder="Ex: Líder, Analista, Supervisor...">
+                    </div>                 
+                    
+                    <div class="col-md-4">
+                        <label class="form-label fw-semibold text-body">Situação</label>
+                        <select class="form-select bg-body text-body shadow-none" id="cli-situacao">
+                            <option value="Ativo">Ativo</option>
+                            <option value="Inativo">Inativo</option>
+                        </select>
+                    </div>
+                </form>
+                
+            </div>
+        </div>
+    </section>
+
+    <section class="mt-4">
+        <div class="cabecalho-secao d-flex justify-content-between align-items-center mb-3">
+            <div class="d-flex align-items-center gap-2">
+                <h3 class="text-white mb-0 fw-bold">Cargos Cadastrados</h3>
+                <span class="badge bg-light text-dark fw-bold px-2.5 py-1.5 fs-6" id="total-produtos">$</span>
+            </div>
+            <a href="#" class="text-white text-decoration-none fw-bold">Ver todos ➡️</a>
+        </div>
+        
+        <div class="tabela-container card border-0 p-3 shadow-sm bg-body">
+            <div class="table-responsive">
+                <table class="tabela table table-hover align-middle mb-0 text-body" id="tabela-produtos-recentes">
+                    <thead class="table-light fw-bold">
+                        <tr>                                
+                            <th>Nome</th>
+                            <th>Situação</th>                                
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr id="loading-row">
+                            <td colspan="3" class="text-center py-4 text-muted">
+                                ⌛ Carregando cargos...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</main>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('collapsed');
+        }        
+    </script>
+</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/telas/script.js"></script>
+</body>
+</html>

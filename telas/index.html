@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <title>Dashboard - Restaurante do Fabricio</title>
+    <style>
+        /* Transição suave para hover nos cards */
+        .card { transition: transform 0.2s; border: none !important; }
+        .card:hover { transform: translateY(-3px); }
+        
+        /* Container do gráfico com altura fixa */
+        .chart-container { position: relative; height: 300px; width: 100%; }
+
+        /* Ajuste para o Switch de tema na Navbar */
+        .form-check-input { cursor: pointer; }
+    </style>
+</head>
+<body class="bg-body-tertiary">
+
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
+    <div class="container">
+        <a class="navbar-brand fw-bold d-flex align-items-center" href="index.html">
+            <i class="bi bi-shop me-2 text-warning" style="font-size: 1.2rem;"></i>
+            <span>Restaurante do Fabricio</span>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto align-items-center">
+                <li class="nav-item">
+                    <a class="nav-link px-3" href="index.html">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link px-3" href="clientes.html">Clientes</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link px-3" href="produtos.html">Produtos</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link px-3 me-3" href="vendas.html">PDV</a>
+                </li>
+                
+                <li class="nav-item d-flex align-items-center">
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input" type="checkbox" id="darkModeSwitch" style="cursor: pointer;">
+                        <label class="form-check-label ms-1 text-white" for="darkModeSwitch">
+                            <i id="label-tema" class="bi bi-moon-stars-fill"></i>
+                        </label>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+    <div class="container">
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card p-3 shadow-sm bg-primary text-white h-100 text-center">
+                    <small class="text-white-50 fw-bold">FATURAMENTO TOTAL</small>
+                    <h2 id="faturamento-valor" class="fw-bold mb-0 mt-1">R$ 0,00</h2>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3 shadow-sm bg-dark text-white h-100 text-center border border-secondary">
+                    <small class="text-white-50 fw-bold">EXTREMOS DE VENDA</small>
+                    <div class="d-flex justify-content-around fw-bold mt-2">
+                        <span id="venda-max" class="text-success">↑ R$ 0,00</span>
+                        <span id="venda-min" class="text-warning">↓ R$ 0,00</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3 shadow-sm border-start border-4 border-success bg-body h-100">
+                    <small class="text-secondary fw-bold"><i class="bi bi-trophy-fill text-warning me-1"></i> CLIENTE VIP</small>
+                    <h5 id="cliente-top" class="mb-0 mt-2 text-truncate text-body">Carregando...</h5>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card p-3 shadow-sm border-start border-4 border-danger bg-body h-100">
+                    <small class="text-secondary fw-bold"><i class="bi bi-graph-down text-danger me-1"></i> MENOS COMPRAS</small>
+                    <h5 id="cliente-bottom" class="mb-0 mt-2 text-truncate text-body">Carregando...</h5>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-8 mb-4">
+                <div class="card p-4 shadow-sm bg-body h-100">
+                    <h6 class="fw-bold mb-4 text-body"><i class="bi bi-graph-up me-2 text-primary"></i>Vendas Diárias (R$)</h6>
+                    <div class="chart-container">
+                        <canvas id="graficoDiario"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-4">
+                <div class="card p-4 shadow-sm bg-body h-100">
+                    <h6 class="fw-bold mb-4 text-body"><i class="bi bi-pie-chart me-2 text-success"></i>Mix de Produtos</h6>
+                    <div class="chart-container">
+                        <canvas id="graficoVendas"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
