@@ -1,4 +1,4 @@
-const API_URL = "http://127.0.0.1:8000"; 
+const API_URL = "hhttp://qcsoftware2.onrender.com"; 
 
 // VARIÁVEIS DE CONTROLE DE ESTADO (PESQUISA E PAGINAÇÃO)
 let todosProdutos = [];      // Armazena a lista bruta vinda da API
