@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="Q.C Software", version="1.0.0")
-app.mount("/front", StaticFiles(directory="telas", html=True), name="front")
+app.mount("/telas", StaticFiles(directory="telas", html=True), name="telas")
 
 # Configura as origens permitidas
 origins = [
