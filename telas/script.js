@@ -1,4 +1,4 @@
-const API_URL = "http://qcsoftware2.onrender.com";
+const API_URL = "https://qcsoftware2.onrender.com";
 
 // VARIÁVEIS DE CONTROLE DE ESTADO (PESQUISA E PAGINAÇÃO)
 let todosProdutos = [];      // Armazena a lista bruta vinda da API
