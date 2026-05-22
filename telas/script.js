@@ -134,15 +134,27 @@ function renderizarTabela(produtos) {
             ? 'bg-success-subtle text-success' 
             : 'bg-secondary-subtle text-secondary';
 
-        return
-    <tr class="align-middle">                
-        <td><strong>${p.nome || "Sem Nome"}</strong></td>
-        <td>${p.categoria || "Sem Categoria"}</td>
-        <td><span class="badge ${badgeClasse}">${situacaoTratada}</span></td>
-        <td class="text-end">            
-        </td>
-    </tr>
-;
+        return `
+            <tr class="align-middle">                
+                <td><strong>${p.nome || "Sem Nome"}</strong></td>
+                <td>${p.categoria || "Sem Categoria"}</td>
+                <td><span class="badge ${badgeClasse}">${situacaoTratada}</span></td>
+                <td class="text-end">
+                // ` + /*
+//   <button class="btn btn-sm btn-outline-primary me-1 border-0" 
+//           onclick="prepararEdicaoSegura('${produtoEncoded}')" 
+//           title="Editar produto">
+//       <i class="bi bi-pencil"></i>
+//   </button>
+//   <button class="btn btn-sm btn-outline-danger border-0" 
+//           onclick="deletarItemGeral('produtos', '${produtoId}', listarProdutosCRUD)" 
+//           title="Excluir produto">
+//       <i class="bi bi-trash"></i>
+//   </button>
+// */ + `
+                </td>
+            </tr>
+        `;
     }).join('');
 }
 
@@ -503,14 +515,25 @@ function renderizarTabelaCargos(cargos) {
             ? 'bg-success-subtle text-success' 
             : 'bg-secondary-subtle text-secondary';
 
-        return
-    <tr class="align-middle">                
-        <td><strong>${c.nome || "Sem Nome"}</strong></td>                
-        <td><span class="badge ${badgeClasse}">${situacaoTratada}</span></td>
-        <td class="text-end">            
-        </td>
-    </tr>
-;
+        return `
+            <tr class="align-middle">                
+                <td><strong>${c.nome || "Sem Nome"}</strong></td>                
+                <td><span class="badge ${badgeClasse}">${situacaoTratada}</span></td>
+                <td class="text-end">
+                     // ` + /*<button class="btn btn-sm btn-outline-primary me-1 border-0"
+                            onclick="prepararEdicaoSeguraCargo('${cargoEncoded}')" 
+                            title="Editar cargo">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger border-0" 
+                            onclick="deletarItemGeral('cargos', '${cargoId}', listarCargosCRUD)" 
+                            title="Excluir cargo">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                    // */ + `
+                </td>
+            </tr>
+        `;
     }).join('');
 }
 
@@ -807,15 +830,26 @@ function renderizarTabelaMaquinas(maquinas) {
             ? 'bg-success-subtle text-success' 
             : 'bg-secondary-subtle text-secondary';
 
-        return
-    <tr class="align-middle">                
-        <td><strong>${m.nome || "Sem Nome"}</strong></td>
-        <td>${m.codigo || m.tipo || "Geral"}</td>
-        <td><span class="badge ${badgeClasse}">${situacaoTratada}</span></td>
-        <td class="text-end">            
-        </td>
-    </tr>
-;
+        return `
+            <tr class="align-middle">                
+                <td><strong>${m.nome || "Sem Nome"}</strong></td>
+                <td>${m.codigo || m.tipo || "Geral"}</td>
+                <td><span class="badge ${badgeClasse}">${situacaoTratada}</span></td>
+                <td class="text-end">
+                    // ` + /* <button class="btn btn-sm btn-outline-primary me-1 border-0" 
+                            onclick="prepararEdicaoSeguraMaquina('${maquinaEncoded}')" 
+                            title="Editar máquina">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger border-0" 
+                            onclick="deletarItemGeral('maquinas', '${maquinaId}', listarMaquinasCRUD)" 
+                            title="Excluir máquina">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                    // */ + `
+                </td>
+            </tr>
+        `;
     }).join('');
 }
 
