@@ -92,22 +92,7 @@ def criar_maquina(obj: schemas.MaquinaCreate, db: Session = Depends(get_db)):
     return novo
 
 # ==========================================
-# 4. COLABORADORES
-# ==========================================
-@app.get("/colaboradores/", response_model=List[schemas.Colaborador], tags=["Colaboradores"])
-def listar_colaboradores(db: Session = Depends(get_db)):
-    return db.query(models.Colaborador).all()
-
-@app.post("/colaboradores/", response_model=schemas.Colaborador, tags=["Colaboradores"])
-def criar_colaborador(obj: schemas.ColaboradorCreate, db: Session = Depends(get_db)):
-    novo = models.Colaborador(**obj.model_dump())
-    db.add(novo)
-    db.commit()
-    db.refresh(novo)
-    return novo
-
-# ==========================================
-# 5. OCORRÊNCIAS
+# 4. OCORRÊNCIAS
 # ==========================================
 # --- LISTAR ---
 @app.get("/ocorrencias/", response_model=List[schemas.Ocorrencia], tags=["Ocorrências"])
@@ -139,65 +124,6 @@ def criar_ocorrencia(obj: schemas.OcorrenciaCreate, db: Session = Depends(get_db
             status_code=status.HTTP_400_BAD_REQUEST, 
             detail=f"Erro nos dados enviados: {str(e)}"
         )
-# ==========================================
-# 6. USUÁRIOS
-# ==========================================
-@app.get("/usuarios/", response_model=List[schemas.Usuario], tags=["Usuários"])
-def listar_usuarios(db: Session = Depends(get_db)):
-    return db.query(models.Usuario).all()
-
-@app.post("/usuarios/", response_model=schemas.Usuario, tags=["Usuários"])
-def criar_usuario(obj: schemas.UsuarioCreate, db: Session = Depends(get_db)):
-    novo = models.Usuario(**obj.model_dump())
-    db.add(novo)
-    db.commit()
-    db.refresh(novo)
-    return novo
-
-# ==========================================
-# 7. PERMISSÕES
-# ==========================================
-@app.get("/permissoes/", response_model=List[schemas.Permissao], tags=["Permissões"])
-def listar_permissoes(db: Session = Depends(get_db)):
-    return db.query(models.Permissao).all()
-
-@app.post("/permissoes/", response_model=schemas.Permissao, tags=["Permissões"])
-def criar_permissao(obj: schemas.PermissaoCreate, db: Session = Depends(get_db)):
-    novo = models.Permissao(**obj.model_dump())
-    db.add(novo)
-    db.commit()
-    db.refresh(novo)
-    return novo
-
-# ==========================================
-# 8. TELAS
-# ==========================================
-@app.get("/telas/", response_model=List[schemas.Tela], tags=["Telas"])
-def listar_telas(db: Session = Depends(get_db)):
-    return db.query(models.Tela).all()
-
-@app.post("/telas/", response_model=schemas.Tela, tags=["Telas"])
-def criar_tela(obj: schemas.TelaCreate, db: Session = Depends(get_db)):
-    novo = models.Tela(**obj.model_dump())
-    db.add(novo)
-    db.commit()
-    db.refresh(novo)
-    return novo
-
-# ==========================================
-# 9. PERFIS
-# ==========================================
-@app.get("/perfis/", response_model=List[schemas.Perfil], tags=["Perfis"])
-def listar_perfis(db: Session = Depends(get_db)):
-    return db.query(models.Perfil).all()
-
-@app.post("/perfis/", response_model=schemas.Perfil, tags=["Perfis"])
-def criar_perfil(obj: schemas.PerfilCreate, db: Session = Depends(get_db)):
-    novo = models.Perfil(**obj.model_dump())
-    db.add(novo)
-    db.commit()
-    db.refresh(novo)
-    return novo
 
 if __name__ == "__main__":
     import uvicorn
