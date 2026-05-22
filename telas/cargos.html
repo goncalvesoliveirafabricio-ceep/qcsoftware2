@@ -50,17 +50,19 @@
             </div>
         </nav>
 
-        <main class="main-content" style="margin-left: 260px; width: 100%;"> <div class="container-fluid mb-4 mt-3">
+        <main class="main-content" style="margin-left: 260px; width: 100%;"> 
+            <div class="container-fluid mb-4 mt-3">
                 <i class="sidebar-texto2 fas fa fa-address-card me-3 fw-bold"></i>
                 <span class="sidebar-texto2 fw-bold">Cargos</span>
             </div>
 
+            <!-- SEÇÃO DO FORMULÁRIO (CREATE / UPDATE) -->
             <section class="mb-4">            
                 <div class="col-12">
                     <div class="card shadow-sm p-4 border-0 bg-body">
                         
                         <div class="d-flex justify-content-between align-items-center mb-4">
-                            <h4 class="mb-0 fw-bold text-body" id="titulo-form-cargos">
+                            <h4 class="mb-0 fw-bold text-body" id="titulo-form-cargo">
                                 <i class="sidebar-texto fas fa fa-address-card me-3"></i> Novo Cargo
                             </h4>
                             
@@ -72,14 +74,14 @@
                         </div>
                         
                         <form id="formCargos" class="row g-3 align-items-end">
-                            <input type="hidden" id="cargos-id">
+                            <input type="hidden" id="cargo-id">
                             
-                            <div class="col-md-4">
-                                <label class="form-label fw-semibold text-body">Nome</label>
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-body">Nome do Cargo</label>
                                 <input type="text" id="cargos-nome" class="form-control bg-body text-body shadow-none" required placeholder="Ex: Líder, Analista, Supervisor...">
                             </div>                 
                             
-                            <div class="col-md-4">
+                            <div class="col-md-6">
                                 <label class="form-label fw-semibold text-body">Situação</label>
                                 <select class="form-select bg-body text-body shadow-none" id="cargos-situacao">
                                     <option value="Ativo">Ativo</option>
@@ -92,13 +94,19 @@
                 </div>
             </section>
 
+            <!-- SEÇÃO DA TABELA (READ / SEARCH / PAGINATION) -->
             <section class="mt-4">
                 <div class="cabecalho-secao d-flex justify-content-between align-items-center mb-3">
                     <div class="d-flex align-items-center gap-2">
                         <h3 class="text-white mb-0 fw-bold">Cargos Cadastrados</h3>
                         <span class="badge bg-light text-dark fw-bold px-2.5 py-1.5 fs-6" id="total-cargos">$</span>
                     </div>
-                    <a href="#" class="text-white text-decoration-none fw-bold">Ver todos ➡️</a>
+                    
+                    <!-- Barra de pesquisa adicionada para controle do script -->
+                    <div class="position-relative style-busca style-busca-cargo shadow-sm rounded">
+                        <input type="text" id="pesquisa-cargo" class="form-control ps-5 shadow-none border-0 bg-body text-body" placeholder="Buscar cargo por nome...">
+                        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                    </div>
                 </div>
                 
                 <div class="tabela-container card border-0 p-3 shadow-sm bg-body">
@@ -120,9 +128,36 @@
                             </tbody>
                         </table>
                     </div>
+
+                    <!-- Controles de paginação adicionados para o gerenciamento de páginas -->
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+                        <span class="small text-muted" id="info-paginacao-cargos">Página 1 de 1</span>
+                        <div class="btn-group gap-1">
+                            <button class="btn btn-sm btn-outline-secondary rounded shadow-none" id="btn-anterior-cargos" disabled>
+                                <i class="bi bi-chevron-left"></i> Anterior
+                            </button>
+                            <button class="btn btn-sm btn-outline-secondary rounded shadow-none" id="btn-proximo-cargos" disabled>
+                                Próximo <i class="bi bi-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+
                 </div>
             </section>
         </main>
+    </div>
+
+    <!-- CONTENEUR PARA TOASTS DE NOTIFICAÇÃO (OPCIONAL - USADO PELO SEU SCRIPT) -->
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+        <div id="toast-cadastro" class="toast align-items-center text-white border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body d-flex align-items-center gap-2">
+                    <span id="toast-mensagem-icone"></span>
+                    <span id="toast-mensagem-texto"></span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
     </div>
 
     <script>

@@ -6,6 +6,7 @@ let produtosFiltrados = [];  // Armazena o resultado da busca por nome
 let paginaAtual = 1;
 const ITENS_POR_PAGINA = 10;
 
+// -- Produtos
 // =========================================================================
 // 1. LISTAR PRODUTOS (READ com Filtro e Paginação)
 // =========================================================================
@@ -377,6 +378,633 @@ document.addEventListener('DOMContentLoaded', () => {
         if (paginaAtual < totalPaginas) {
             paginaAtual++;
             filtrarEAtualizarTabela();
+        }
+    });
+});
+
+// - Cargos
+
+// =========================================================================
+// VARIÁVEIS DE CONTROLE DE ESTADO PARA CARGOS
+// =========================================================================
+let todosCargos = [];       // Armazena a lista bruta vinda da API
+let cargosFiltrados = [];   // Armazena o resultado da busca por nome
+let paginaAtualCargos = 1;  // Variável de página separada para não chocar com produtos
+
+// =========================================================================
+// 1. LISTAR CARGOS (READ com Filtro e Paginação)
+// =========================================================================
+async function listarCargosCRUD() {
+    try {
+        const res = await fetch(`${API_URL}/cargos/`);
+        
+        if (!res.ok) {
+            throw new Error(`Erro no servidor: Status ${res.status}`);
+        }
+
+        todosCargos = await res.json();
+        
+        const totalBadge = document.getElementById('total-cargos');
+        if (totalBadge) totalBadge.innerText = todosCargos.length;
+
+        // Processa o filtro inicial e pagina os resultados
+        filtrarEAtualizarTabelaCargos();
+
+    } catch (e) { 
+        console.error("Erro detalhado na requisição dos Cargos:", e); 
+        const tabela = document.getElementById('tabela-cargos');
+        if (tabela) {
+            tabela.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center text-danger py-4">
+                        ⚠️ Erro ao carregar cargos.<br>
+                        <small class="text-muted">Motivo: ${e.message}</small>
+                    </td>
+                </tr>
+            `;
+        }
+    }
+}
+
+// FUNÇÃO INTERNA: Filtra os cargos por nome e calcula as páginas disponíveis
+function filtrarEAtualizarTabelaCargos() {
+    const termoPesquisa = document.getElementById('pesquisa-cargo')?.value.toLowerCase() || "";
+    
+    // Filtra pelo nome do cargo digitado
+    cargosFiltrados = todosCargos.filter(c => 
+        c.nome && c.nome.toLowerCase().includes(termoPesquisa)
+    );
+
+    const totalPaginas = Math.ceil(cargosFiltrados.length / ITENS_POR_PAGINA) || 1;
+    
+    if (paginaAtualCargos > totalPaginas) {
+        paginaAtualCargos = totalPaginas;
+    }
+
+    // Calcula os cortes exatos para exibir o limite de 10 por página
+    const indiceInicial = (paginaAtualCargos - 1) * ITENS_POR_PAGINA;
+    const indiceFinal = indiceInicial + ITENS_POR_PAGINA;
+    const cargosExibidos = cargosFiltrados.slice(indiceInicial, indiceFinal);
+
+    renderizarTabelaCargos(cargosExibidos);
+    atualizarControlesPaginacaoCargos(totalPaginas);
+}
+
+// FUNÇÃO INTERNA: Renderiza as linhas visíveis na tabela de cargos
+function renderizarTabelaCargos(cargos) {
+    const tabela = document.getElementById('tabela-cargos');
+    if (!tabela) return;
+
+    if (!cargos || cargos.length === 0) {
+        tabela.innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center py-4 text-muted">Nenhum cargo encontrado.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    tabela.innerHTML = cargos.map(c => {
+        // Captura o ID baseado na estrutura real do seu banco (id_cargos, id, _id)
+        let idBruto = undefined;
+        
+        if (c) {
+            if (c.id_cargos !== undefined && c.id_cargos !== null) idBruto = c.id_cargos;
+            else if (c.id !== undefined && c.id !== null) idBruto = c.id;
+            else if (c._id !== undefined && c._id !== null) idBruto = c._id;
+        }
+        
+        const cargoId = idBruto !== undefined ? idBruto.toString().trim() : "";
+
+        if (!cargoId) {
+            console.warn("Cargo sem ID detectado. Estrutura recebida do banco:", c);
+            return `
+                <tr class="table-warning">
+                    <td><strong>${c.nome || "Sem Nome"}</strong></td>                    
+                    <td><span class="badge bg-warning text-dark">Erro de ID</span></td>
+                    <td class="text-end text-muted small">⚠️ ID ausente</td>
+                </tr>
+            `;
+        }
+
+        // Mapeamento automático da Situação/Ativo
+        let situacaoTratada = "Ativo"; 
+        if (c.ativo !== undefined && c.ativo !== null) {
+            situacaoTratada = c.ativo;
+        } else if (c.situacao !== undefined && c.situacao !== null) {
+            situacaoTratada = c.situacao;
+        }
+
+        if (typeof situacaoTratada === 'boolean') {
+            situacaoTratada = situacaoTratada ? "Ativo" : "Inativo";
+        }
+
+        if (typeof situacaoTratada === 'string' && situacaoTratada.length > 0) {
+            situacaoTratada = situacaoTratada.charAt(0).toUpperCase() + situacaoTratada.slice(1).toLowerCase();
+        }
+
+        // Unifica a propriedade para o resto do script entender como 'id' e 'situacao'
+        c.id = cargoId;
+        c.situacao = situacaoTratada;
+
+        const cargoEncoded = encodeURIComponent(JSON.stringify(c));
+        
+        const badgeClasse = situacaoTratada === 'Ativo' 
+            ? 'bg-success-subtle text-success' 
+            : 'bg-secondary-subtle text-secondary';
+
+        return `
+            <tr class="align-middle">                
+                <td><strong>${c.nome || "Sem Nome"}</strong></td>                
+                <td><span class="badge ${badgeClasse}">${situacaoTratada}</span></td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-primary me-1 border-0" 
+                            onclick="prepararEdicaoSeguraCargo('${cargoEncoded}')" 
+                            title="Editar cargo">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger border-0" 
+                            onclick="deletarItemGeral('cargos', '${cargoId}', listarCargosCRUD)" 
+                            title="Excluir cargo">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// FUNÇÃO INTERNA: Bloqueia ou libera os botões de controle de paginação de cargos
+function atualizarControlesPaginacaoCargos(totalPaginas) {
+    const btnAnterior = document.getElementById('btn-anterior-cargos');
+    const btnProximo = document.getElementById('btn-proximo-cargos');
+    const infoPaginacao = document.getElementById('info-paginacao-cargos');
+
+    if (infoPaginacao) {
+        infoPaginacao.innerText = `Página ${paginaAtualCargos} de ${totalPaginas}`;
+    }
+
+    if (btnAnterior) btnAnterior.disabled = (paginaAtualCargos === 1);
+    if (btnProximo) btnProximo.disabled = (paginaAtualCargos === totalPaginas);
+}
+
+// =========================================================================
+// 2. SALVAR OU ATUALIZAR CADASTRO (CREATE / UPDATE)
+// =========================================================================
+document.getElementById('formCargos')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const campoId = document.getElementById('cargo-id');
+    let id = campoId ? campoId.value.toString().trim() : "";
+    
+    if (!id || id === "" || id === "undefined" || id === "null") {
+        id = null;
+    }
+    
+    const nomeInput = document.getElementById('cargos-nome')?.value || "";
+    const departamentoInput = document.getElementById('cargos-departamento')?.value || "";
+    const situacaoInput = document.getElementById('cargos-situacao')?.value || "";
+
+    const url = id ? `${API_URL}/cargos/${id}` : `${API_URL}/cargos/`;
+    const metodo = id ? 'PUT' : 'POST';
+
+    try {
+        let options = {};
+        const fileInput = document.getElementById('cargo-foto-arquivo'); // Input de arquivo se houver para cargos
+
+        if (fileInput && fileInput.files.length > 0) {
+            const formData = new FormData();
+            formData.append('nome', nomeInput);
+            formData.append('departamento', departamentoInput);
+            formData.append('situacao', situacaoInput);
+            formData.append('file', fileInput.files[0]);
+
+            options = {
+                method: metodo,
+                body: formData
+            };
+        } else {
+            const payloadJSON = {
+                nome: nomeInput,
+                departamento: departamentoInput,
+                situacao: situacaoInput
+            };
+
+            options = {
+                method: metodo,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payloadJSON)
+            };
+        }
+
+        const res = await fetch(url, options);
+        
+        if (res.ok) {
+            e.target.reset(); 
+            if (campoId) campoId.value = ""; 
+            
+            const tituloForm = document.getElementById('titulo-form-cargo');
+            if (tituloForm) {
+                tituloForm.innerHTML = '<i class="bi bi-briefcase text-primary me-2"></i>Novo Cargo';
+            }
+            
+            if (metodo === 'POST') {
+                dispararNotificacao("Novo cargo criado com sucesso!", "criar");
+            } else {
+                dispararNotificacao("Cargo alterado com sucesso!", "atualizar");
+            }
+            
+            listarCargosCRUD();
+        } else {
+            const erroApi = await res.json().catch(() => ({}));
+            console.error("Detalhes do erro do servidor:", erroApi);
+            alert(`Erro ao salvar cargo. Status: ${res.status}`);
+        }
+    } catch (err) { 
+        console.error("Erro no envio:", err);
+        alert("Erro de conexão ao salvar cargo."); 
+    }
+});
+
+// =========================================================================
+// 4. FUNÇÕES DE AUXÍLIO PARA EDIÇÃO DE CARGOS
+// =========================================================================
+window.prepararEdicaoSeguraCargo = function(cargoEncoded) {
+    try {
+        const cargo = JSON.parse(decodeURIComponent(cargoEncoded));
+        prepararEdicaoCargo(cargo);
+    } catch (err) {
+        console.error("Erro ao decodificar dados do cargo:", err);
+    }
+};
+
+function prepararEdicaoCargo(c) {
+    const campoId = document.getElementById('cargo-id');
+    const campoNome = document.getElementById('cargos-nome');    
+    const campoSituacao = document.getElementById('cargos-situacao');
+    
+    const idLimpo = (c.id !== undefined ? c.id : (c._id || "")).toString().trim();
+    
+    if (campoId) campoId.value = idLimpo;
+    if (campoNome) campoNome.value = c.nome || "";    
+    if (campoSituacao && c.situacao) campoSituacao.value = c.situacao;
+    
+    const tituloForm = document.getElementById('titulo-form-cargo');
+    if (tituloForm) {
+        tituloForm.innerHTML = '<i class="bi bi-pencil-square text-warning me-2"></i>Editando Cargo';
+    }
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// =========================================================================
+// 6. OUVINTES DE EVENTOS DA PÁGINA (ADICIONADOS AO DOMContentLoaded EXISTENTE)
+// =========================================================================
+// Observação: Como você provavelmente já tem um `document.addEventListener('DOMContentLoaded', ...)`
+// você pode apenas colar essas linhas extras dentro dele, ou manter este bloco separado abaixo:
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Inicializa a listagem de cargos se a tabela de cargos existir na página atual
+    if (document.getElementById('tabela-cargos')) {
+        listarCargosCRUD();
+    }
+
+    // Evento de digitação na caixa de pesquisa de cargos
+    document.getElementById('pesquisa-cargo')?.addEventListener('input', () => {
+        paginaAtualCargos = 1; 
+        filtrarEAtualizarTabelaCargos();
+    });
+
+    // Evento de clique para o botão "Anterior" dos cargos
+    document.getElementById('btn-anterior-cargos')?.addEventListener('click', () => {
+        if (paginaAtualCargos > 1) {
+            paginaAtualCargos--;
+            filtrarEAtualizarTabelaCargos();
+        }
+    });
+
+    // Evento de clique para o botão "Próximo" dos cargos
+    document.getElementById('btn-proximo-cargos')?.addEventListener('click', () => {
+        const totalPaginas = Math.ceil(cargosFiltrados.length / ITENS_POR_PAGINA) || 1;
+        if (paginaAtualCargos < totalPaginas) {
+            paginaAtualCargos++;
+            filtrarEAtualizarTabelaCargos();
+        }
+    });
+});
+
+// - Máquinas
+
+// =========================================================================
+// VARIÁVEIS DE CONTROLE DE ESTADO PARA MÁQUINAS
+// =========================================================================
+let todasMaquinas = [];       // Armazena a lista bruta vinda da API
+let maquinasFiltrados = [];   // Armazena o resultado da busca por nome (mantido padrão de nomenclatura)
+let paginaAtualMaquinas = 1;  // Controle de página exclusivo para máquinas
+
+// =========================================================================
+// 1. LISTAR MÁQUINAS (READ com Filtro e Paginação)
+// =========================================================================
+async function listarMaquinasCRUD() {
+    try {
+        const res = await fetch(`${API_URL}/maquinas/`);
+        
+        if (!res.ok) {
+            throw new Error(`Erro no servidor: Status ${res.status}`);
+        }
+
+        todasMaquinas = await res.json();
+        
+        const totalBadge = document.getElementById('total-maquinas');
+        if (totalBadge) totalBadge.innerText = todasMaquinas.length;
+
+        // Processa o filtro inicial e pagina os resultados
+        filtrarEAtualizarTabelaMaquinas();
+
+    } catch (e) { 
+        console.error("Erro detalhado na requisição das Máquinas:", e); 
+        const tabela = document.getElementById('tabela-maquinas');
+        if (tabela) {
+            tabela.innerHTML = `
+                <tr>
+                    <td colspan="4" class="text-center text-danger py-4">
+                        ⚠️ Erro ao carregar máquinas.<br>
+                        <small class="text-muted">Motivo: ${e.message}</small>
+                    </td>
+                </tr>
+            `;
+        }
+    }
+}
+
+// FUNÇÃO INTERNA: Filtra as máquinas por nome e calcula as páginas disponíveis
+function filtrarEAtualizarTabelaMaquinas() {
+    const termoPesquisa = document.getElementById('pesquisa-maquina')?.value.toLowerCase() || "";
+    
+    // Filtra pelo nome da máquina digitado
+    maquinasFiltrados = todasMaquinas.filter(m => 
+        m.nome && m.nome.toLowerCase().includes(termoPesquisa)
+    );
+
+    const totalPaginas = Math.ceil(maquinasFiltrados.length / ITENS_POR_PAGINA) || 1;
+    
+    if (paginaAtualMaquinas > totalPaginas) {
+        paginaAtualMaquinas = totalPaginas;
+    }
+
+    // Calcula os cortes exatos para exibir o limite de 10 por página
+    const indiceInicial = (paginaAtualMaquinas - 1) * ITENS_POR_PAGINA;
+    const indiceFinal = indiceInicial + ITENS_POR_PAGINA;
+    const maquinasExibidas = maquinasFiltrados.slice(indiceInicial, indiceFinal);
+
+    renderizarTabelaMaquinas(maquinasExibidas);
+    atualizarControlesPaginacaoMaquinas(totalPaginas);
+}
+
+// FUNÇÃO INTERNA: Renderiza as linhas visíveis na tabela de máquinas
+function renderizarTabelaMaquinas(maquinas) {
+    const tabela = document.getElementById('tabela-maquinas');
+    if (!tabela) return;
+
+    if (!maquinas || maquinas.length === 0) {
+        tabela.innerHTML = `
+            <tr>
+                <td colspan="4" class="text-center py-4 text-muted">Nenhuma máquina encontrada.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    tabela.innerHTML = maquinas.map(m => {
+        // Captura o ID baseado na estrutura real do seu banco (id_maquinas, id, _id)
+        let idBruto = undefined;
+        
+        if (m) {
+            if (m.id_maquinas !== undefined && m.id_maquinas !== null) idBruto = m.id_maquinas;
+            else if (m.id !== undefined && m.id !== null) idBruto = m.id;
+            else if (m._id !== undefined && m._id !== null) idBruto = m._id;
+        }
+        
+        const maquinaId = idBruto !== undefined ? idBruto.toString().trim() : "";
+
+        if (!maquinaId) {
+            console.warn("Máquina sem ID detectada. Estrutura recebida do banco:", m);
+            return `
+                <tr class="table-warning">
+                    <td><strong>${m.nome || "Sem Nome"}</strong></td>
+                    <td>${m.codigo || m.tipo || "Sem Código"}</td>
+                    <td><span class="badge bg-warning text-dark">Erro de ID</span></td>
+                    <td class="text-end text-muted small">⚠️ ID ausente</td>
+                </tr>
+            `;
+        }
+
+        // Mapeamento automático da Situação/Ativo
+        let situacaoTratada = "Ativo"; 
+        if (m.ativo !== undefined && m.ativo !== null) {
+            situacaoTratada = m.ativo;
+        } else if (m.situacao !== undefined && m.situacao !== null) {
+            situacaoTratada = m.situacao;
+        }
+
+        if (typeof situacaoTratada === 'boolean') {
+            situacaoTratada = situacaoTratada ? "Ativo" : "Inativo";
+        }
+
+        if (typeof situacaoTratada === 'string' && situacaoTratada.length > 0) {
+            situacaoTratada = situacaoTratada.charAt(0).toUpperCase() + situacaoTratada.slice(1).toLowerCase();
+        }
+
+        // Unifica as propriedades
+        m.id = maquinaId;
+        m.situacao = situacaoTratada;
+
+        const maquinaEncoded = encodeURIComponent(JSON.stringify(m));
+        
+        const badgeClasse = situacaoTratada === 'Ativo' 
+            ? 'bg-success-subtle text-success' 
+            : 'bg-secondary-subtle text-secondary';
+
+        return `
+            <tr class="align-middle">                
+                <td><strong>${m.nome || "Sem Nome"}</strong></td>
+                <td>${m.codigo || m.tipo || "Geral"}</td>
+                <td><span class="badge ${badgeClasse}">${situacaoTratada}</span></td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-primary me-1 border-0" 
+                            onclick="prepararEdicaoSeguraMaquina('${maquinaEncoded}')" 
+                            title="Editar máquina">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger border-0" 
+                            onclick="deletarItemGeral('maquinas', '${maquinaId}', listarMaquinasCRUD)" 
+                            title="Excluir máquina">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// FUNÇÃO INTERNA: Bloqueia ou libera os botões de controle de paginação de máquinas
+function atualizarControlesPaginacaoMaquinas(totalPaginas) {
+    const btnAnterior = document.getElementById('btn-anterior-maquinas');
+    const btnProximo = document.getElementById('btn-proximo-maquinas');
+    const infoPaginacao = document.getElementById('info-paginacao-maquinas');
+
+    if (infoPaginacao) {
+        infoPaginacao.innerText = `Página ${paginaAtualMaquinas} de ${totalPaginas}`;
+    }
+
+    if (btnAnterior) btnAnterior.disabled = (paginaAtualMaquinas === 1);
+    if (btnProximo) btnProximo.disabled = (paginaAtualMaquinas === totalPaginas);
+}
+
+// =========================================================================
+// 2. SALVAR OU ATUALIZAR CADASTRO (CREATE / UPDATE)
+// =========================================================================
+document.getElementById('formMaquinas')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const campoId = document.getElementById('maq-id');
+    let id = campoId ? campoId.value.toString().trim() : "";
+    
+    if (!id || id === "" || id === "undefined" || id === "null") {
+        id = null;
+    }
+    
+    const nomeInput = document.getElementById('maquinas-nome')?.value || "";
+    const codigoInput = document.getElementById('maquinas-codigo')?.value || "";
+    const situacaoInput = document.getElementById('maquinas-situacao')?.value || "";
+
+    const url = id ? `${API_URL}/maquinas/${id}` : `${API_URL}/maquinas/`;
+    const metodo = id ? 'PUT' : 'POST';
+
+    try {
+        let options = {};
+        const fileInput = document.getElementById('maquina-foto-arquivo'); // Suporte a upload se houver foto do equipamento
+
+        if (fileInput && fileInput.files.length > 0) {
+            const formData = new FormData();
+            formData.append('nome', nomeInput);
+            formData.append('codigo', codigoInput);
+            formData.append('situacao', situacaoInput);
+            formData.append('file', fileInput.files[0]);
+
+            options = {
+                method: metodo,
+                body: formData
+            };
+        } else {
+            const payloadJSON = {
+                nome: nomeInput,
+                codigo: codigoInput,
+                situacao: situacaoInput
+            };
+
+            options = {
+                method: metodo,
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payloadJSON)
+            };
+        }
+
+        const res = await fetch(url, options);
+        
+        if (res.ok) {
+            e.target.reset(); 
+            if (campoId) campoId.value = ""; 
+            
+            const tituloForm = document.getElementById('titulo-form-maq');
+            if (tituloForm) {
+                tituloForm.innerHTML = '<i class="bi bi-cpu text-primary me-2"></i>Nova Máquina';
+            }
+            
+            if (metodo === 'POST') {
+                dispararNotificacao("Nova máquina criada com sucesso!", "criar");
+            } else {
+                dispararNotificacao("Máquina alterada com sucesso!", "atualizar");
+            }
+            
+            listarMaquinasCRUD();
+        } else {
+            const erroApi = await res.json().catch(() => ({}));
+            console.error("Detalhes do erro do servidor:", erroApi);
+            alert(`Erro ao salvar máquina. Status: ${res.status}`);
+        }
+    } catch (err) { 
+        console.error("Erro no envio:", err);
+        alert("Erro de conexão ao salvar máquina."); 
+    }
+});
+
+// =========================================================================
+// 4. FUNÇÕES DE AUXÍLIO PARA EDIÇÃO DE MÁQUINAS
+// =========================================================================
+window.prepararEdicaoSeguraMaquina = function(maquinaEncoded) {
+    try {
+        const maquina = JSON.parse(decodeURIComponent(maquinaEncoded));
+        prepararEdicaoMaquina(maquina);
+    } catch (err) {
+        console.error("Erro ao decodificar dados da máquina:", err);
+    }
+};
+
+function prepararEdicaoMaquina(m) {
+    const campoId = document.getElementById('maq-id');
+    const campoNome = document.getElementById('maquinas-nome');
+    const campoCodigo = document.getElementById('maquinas-codigo');
+    const campoSituacao = document.getElementById('maquinas-situacao');
+    
+    const idLimpo = (m.id !== undefined ? m.id : (m._id || "")).toString().trim();
+    
+    if (campoId) campoId.value = idLimpo;
+    if (campoNome) campoNome.value = m.nome || "";
+    if (campoCodigo) campoCodigo.value = m.codigo || m.tipo || "";
+    if (campoSituacao && m.situacao) campoSituacao.value = m.situacao;
+    
+    const tituloForm = document.getElementById('titulo-form-maq');
+    if (tituloForm) {
+        tituloForm.innerHTML = '<i class="bi bi-pencil-square text-warning me-2"></i>Editando Máquina';
+    }
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// =========================================================================
+// 6. OUVINTES DE EVENTOS DA PÁGINA (DENTRO DO DOMContentLoaded)
+// =========================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    // Inicializa a listagem se o elemento da tabela de máquinas estiver presente na página
+    if (document.getElementById('tabela-maquinas')) {
+        listarMaquinasCRUD();
+    }
+
+    // Evento de digitação na caixa de pesquisa de máquinas
+    document.getElementById('pesquisa-maquina')?.addEventListener('input', () => {
+        paginaAtualMaquinas = 1; 
+        filtrarEAtualizarTabelaMaquinas();
+    });
+
+    // Evento de clique para o botão "Anterior" das máquinas
+    document.getElementById('btn-anterior-maquinas')?.addEventListener('click', () => {
+        if (paginaAtualMaquinas > 1) {
+            paginaAtualMaquinas--;
+            filtrarEAtualizarTabelaMaquinas();
+        }
+    });
+
+    // Evento de clique para o botão "Próximo" das máquinas
+    document.getElementById('btn-proximo-maquinas')?.addEventListener('click', () => {
+        const totalPaginas = Math.ceil(maquinasFiltrados.length / ITENS_POR_PAGINA) || 1;
+        if (paginaAtualMaquinas < totalPaginas) {
+            paginaAtualMaquinas++;
+            filtrarEAtualizarTabelaMaquinas();
         }
     });
 });
