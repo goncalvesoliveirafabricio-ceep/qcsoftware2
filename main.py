@@ -124,6 +124,21 @@ def criar_ocorrencia(obj: schemas.OcorrenciaCreate, db: Session = Depends(get_db
             status_code=status.HTTP_400_BAD_REQUEST, 
             detail=f"Erro nos dados enviados: {str(e)}"
         )
+    
+# ==========================================
+# 5. COLABORADORES
+# ==========================================
+@app.get("/colaboradores/", response_model=List[schemas.Colaborador], tags=["Colaboradores"])
+def listar_colaboradores(db: Session = Depends(get_db)):
+    return db.query(models.Colaborador).all()
+
+@app.post("/colaboradores/", response_model=schemas.Colaborador, tags=["Colaboradores"])
+def criar_colaborador(obj: schemas.ColaboradorCreate, db: Session = Depends(get_db)):
+    novo = models.Colaborador(**obj.model_dump())
+    db.add(novo)
+    db.commit()
+    db.refresh(novo)
+    return novo  
 
 if __name__ == "__main__":
     import uvicorn
