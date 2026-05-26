@@ -90,9 +90,6 @@
                         <button type="submit" form="formCliente" class="btn btn-success px-4 fw-bold">
                             💾 Salvar
                         </button>
-                        <a asp-action="Index" class="btn btn-secondary px-4 fw-bold">
-                            ⬅️ Voltar
-                        </a>
                     </div>
                 </div>
                 
@@ -109,10 +106,10 @@
                         <input type="text" id="cli-tel" class="form-control bg-body text-body shadow-none" placeholder="Ex: 1, 2, 3...">
                     </div>
 
-                                        <div class="col-md-4">
+                    <div class="col-md-4">
                         <label class="form-label fw-semibold text-body">Cargos</label>
-                        <select class="form-select bg-body text-body shadow-none" id="cli-car">
-                            <option value="#">#</option>
+                        <select class="form-select bg-body text-body shadow-none" id="cargos-nome">
+                            <option value="">Selecione o cargo...</option>
                         </select>
                     </div>
 
@@ -135,17 +132,23 @@
     </section>
 
     <section class="mt-4">
-        <div class="cabecalho-secao d-flex justify-content-between align-items-center mb-3">
-            <div class="d-flex align-items-center gap-2">
-                <h3 class="text-white mb-0 fw-bold">Colaboradores Cadastrados</h3>
-                <span class="badge bg-light text-dark fw-bold px-2.5 py-1.5 fs-6" id="total-produtos">$</span>
+        <div class="row align-items-center mb-4">
+            <div class="col-12 col-md-auto">
+                <h3 class="text-white mb-0 fw-bold d-inline-block align-middle me-2">Colaboradores Cadastrados</h3>
+                <span class="badge bg-light text-dark fw-bold px-3 py-2 fs-6 align-middle" id="total-colaboradores">0</span>
             </div>
-            <a href="#" class="text-white text-decoration-none fw-bold">Ver todos ➡️</a>
+        
+            <div class="col-12 col-md-5 ms-auto mt-3 mt-md-0">
+                <div class="position-relative style-busca style-busca-colaboradores shadow-sm rounded">
+                    <input type="text" id="pesquisa-colaboradores" class="form-control w-100 ps-5 shadow-none border-0 bg-body text-body" placeholder="Buscar colaboradores por nome...">
+                    <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                </div>
+            </div>
         </div>
         
         <div class="tabela-container card border-0 p-3 shadow-sm bg-body">
             <div class="table-responsive">
-                <table class="tabela table table-hover align-middle mb-0 text-body" id="tabela-produtos-recentes">
+                <table class="tabela table table-hover align-middle mb-0 text-body" id="tabela-colaboradores-recentes">
                     <thead class="table-light fw-bold">
                         <tr>                                
                             <th>Nome</th>
@@ -156,14 +159,25 @@
                             <th class="text-end">Ações</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        <tr id="loading-row">
+                    <tbody id="corpo-tabela-colaboradores"> <tr id="loading-row">
                             <td colspan="6" class="text-center py-4 text-muted">
                                 ⌛ Carregando colaboradores...
                             </td>
                         </tr>
                     </tbody>
                 </table>
+            </div>
+    
+            <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                <span class="text-muted small" id="info-paginacao-colaboradores">Página 1 de 1</span>
+                <div>
+                    <button class="btn btn-sm btn-outline-secondary me-1" id="btn-anterior-colaboradores" disabled>
+                        <i class="bi bi-chevron-left"></i> Anterior
+                    </button>
+                    <button class="btn btn-sm btn-outline-secondary" id="btn-proximo-colaboradores" disabled>
+                        Próximo <i class="bi bi-chevron-right"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </section>

@@ -1012,6 +1012,336 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+//-- Colaboradores
+
+// =========================================================================
+// VARIÁVEIS DE CONTROLE DE ESTADO PARA COLABORADORES
+// =========================================================================
+let todosColaboradores = [];       // Armazena a lista bruta vinda da API
+let colaboradoresFiltrados = [];   // Armazena o resultado da busca por nome
+let paginaAtualColaboradores = 1;  // Controle de paginação exclusivo
+
+// =========================================================================
+// 1. CARREGAR OPÇÕES DO SELECT DE CARGOS (DINÂMICO)
+// =========================================================================
+async function carregarCargosNoSelect() {
+    // Busca por ID ou pelo elemento select correspondente
+    const selectCargo = document.getElementById('colaboradores-cargo') || document.querySelector('select[id*="cargo"]');
+    if (!selectCargo) return;
+
+    try {
+        const res = await fetch(`${API_URL}/cargos/`);
+        if (res.ok) {
+            const cargos = await res.json();
+            // Mantém a primeira opção padrão e renderiza os cargos vindos do banco
+            selectCargo.innerHTML = '<option value="">Selecione o cargo</option>' + 
+                cargos.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('');
+        }
+    } catch (e) {
+        console.error("Erro ao carregar cargos para o formulário:", e);
+    }
+}
+
+// =========================================================================
+// 2. LISTAR COLABORADORES (READ com Filtro e Paginação)
+// =========================================================================
+async function listarColaboradoresCRUD() {
+    try {
+        const res = await fetch(`${API_URL}/colaboradores/`);
+        
+        if (!res.ok) {
+            throw new Error(`Erro no servidor: Status ${res.status}`);
+        }
+
+        todosColaboradores = await res.json();
+        
+        // Atualiza a contagem no badge superior
+        const totalBadge = document.getElementById('total-colaboradores') || document.querySelector('.badge');
+        if (totalBadge) totalBadge.innerText = todosColaboradores.length;
+
+        // Processa o filtro inicial e pagina os resultados
+        filtrarEAtualizarTabelaColaboradores();
+
+    } catch (e) { 
+        console.error("Erro detalhado na requisição dos Colaboradores:", e); 
+        const tabela = document.getElementById('tabela-colaboradores') || document.querySelector('tbody');
+        if (tabela) {
+            tabela.innerHTML = `
+                <tr>
+                    <td colspan="6" class="text-center text-danger py-4">
+                        ⚠️ Erro ao carregar colaboradores.<br>
+                        <small class="text-muted">Motivo: ${e.message}</small>
+                    </td>
+                </tr>
+            `;
+        }
+    }
+}
+
+// FUNÇÃO INTERNA: Filtra os colaboradores por nome e calcula as páginas disponíveis
+function filtrarEAtualizarTabelaColaboradores() {
+    const termoPesquisa = document.getElementById('pesquisa-colaborador')?.value.toLowerCase() || "";
+    
+    // Filtra pelo nome digitado na caixa de pesquisa
+    colaboradoresFiltrados = todosColaboradores.filter(c => 
+        c.nome && c.nome.toLowerCase().includes(termoPesquisa)
+    );
+
+    const totalPaginas = Math.ceil(colaboradoresFiltrados.length / ITENS_POR_PAGINA) || 1;
+    
+    if (paginaAtualColaboradores > totalPaginas) {
+        paginaAtualColaboradores = totalPaginas;
+    }
+
+    // Calcula os cortes exatos para exibir o limite de 10 por página
+    const indiceInicial = (paginaAtualColaboradores - 1) * ITENS_POR_PAGINA;
+    const indiceFinal = indiceInicial + ITENS_POR_PAGINA;
+    const colaboradoresExibidos = colaboradoresFiltrados.slice(indiceInicial, indiceFinal);
+
+    renderizarTabelaColaboradores(colaboradoresExibidos);
+    atualizarControlesPaginacaoColaboradores(totalPaginas);
+}
+
+// FUNÇÃO INTERNA: Renderiza as linhas visíveis na tabela de colaboradores
+function renderizarTabelaColaboradores(colaboradores) {
+    const tabela = document.getElementById('tabela-colaboradores') || document.querySelector('tbody');
+    if (!tabela) return;
+
+    if (!colaboradores || colaboradores.length === 0) {
+        tabela.innerHTML = `
+            <tr>
+                <td colspan="6" class="text-center py-4 text-muted">Nenhum colaborador encontrado.</td>
+            </tr>
+        `;
+        return;
+    }
+
+    tabela.innerHTML = colaboradores.map(c => {
+        // Captura o ID baseado na estrutura do seu banco (id_colaboradores, id, _id)
+        let idBruto = undefined;
+        
+        if (c) {
+            if (c.id_colaboradores !== undefined && c.id_colaboradores !== null) idBruto = c.id_colaboradores;
+            else if (c.id !== undefined && c.id !== null) idBruto = c.id;
+            else if (c._id !== undefined && c._id !== null) idBruto = c._id;
+        }
+        
+        const colaboradorId = idBruto !== undefined ? idBruto.toString().trim() : "";
+
+        if (!colaboradorId) {
+            console.warn("Colaborador sem ID detectado. Estrutura recebida do banco:", c);
+            return `
+                <tr class="table-warning">
+                    <td><strong>${c.nome || "Sem Nome"}</strong></td>
+                    <td>${c.matricula || "-"}</td>
+                    <td>${c.cargos || c.cargo || "-"}</td>
+                    <td>${c.email || "-"}</td>
+                    <td><span class="badge bg-warning text-dark">Erro de ID</span></td>
+                    <td class="text-end text-muted small">⚠️ ID ausente</td>
+                </tr>
+            `;
+        }
+
+        // Mapeamento automático da Situação/Ativo (Padrão boolean para String)
+        let situacaoTratada = "Ativo"; 
+        if (c.ativo !== undefined && c.ativo !== null) {
+            situacaoTratada = c.ativo;
+        } else if (c.situacao !== undefined && c.situacao !== null) {
+            situacaoTratada = c.situacao;
+        }
+
+        if (typeof situacaoTratada === 'boolean') {
+            situacaoTratada = situacaoTratada ? "Ativo" : "Inativo";
+        }
+
+        if (typeof situacaoTratada === 'string' && situacaoTratada.length > 0) {
+            situacaoTratada = situacaoTratada.charAt(0).toUpperCase() + situacaoTratada.slice(1).toLowerCase();
+        }
+
+        // Unifica a propriedade para uso interno do script
+        c.id = colaboradorId;
+        c.situacao = situacaoTratada;
+
+        const colaboradorEncoded = encodeURIComponent(JSON.stringify(c));
+        
+        const badgeClasse = situacaoTratada === 'Ativo' 
+            ? 'bg-success-subtle text-success' 
+            : 'bg-secondary-subtle text-secondary';
+
+        return `
+            <tr class="align-middle">                
+                <td><strong>${c.nome || "Sem Nome"}</strong></td>
+                <td>${c.matricula || "-"}</td>
+                <td>${c.cargos || c.cargo || "-"}</td>
+                <td>${c.email || "-"}</td>
+                <td><span class="badge ${badgeClasse}">${situacaoTratada}</span></td>
+                <td class="text-end">
+                    <button class="btn btn-sm btn-outline-primary me-1 border-0" 
+                            onclick="prepararEdicaoSeguraColaborador('${colaboradorEncoded}')" 
+                            title="Editar colaborador">
+                        <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger border-0" 
+                            onclick="deletarItemGeral('colaboradores', '${colaboradorId}', listarColaboradoresCRUD)" 
+                            title="Excluir colaborador">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+// FUNÇÃO INTERNA: Gerencia o bloqueio dos botões de paginação
+function atualizarControlesPaginacaoColaboradores(totalPaginas) {
+    const btnAnterior = document.getElementById('btn-anterior-colaboradores');
+    const btnProximo = document.getElementById('btn-proximo-colaboradores');
+    const infoPaginacao = document.getElementById('info-paginacao-colaboradores');
+
+    if (infoPaginacao) {
+        infoPaginacao.innerText = `Página ${paginaAtualColaboradores} de ${totalPaginas}`;
+    }
+
+    if (btnAnterior) btnAnterior.disabled = (paginaAtualColaboradores === 1);
+    if (btnProximo) btnProximo.disabled = (paginaAtualColaboradores === totalPaginas);
+}
+
+// =========================================================================
+// 3. SALVAR OU ATUALIZAR CADASTRO (CREATE / UPDATE)
+// =========================================================================
+document.getElementById('formColaboradores')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const campoId = document.getElementById('colab-id');
+    let id = campoId ? campoId.value.toString().trim() : "";
+    
+    if (!id || id === "" || id === "undefined" || id === "null") {
+        id = null;
+    }
+    
+    const nomeInput = document.getElementById('colaboradores-nome')?.value || "";
+    const matriculaInput = document.getElementById('colaboradores-matricula')?.value || "";
+    const cargoInput = document.getElementById('colaboradores-cargo')?.value || "";
+    const emailInput = document.getElementById('colaboradores-email')?.value || "";
+    const situacaoInput = document.getElementById('colaboradores-situacao')?.value || "";
+
+    const url = id ? `${API_URL}/colaboradores/${id}` : `${API_URL}/colaboradores/`;
+    const metodo = id ? 'PUT' : 'POST';
+
+    try {
+        const payloadJSON = {
+            nome: nomeInput,
+            matricula: matriculaInput,
+            cargos: cargoInput, 
+            email: emailInput,
+            situacao: situacaoInput
+        };
+
+        // CORREÇÃO CRÍTICA: Removido atribuição inválida 'options =' de dentro do argumento
+        const res = await fetch(url, {
+            method: metodo,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payloadJSON)
+        });
+        
+        if (res.ok) {
+            e.target.reset(); 
+            if (campoId) campoId.value = ""; // Limpa completamente o id oculto
+            
+            const tituloForm = document.getElementById('titulo-form-colab');
+            if (tituloForm) {
+                tituloForm.innerHTML = '<i class="bi bi-person-plus text-primary me-2"></i>Novo Colaborador';
+            }
+            
+            if (metodo === 'POST') {
+                dispararNotificacao("Novo colaborador cadastrado com sucesso!", "criar");
+            } else {
+                dispararNotificacao("Cadastro de colaborador alterado!", "atualizar");
+            }
+            
+            listarColaboradoresCRUD();
+        } else {
+            const erroApi = await res.json().catch(() => ({}));
+            console.error("Detalhes do erro do servidor:", erroApi);
+            alert(`Erro ao salvar colaborador. Status: ${res.status}`);
+        }
+    } catch (err) { 
+        console.error("Erro no envio:", err);
+        alert("Erro de conexão ao salvar colaborador."); 
+    }
+});
+
+// =========================================================================
+// 4. FUNÇÕES DE AUXÍLIO PARA EDIÇÃO
+// =========================================================================
+window.prepararEdicaoSeguraColaborador = function(colaboradorEncoded) {
+    try {
+        const colaborador = JSON.parse(decodeURIComponent(colaboradorEncoded));
+        prepararEdicaoColaborador(colaborador);
+    } catch (err) {
+        console.error("Erro ao decodificar dados do colaborador:", err);
+    }
+};
+
+function prepararEdicaoColaborador(c) {
+    const campoId = document.getElementById('colab-id');
+    const campoNome = document.getElementById('colaboradores-nome');
+    const campoMatricula = document.getElementById('colaboradores-matricula');
+    const campoCargo = document.getElementById('colaboradores-cargo');
+    const campoEmail = document.getElementById('colaboradores-email');
+    const campoSituacao = document.getElementById('colaboradores-situacao');
+    
+    const idLimpo = (c.id !== undefined ? c.id : (c._id || "")).toString().trim();
+    
+    if (campoId) campoId.value = idLimpo;
+    if (campoNome) campoNome.value = c.nome || "";
+    if (campoMatricula) campoMatricula.value = c.matricula || "";
+    if (campoCargo) campoCargo.value = c.cargos || c.cargo || "";
+    if (campoEmail) campoEmail.value = c.email || "";
+    if (campoSituacao && c.situacao) campoSituacao.value = c.situacao;
+    
+    const tituloForm = document.getElementById('titulo-form-colab');
+    if (tituloForm) {
+        tituloForm.innerHTML = '<i class="bi bi-pencil-square text-warning me-2"></i>Editando Colaborador';
+    }
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// =========================================================================
+// 5. OUVINTES DE EVENTOS DA PÁGINA (DOM)
+// =========================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    // Inicializa a listagem e o select dinâmico
+    listarColaboradoresCRUD();
+    carregarCargosNoSelect();
+
+    // Evento de busca/pesquisa por nome
+    document.getElementById('pesquisa-colaborador')?.addEventListener('input', () => {
+        paginaAtualColaboradores = 1; 
+        filtrarEAtualizarTabelaColaboradores();
+    });
+
+    // Paginação: Botão Anterior
+    document.getElementById('btn-anterior-colaboradores')?.addEventListener('click', () => {
+        if (paginaAtualColaboradores > 1) {
+            paginaAtualColaboradores--;
+            filtrarEAtualizarTabelaColaboradores();
+        }
+    });
+
+    // Paginação: Botão Próximo
+    document.getElementById('btn-proximo-colaboradores')?.addEventListener('click', () => {
+        const totalPaginas = Math.ceil(colaboradoresFiltrados.length / ITENS_POR_PAGINA) || 1;
+        if (paginaAtualColaboradores < totalPaginas) {
+            paginaAtualColaboradores++;
+            filtrarEAtualizarTabelaColaboradores();
+        }
+    });
+});
     
     // -- DEFINIR DATA E HORA DE BRASÍLIA --
      (function() {

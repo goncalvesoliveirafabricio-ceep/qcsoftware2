@@ -185,29 +185,18 @@
 
         <!-- TABELA -->
         <section class="mt-4">
-
-            <div class="cabecalho-secao d-flex justify-content-between align-items-center mb-3">
-
-                <div class="d-flex align-items-center gap-2">
-
-                    <h3 class="text-white mb-0 fw-bold">
-                        Produtos Cadastrados
-                    </h3>
-
-                    <span class="badge bg-light text-dark fw-bold px-3 py-2 fs-6"
-                        id="total-produtos">0</span>
-
+            <div class="row align-items-center mb-4">
+                <div class="col-12 col-md-auto">
+                    <h3 class="text-white mb-0 fw-bold d-inline-block align-middle me-2">Produtos Cadastrados</h3>
+                    <span class="badge bg-light text-dark fw-bold px-3 py-2 fs-6 align-middle" id="total-produtos">$</span>
                 </div>
-
-            </div>
-
-            <div class="mb-3">
-
-                <input type="text"
-                    id="pesquisa-produto"
-                    class="form-control"
-                    placeholder="🔍 Pesquisar produto por nome...">
-
+            
+                <div class="col-12 col-md-5 ms-auto mt-3 mt-md-0">
+                    <div class="position-relative style-busca style-busca-produto shadow-sm rounded">
+                        <input type="text" id="pesquisa-produto" class="form-control w-100 ps-5 shadow-none border-0 bg-body text-body" placeholder="Buscar produtos por nome...">
+                        <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                    </div>
+                </div>
             </div>
 
             <div class="tabela-container card border-0 p-3 shadow-sm bg-body">
