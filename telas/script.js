@@ -1115,7 +1115,8 @@ function renderizarTabelaColaboradores(colaboradores) {
         // Se trouxer string direta ou ID, tratamos adequadamente.
         // =========================================================================
         let nomeCargoExibicao = "-";
-            const cargoBruto = c.cargos ?? c.cargo; 
+            // Procure por esta linha dentro de renderizarTabelaColaboradores:
+            const cargoBruto = c.cargos ?? c.cargo ?? c.id_cargos ?? c.id_cargo; 
 
             if (cargoBruto) {
                 if (typeof cargoBruto === 'object') {
@@ -1186,34 +1187,27 @@ document.getElementById('formColaboradores')?.addEventListener('submit', async (
     const metodo = id ? 'PUT' : 'POST';
 
     try {
-        // =========================================================================
-        // CORREÇÃO DEFINITIVA PARA O ERRO 422 (INTEGER)
-        // Captura o valor do select e força a conversão para Inteiro na base 10
-        // =========================================================================
-        const selectCargo = document.getElementById('colaboradores-cargo');
+        // CORREÇÃO: Busca pelo ID exato ou por qualquer select que contenha "cargo" no ID
+        const selectCargo = document.getElementById('colaboradores-cargo') || document.querySelector('select[id*="cargo"]');
         const valorCargo = selectCargo ? selectCargo.value : "";
         
-        // parseInt converte a string "15" para o número inteiro 15. 
-        // Se estiver vazio, retorna NaN (Not a Number).
+        // Converte o ID selecionado para número inteiro
         const idCargoInt = parseInt(valorCargo, 10);
 
-        // Validação de segurança: se não for um número válido, barra o envio
+        // Alerta de debug caso o valor obtido seja inválido
         if (isNaN(idCargoInt)) {
-            alert("Por favor, selecione um cargo válido antes de salvar.");
-            return; // Impede o envio para a API
+            console.error("Valor capturado no select do cargo:", valorCargo);
+            alert("Erro: Não foi possível identificar o código do cargo selecionado. Verifique o console.");
+            return; 
         }
 
         const payloadJSON = {
             nome: document.getElementById('colaboradores-nome')?.value || "",
             matricula: document.getElementById('colaboradores-matricula')?.value || "",
-            // Envia estritamente como Integer, como a API exige
-            id_cargos: idCargoInt, 
+            id_cargos: idCargoInt, // Enviado perfeitamente como Integer
             email: document.getElementById('colaboradores-email')?.value || "",
             situacao: document.getElementById('colaboradores-situacao')?.value || ""
         };
-
-        // Console log para você auditar o que está indo para a API
-        console.log("Payload sendo enviado para a API:", payloadJSON);
 
         const res = await fetch(url, {
             method: metodo,
@@ -1243,14 +1237,8 @@ document.getElementById('formColaboradores')?.addEventListener('submit', async (
             listarColaboradoresCRUD();
         } else {
             const erroApi = await res.json().catch(() => ({}));
-            console.error("Detalhes do erro 422/500 do servidor:", erroApi);
-            
-            // Tratamento visual melhor para o erro
-            let msgErro = `Erro ao salvar colaborador (Status: ${res.status}).`;
-            if (erroApi.detail) {
-                msgErro += `\nDetalhe da API: ${JSON.stringify(erroApi.detail)}`;
-            }
-            alert(msgErro);
+            console.error("Detalhes do erro do servidor:", erroApi);
+            alert(`Erro ao salvar colaborador. Status do servidor: ${res.status}`);
         }
     } catch (err) { 
         console.error("Erro no envio:", err);
@@ -1290,18 +1278,20 @@ window.prepararEdicaoPorId = function(id) {
     // Varre as possibilidades de onde o ID do cargo possa estar vindo do banco.
     // =========================================================================
     if (campoCargo) {
-        let idCargoEdicao = "";
-        if (c.id_cargos) {
-            idCargoEdicao = c.id_cargos;
-        } else if (c.cargos && typeof c.cargos === 'object') {
-            idCargoEdicao = c.cargos.id_cargos || c.cargos.id;
-        } else if (c.cargo && typeof c.cargo === 'object') {
-            idCargoEdicao = c.cargo.id_cargos || c.cargo.id;
-        } else {
-            idCargoEdicao = c.cargo || "";
-        }
-        campoCargo.value = idCargoEdicao;
+    let idCargoEdicao = "";
+    if (c.id_cargos) {
+        idCargoEdicao = c.id_cargos;
+    } else if (c.id_cargo) { // <-- Adicionado suporte ao singular
+        idCargoEdicao = c.id_cargo;
+    } else if (c.cargos && typeof c.cargos === 'object') {
+        idCargoEdicao = c.cargos.id_cargos || c.cargos.id || c.cargos.id_cargo;
+    } else if (c.cargo && typeof c.cargo === 'object') {
+        idCargoEdicao = c.cargo.id_cargos || c.cargo.id || c.cargo.id_cargo;
+    } else {
+        idCargoEdicao = c.cargo || "";
     }
+    campoCargo.value = idCargoEdicao;
+}
     
     if (campoEmail) campoEmail.value = c.email || "";
     
