@@ -1019,7 +1019,6 @@ document.addEventListener('DOMContentLoaded', () => {
 let todosColaboradores = [];       // Armazena a lista bruta vinda da API
 let colaboradoresFiltrados = [];   // Armazena o resultado da busca por nome
 let paginaAtualColaboradores = 1;  // Controle de paginação exclusivo
-let todosCargos = [];              // CORREÇÃO: Variável global para armazenar os cargos para a listagem
 
 // =========================================================================
 // 1. CARREGAR OPÇÕES DO SELECT DE CARGOS (DINÂMICO)
@@ -1032,14 +1031,8 @@ async function carregarCargosNoSelect() {
         const res = await fetch(`${API_URL}/cargos/`);
         if (res.ok) {
             const cargos = await res.json();
-            todosCargos = cargos; // CORREÇÃO: Salva os cargos na variável global
-
-            // CORREÇÃO: O 'value' do option agora recebe o ID do cargo (c.id ou c.id_cargos) em vez do nome.
             selectCargo.innerHTML = '<option value="">Selecione o cargo</option>' + 
-                cargos.map(c => {
-                    const idCargo = c.id_cargos ?? c.id ?? c._id;
-                    return `<option value="${idCargo}">${c.nome}</option>`;
-                }).join('');
+                cargos.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('');
         }
     } catch (e) {
         console.error("Erro ao carregar cargos para o formulário:", e);
@@ -1116,28 +1109,31 @@ function renderizarTabelaColaboradores(colaboradores) {
             situacaoTratada = situacaoTratada.charAt(0).toUpperCase() + situacaoTratada.slice(1).toLowerCase();
         }
 
-        // Tratamento da exibição do Cargo
+        // =========================================================================
+        // AJUSTADO: Tratamento da exibição do Cargo na tabela
+        // Se a API trouxer um objeto de cargo {id: 1, nome: "Cargo"}, pegamos o nome.
+        // Se trouxer string direta ou ID, tratamos adequadamente.
+        // =========================================================================
         let nomeCargoExibicao = "-";
-        const cargoBruto = c.cargos ?? c.cargo ?? c.id_cargos; // Garantindo que pegue o ID caso a chave seja id_cargos
+            const cargoBruto = c.cargos ?? c.cargo; 
 
-        if (cargoBruto) {
-            if (typeof cargoBruto === 'object') {
-                nomeCargoExibicao = cargoBruto.nome || "-";
-            } else {
-                // CORREÇÃO: Utiliza a variável global 'todosCargos' populada em carregarCargosNoSelect()
-                const cargoEncontrado = todosCargos.find(cargo => {
-                    const idDoCargo = cargo.id_cargos ?? cargo.id ?? cargo._id;
-                    return idDoCargo == cargoBruto;
-                });
-                
-                if (cargoEncontrado) {
-                    nomeCargoExibicao = cargoEncontrado.nome;
+            if (cargoBruto) {
+                if (typeof cargoBruto === 'object') {
+                    nomeCargoExibicao = cargoBruto.nome || "-";
                 } else {
-                    nomeCargoExibicao = `Cargo ${cargoBruto}`; // Fallback
+                    // Se 'cargoBruto' for um ID (como 15 ou 10), procura o objeto correspondente na sua lista de cargos
+                    // Altere 'listaDeCargos' para o nome real da sua variável que guarda os cargos cadastrados
+                    const cargoEncontrado = listaDeCargos.find(cargo => cargo.id == cargoBruto);
+                    
+                    if (cargoEncontrado) {
+                        nomeCargoExibicao = cargoEncontrado.nome;
+                    } else {
+                        nomeCargoExibicao = `Cargo ${cargoBruto}`; // Fallback caso não ache o ID na lista
+                    }
                 }
             }
-        }
 
+        // Salva as propriedades unificadas de volta no objeto para uso no Edit
         c.idUnificado = colaboradorId;
         c.situacaoTratada = situacaoTratada;
 
@@ -1190,13 +1186,17 @@ document.getElementById('formColaboradores')?.addEventListener('submit', async (
     const metodo = id ? 'PUT' : 'POST';
 
     try {
+        // =========================================================================
+        // AJUSTADO: Captura o ID do cargo selecionado no <select>
+        // Caso o backend espere um número, adicionamos a conversão Number(...) por segurança
+        // =========================================================================
         const valorCargo = document.getElementById('colaboradores-cargo')?.value || "";
-        const idCargoTratado = valorCargo ? Number(valorCargo) : null; // Agora valorCargo contém o ID, então Number() funcionará perfeitamente.
+        const idCargoTratado = valorCargo ? Number(valorCargo) : null; 
 
         const payloadJSON = {
             nome: document.getElementById('colaboradores-nome')?.value || "",
             matricula: document.getElementById('colaboradores-matricula')?.value || "",
-            id_cargos: idCargoTratado,
+            id_cargos: idCargoTratado, // Enviado como ID numérico para relacionar tabelas
             email: document.getElementById('colaboradores-email')?.value || "",
             situacao: document.getElementById('colaboradores-situacao')?.value || ""
         };
@@ -1223,7 +1223,7 @@ document.getElementById('formColaboradores')?.addEventListener('submit', async (
                 const mensagem = metodo === 'POST' ? "Novo colaborador cadastrado com sucesso!" : "Cadastro de colaborador alterado!";
                 dispararNotificacao(mensagem, acao);
             } else {
-                alert(id ? "Cadastro atualizado com sucesso!" : "Colaborador cadastrado com sucesso!");
+                alert(id ? "Cadastro updated com sucesso!" : "Colaborador cadastrado com sucesso!");
             }
             
             listarColaboradoresCRUD();
@@ -1265,6 +1265,10 @@ window.prepararEdicaoPorId = function(id) {
     if (campoNome) campoNome.value = c.nome || "";
     if (campoMatricula) campoMatricula.value = c.matricula || "";
     
+    // =========================================================================
+    // AJUSTADO: Vincula o cargo correto de volta ao <select> no formulário
+    // Varre as possibilidades de onde o ID do cargo possa estar vindo do banco.
+    // =========================================================================
     if (campoCargo) {
         let idCargoEdicao = "";
         if (c.id_cargos) {
@@ -1315,6 +1319,7 @@ window.deletarItemGeral = async function(endpoint, id) {
                 dispararNotificacao("Registro excluído com sucesso!", "excluir");
             }
             
+            // Recarrega a tabela correta dependendo do endpoint
             if (endpoint === 'colaboradores') {
                 listarColaboradoresCRUD();
             }
@@ -1331,10 +1336,9 @@ window.deletarItemGeral = async function(endpoint, id) {
 // =========================================================================
 // 6. OUVINTES DE EVENTOS DA PÁGINA (DOM)
 // =========================================================================
-document.addEventListener('DOMContentLoaded', async () => {
-    // CORREÇÃO: Forçar o carregamento dos cargos PRIMEIRO, depois listar os colaboradores
-    await carregarCargosNoSelect();
+document.addEventListener('DOMContentLoaded', () => {
     listarColaboradoresCRUD();
+    carregarCargosNoSelect();
 
     document.getElementById('pesquisa-colaborador')?.addEventListener('input', () => {
         paginaAtualColaboradores = 1; 
