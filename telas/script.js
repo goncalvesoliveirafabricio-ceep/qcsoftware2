@@ -432,9 +432,34 @@ function filtrarEAtualizarTabelaCargos() {
     const termoPesquisa = document.getElementById('pesquisa-cargo')?.value.toLowerCase() || "";
     
     // Filtra pelo nome do cargo digitado
-    cargosFiltrados = todosCargos.filter(c => 
-        c.nome && c.nome.toLowerCase().includes(termoPesquisa)
+cargosFiltrados = todosCargos.filter(c =>
+    c.nome && c.nome.toLowerCase().includes(termoPesquisa)
+);
+
+// ===============================
+// ORDENAÇÃO ALFABÉTICA
+// ===============================
+cargosFiltrados.sort((a, b) =>
+    a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' })
+);
+
+// ===============================
+// ÚLTIMO CADASTRADO NO TOPO
+// ===============================
+
+// Pega o último item cadastrado da API
+const ultimoCadastro = todosCargos[todosCargos.length - 1];
+
+if (ultimoCadastro) {
+
+    // Remove ele da posição atual
+    cargosFiltrados = cargosFiltrados.filter(
+        c => c.id_cargos !== ultimoCadastro.id_cargos
     );
+
+    // Adiciona no topo
+    cargosFiltrados.unshift(ultimoCadastro);
+}
 
     const totalPaginas = Math.ceil(cargosFiltrados.length / ITENS_POR_PAGINA) || 1;
     
@@ -1025,16 +1050,17 @@ let listaDeCargos = [];            // CORREÇÃO: Declarada globalmente para evi
 // 1. CARREGAR OPÇÕES DO SELECT DE CARGOS (DINÂMICO)
 // =========================================================================
 async function carregarCargosNoSelect() {
-    const selectCargo = document.getElementById('colaboradores-cargo') || document.querySelector('select[id*="cargo"]');
+    // CORREÇÃO: Adicionado o :not([id*="situacao"]) para impedir que ele altere o campo Ativo/Inativo na tela de Cargos
+    const selectCargo = document.getElementById('colaboradores-cargo') || document.querySelector('select[id*="cargo"]:not([id*="situacao"])');
     if (!selectCargo) return;
 
     try {
         const res = await fetch(`${API_URL}/cargos/`);
         if (res.ok) {
             const cargos = await res.json();
-            listaDeCargos = cargos; // CORREÇÃO: Salva os cargos para uso na tabela
+            listaDeCargos = cargos; // Salva os cargos para uso na tabela
             
-            // CORREÇÃO: Passando o ID numérico para o 'value' em vez do nome. Isso resolve o erro 422.
+            // Passando o ID numérico para o 'value' em vez do nome.
             selectCargo.innerHTML = '<option value="">Selecione o cargo</option>' + 
                 cargos.map(c => {
                     const idCargo = c.id_cargos ?? c.id ?? c._id;
