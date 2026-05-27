@@ -1019,6 +1019,7 @@ document.addEventListener('DOMContentLoaded', () => {
 let todosColaboradores = [];       // Armazena a lista bruta vinda da API
 let colaboradoresFiltrados = [];   // Armazena o resultado da busca por nome
 let paginaAtualColaboradores = 1;  // Controle de paginação exclusivo
+let todosCargos = [];              // <-- Certifique-se de que esta linha existe aqui no topo!
 
 // =========================================================================
 // 1. CARREGAR OPÇÕES DO SELECT DE CARGOS (DINÂMICO)
@@ -1090,7 +1091,7 @@ function renderizarTabelaColaboradores(colaboradores) {
     }
 
     tabela.innerHTML = colaboradores.map(c => {
-        // Padronização do ID
+        // Padronização do ID do Colaborador
         let idBruto = c.id_colaboradores ?? c.id ?? c._id;
         const colaboradorId = idBruto !== undefined ? idBruto.toString().trim() : "";
 
@@ -1110,29 +1111,28 @@ function renderizarTabelaColaboradores(colaboradores) {
         }
 
         // =========================================================================
-        // AJUSTADO: Tratamento da exibição do Cargo na tabela
-        // Se a API trouxer um objeto de cargo {id: 1, nome: "Cargo"}, pegamos o nome.
-        // Se trouxer string direta ou ID, tratamos adequadamente.
+        // CORREÇÃO DO ERRO: Utiliza 'todosCargos' em vez de 'listaDeCargos'
         // =========================================================================
         let nomeCargoExibicao = "-";
-            // Procure por esta linha dentro de renderizarTabelaColaboradores:
-            const cargoBruto = c.cargos ?? c.cargo ?? c.id_cargos ?? c.id_cargo; 
+        const cargoBruto = c.cargos ?? c.cargo ?? c.id_cargos ?? c.id_cargo; 
 
-            if (cargoBruto) {
-                if (typeof cargoBruto === 'object') {
-                    nomeCargoExibicao = cargoBruto.nome || "-";
+        if (cargoBruto) {
+            if (typeof cargoBruto === 'object') {
+                nomeCargoExibicao = cargoBruto.nome || "-";
+            } else {
+                // Procurando o cargo na variável global correta
+                const cargoEncontrado = todosCargos.find(cargo => {
+                    const idDoCargo = cargo.id_cargos ?? cargo.id ?? cargo._id;
+                    return idDoCargo == cargoBruto;
+                });
+                
+                if (cargoEncontrado) {
+                    nomeCargoExibicao = cargoEncontrado.nome;
                 } else {
-                    // Se 'cargoBruto' for um ID (como 15 ou 10), procura o objeto correspondente na sua lista de cargos
-                    // Altere 'listaDeCargos' para o nome real da sua variável que guarda os cargos cadastrados
-                    const cargoEncontrado = listaDeCargos.find(cargo => cargo.id == cargoBruto);
-                    
-                    if (cargoEncontrado) {
-                        nomeCargoExibicao = cargoEncontrado.nome;
-                    } else {
-                        nomeCargoExibicao = `Cargo ${cargoBruto}`; // Fallback caso não ache o ID na lista
-                    }
+                    nomeCargoExibicao = `Cargo ${cargoBruto}`; // Fallback se o ID não for achado na lista
                 }
             }
+        }
 
         // Salva as propriedades unificadas de volta no objeto para uso no Edit
         c.idUnificado = colaboradorId;
