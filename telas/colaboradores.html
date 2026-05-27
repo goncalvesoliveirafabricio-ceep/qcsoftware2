@@ -134,41 +134,54 @@
     </section>
     
     <section class="mt-4">
-        <div class="row align-items-center mb-4">
-            <div class="col-12 col-md-auto">
-                <h3 class="text-white mb-0 fw-bold d-inline-block align-middle me-2">Colaboradores Cadastrados</h3>
-                <span class="badge bg-light text-dark fw-bold px-3 py-2 fs-6 align-middle" id="total-colaboradores">0</span>
-            </div>
-        
-            <div class="col-12 col-md-5 ms-auto mt-3 mt-md-0">
-                <div class="position-relative style-busca style-busca-colaborador shadow-sm rounded">
-                    <input type="text" id="pesquisa-colaborador" class="form-control w-100 ps-5 shadow-none border-0 bg-body text-body" placeholder="Buscar colaboradores por nome...">
-                    <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
-                </div>
-            </div>
+    <div class="row align-items-center mb-4">
+        <div class="col-12 col-md-auto">
+            <h3 class="text-white mb-0 fw-bold d-inline-block align-middle me-2">Colaboradores Cadastrados</h3>
+            <span class="badge bg-light text-dark fw-bold px-3 py-2 fs-6 align-middle" id="total-colaboradores">0</span>
         </div>
         
-        <div class="tabela-container card border-0 p-3 shadow-sm bg-body">
-            <div class="table-responsive">
-                <table class="tabela table table-hover align-middle mb-0 text-body" id="tabela-colaboradores-recentes">
-                    <thead class="table-light fw-bold">
-                        <tr>                                
-                            <th>Nome</th>
-                            <th>Matrícula</th>
-                            <th>Cargo</th>
-                            <th>Email</th>
-                            <th>Situação</th>                                
-                            <th class="text-end">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tabela-colaboradores"> 
-                        <tr id="loading-row">
-                            <td colspan="6" class="text-center py-4 text-muted">
-                                ⌛ Carregando colaboradores...
-                            </td>
-                        </tr>
-                    </tbody>
-                </table> </div> </div> </section>
+        <div class="col-12 col-md-5 ms-auto mt-3 mt-md-0">
+            <div class="position-relative style-busca style-busca-colaborador shadow-sm rounded">
+                <input type="text" id="pesquisa-colaborador" class="form-control w-100 ps-5 shadow-none border-0 bg-body text-body" placeholder="Buscar colaboradores por nome...">
+                <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tabela-container card border-0 p-3 shadow-sm bg-body">
+        <div class="table-responsive">
+            <table class="tabela table table-hover align-middle mb-0 text-body" id="tabela-colaboradores-recentes">
+                <thead class="table-light fw-bold">
+                    <tr>                                
+                        <th>Nome</th>
+                        <th>Matrícula</th>
+                        <th>Cargo</th>
+                        <th>Email</th>
+                        <th>Situação</th>                                
+                        <th class="text-end">Ações</th>
+                    </tr>
+                </thead>
+                <tbody id="tabela-colaboradores"> 
+                    <tr id="loading-row">
+                        <td colspan="6" class="text-center py-4 text-muted">
+                            ⌛ Carregando colaboradores...
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+            <button id="btn-anterior-colaboradores" class="btn btn-sm btn-outline-secondary border-0" disabled>
+                <i class="bi bi-chevron-left me-1"></i> Anterior
+            </button>
+            <span id="info-paginacao-colaboradores" class="text-muted small fw-medium">Página 1</span>
+            <button id="btn-proximo-colaboradores" class="btn btn-sm btn-outline-secondary border-0" disabled>
+                Próximo <i class="bi bi-chevron-right ms-1"></i>
+            </button>
+        </div>
+    </div>
+</section>
             
             <div class="d-flex justify-content-between align-items-center mt-4">
                 <button class="btn btn-sm btn-outline-secondary" id="btn-anterior-colaboradores" disabled>
