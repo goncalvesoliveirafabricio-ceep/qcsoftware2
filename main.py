@@ -330,13 +330,13 @@ def deletar_permissao(id: int, db: Session = Depends(get_db)):
     return {"status": "Permissão deletada com sucesso"}
 
 # ==========================================
-# 8. TELAS
+# 8. TELA
 # ==========================================
-@app.get("/telas/", response_model=List[schemas.Tela], tags=["Telas"])
-def listar_telas(db: Session = Depends(get_db)):
+@app.get("/tela/", response_model=List[schemas.Tela], tags=["Tela"])
+def listar_tela(db: Session = Depends(get_db)):
     return db.query(models.Tela).all()
 
-@app.post("/telas/", response_model=schemas.Tela, tags=["Telas"])
+@app.post("/tela/", response_model=schemas.Tela, tags=["Tela"])
 def criar_tela(obj: schemas.TelaCreate, db: Session = Depends(get_db)):
     novo = models.Tela(**obj.model_dump())
     db.add(novo)
@@ -344,15 +344,15 @@ def criar_tela(obj: schemas.TelaCreate, db: Session = Depends(get_db)):
     db.refresh(novo)
     return novo
 
-@app.put("/telas/{id}", response_model=schemas.Tela, tags=["Telas"])
+@app.put("/tela/{id}", response_model=schemas.Tela, tags=["Tela"])
 def atualizar_tela(id: int, obj: schemas.TelaCreate, db: Session = Depends(get_db)):
-    db_obj = db.query(models.Tela).filter(models.Tela.id_telas == id).first()
+    db_obj = db.query(models.Tela).filter(models.Tela.id_tela == id).first()
     if not db_obj: raise HTTPException(404, "Tela não encontrada")
     return update_item(db, db_obj, obj)
 
-@app.delete("/telas/{id}", tags=["Telas"])
+@app.delete("/tela/{id}", tags=["Tela"])
 def deletar_tela(id: int, db: Session = Depends(get_db)):
-    db_obj = db.query(models.Tela).filter(models.Tela.id_telas == id).first()
+    db_obj = db.query(models.Tela).filter(models.Tela.id_tela == id).first()
     if not db_obj: raise HTTPException(404, "Tela não encontrada")
     db.delete(db_obj)
     db.commit()
