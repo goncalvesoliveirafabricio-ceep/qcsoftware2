@@ -13,7 +13,7 @@ const ITENS_POR_PAGINA = 10;
 async function listarProdutosCRUD() {
     try {
         const res = await fetch(`${API_URL}/produtos/`);
-        
+            
         if (!res.ok) {
             throw new Error(`Erro no servidor: Status ${res.status}`);
         }
@@ -1019,6 +1019,7 @@ document.addEventListener('DOMContentLoaded', () => {
 let todosColaboradores = [];       // Armazena a lista bruta vinda da API
 let colaboradoresFiltrados = [];   // Armazena o resultado da busca por nome
 let paginaAtualColaboradores = 1;  // Controle de paginação exclusivo
+let listaDeCargos = [];            // CORREÇÃO: Declarada globalmente para evitar o erro "is not defined"
 
 // =========================================================================
 // 1. CARREGAR OPÇÕES DO SELECT DE CARGOS (DINÂMICO)
@@ -1031,8 +1032,14 @@ async function carregarCargosNoSelect() {
         const res = await fetch(`${API_URL}/cargos/`);
         if (res.ok) {
             const cargos = await res.json();
+            listaDeCargos = cargos; // CORREÇÃO: Salva os cargos para uso na tabela
+            
+            // CORREÇÃO: Passando o ID numérico para o 'value' em vez do nome. Isso resolve o erro 422.
             selectCargo.innerHTML = '<option value="">Selecione o cargo</option>' + 
-                cargos.map(c => `<option value="${c.nome}">${c.nome}</option>`).join('');
+                cargos.map(c => {
+                    const idCargo = c.id_cargos ?? c.id ?? c._id;
+                    return `<option value="${idCargo}">${c.nome}</option>`;
+                }).join('');
         }
     } catch (e) {
         console.error("Erro ao carregar cargos para o formulário:", e);
@@ -1109,30 +1116,26 @@ function renderizarTabelaColaboradores(colaboradores) {
             situacaoTratada = situacaoTratada.charAt(0).toUpperCase() + situacaoTratada.slice(1).toLowerCase();
         }
 
-        // =========================================================================
-        // AJUSTADO: Tratamento da exibição do Cargo na tabela
-        // Se a API trouxer um objeto de cargo {id: 1, nome: "Cargo"}, pegamos o nome.
-        // Se trouxer string direta ou ID, tratamos adequadamente.
-        // =========================================================================
         let nomeCargoExibicao = "-";
-            // Procure por esta linha dentro de renderizarTabelaColaboradores:
-            const cargoBruto = c.cargos ?? c.cargo ?? c.id_cargos ?? c.id_cargo; 
+        const cargoBruto = c.cargos ?? c.cargo ?? c.id_cargos ?? c.id_cargo; 
 
-            if (cargoBruto) {
-                if (typeof cargoBruto === 'object') {
-                    nomeCargoExibicao = cargoBruto.nome || "-";
+        if (cargoBruto) {
+            if (typeof cargoBruto === 'object') {
+                nomeCargoExibicao = cargoBruto.nome || "-";
+            } else {
+                // CORREÇÃO: Agora 'listaDeCargos' existe e o ID será devidamente cruzado
+                const cargoEncontrado = listaDeCargos.find(cargo => {
+                    const idCargo = cargo.id_cargos ?? cargo.id ?? cargo._id;
+                    return idCargo == cargoBruto;
+                });
+                
+                if (cargoEncontrado) {
+                    nomeCargoExibicao = cargoEncontrado.nome;
                 } else {
-                    // Se 'cargoBruto' for um ID (como 15 ou 10), procura o objeto correspondente na sua lista de cargos
-                    // Altere 'listaDeCargos' para o nome real da sua variável que guarda os cargos cadastrados
-                    const cargoEncontrado = listaDeCargos.find(cargo => cargo.id == cargoBruto);
-                    
-                    if (cargoEncontrado) {
-                        nomeCargoExibicao = cargoEncontrado.nome;
-                    } else {
-                        nomeCargoExibicao = `Cargo ${cargoBruto}`; // Fallback caso não ache o ID na lista
-                    }
+                    nomeCargoExibicao = `Cargo ${cargoBruto}`; // Fallback caso não ache o ID na lista
                 }
             }
+        }
 
         // Salva as propriedades unificadas de volta no objeto para uso no Edit
         c.idUnificado = colaboradorId;
@@ -1187,14 +1190,12 @@ document.getElementById('formColaboradores')?.addEventListener('submit', async (
     const metodo = id ? 'PUT' : 'POST';
 
     try {
-        // CORREÇÃO: Busca pelo ID exato ou por qualquer select que contenha "cargo" no ID
         const selectCargo = document.getElementById('colaboradores-cargo') || document.querySelector('select[id*="cargo"]');
         const valorCargo = selectCargo ? selectCargo.value : "";
         
-        // Converte o ID selecionado para número inteiro
+        // Agora isso vai funcionar pois valorCargo será um número (ex: "5"), e não um nome (ex: "Gerente")
         const idCargoInt = parseInt(valorCargo, 10);
 
-        // Alerta de debug caso o valor obtido seja inválido
         if (isNaN(idCargoInt)) {
             console.error("Valor capturado no select do cargo:", valorCargo);
             alert("Erro: Não foi possível identificar o código do cargo selecionado. Verifique o console.");
@@ -1204,7 +1205,7 @@ document.getElementById('formColaboradores')?.addEventListener('submit', async (
         const payloadJSON = {
             nome: document.getElementById('colaboradores-nome')?.value || "",
             matricula: document.getElementById('colaboradores-matricula')?.value || "",
-            id_cargos: idCargoInt, // Enviado perfeitamente como Integer
+            id_cargos: idCargoInt, 
             email: document.getElementById('colaboradores-email')?.value || "",
             situacao: document.getElementById('colaboradores-situacao')?.value || ""
         };
@@ -1273,25 +1274,21 @@ window.prepararEdicaoPorId = function(id) {
     if (campoNome) campoNome.value = c.nome || "";
     if (campoMatricula) campoMatricula.value = c.matricula || "";
     
-    // =========================================================================
-    // AJUSTADO: Vincula o cargo correto de volta ao <select> no formulário
-    // Varre as possibilidades de onde o ID do cargo possa estar vindo do banco.
-    // =========================================================================
     if (campoCargo) {
-    let idCargoEdicao = "";
-    if (c.id_cargos) {
-        idCargoEdicao = c.id_cargos;
-    } else if (c.id_cargo) { // <-- Adicionado suporte ao singular
-        idCargoEdicao = c.id_cargo;
-    } else if (c.cargos && typeof c.cargos === 'object') {
-        idCargoEdicao = c.cargos.id_cargos || c.cargos.id || c.cargos.id_cargo;
-    } else if (c.cargo && typeof c.cargo === 'object') {
-        idCargoEdicao = c.cargo.id_cargos || c.cargo.id || c.cargo.id_cargo;
-    } else {
-        idCargoEdicao = c.cargo || "";
+        let idCargoEdicao = "";
+        if (c.id_cargos) {
+            idCargoEdicao = c.id_cargos;
+        } else if (c.id_cargo) { 
+            idCargoEdicao = c.id_cargo;
+        } else if (c.cargos && typeof c.cargos === 'object') {
+            idCargoEdicao = c.cargos.id_cargos || c.cargos.id || c.cargos.id_cargo;
+        } else if (c.cargo && typeof c.cargo === 'object') {
+            idCargoEdicao = c.cargo.id_cargos || c.cargo.id || c.cargo.id_cargo;
+        } else {
+            idCargoEdicao = c.cargo || "";
+        }
+        campoCargo.value = idCargoEdicao;
     }
-    campoCargo.value = idCargoEdicao;
-}
     
     if (campoEmail) campoEmail.value = c.email || "";
     
