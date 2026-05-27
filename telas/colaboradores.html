@@ -78,59 +78,61 @@
     </div>
 
     <section class="mb-4">            
-        <div class="col-12">
-            <div class="card shadow-sm p-4 border-0 bg-body">
-                
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h4 class="mb-0 fw-bold text-body" id="titulo-form">
-                        <i class="sidebar-texto fas fa-user me-3"></i> Novo Colaborador
-                    </h4>
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm p-4 border-0 bg-body">
                     
-                    <div class="d-flex gap-2">
-                        <button type="submit" form="formCliente" class="btn btn-success px-4 fw-bold">
-                            💾 Salvar
-                        </button>
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="mb-0 fw-bold text-body" id="titulo-form-colab">
+                            <i class="sidebar-texto fas fa-user me-3"></i> Novo Colaborador
+                        </h4>
+                        
+                        <div class="d-flex gap-2">
+                            <button type="submit" form="formColaboradores" class="btn btn-success px-4 fw-bold">
+                                <i class="bi bi-floppy"></i> Salvar
+                            </button>
+                        </div>
                     </div>
+                    
+                    <form id="formColaboradores" class="row g-3 align-items-end">
+                        <input type="hidden" id="colab-id">
+                        
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold text-body">Nome</label>
+                            <input type="text" id="colaboradores-nome" class="form-control bg-body text-body shadow-none" required placeholder="Ex: Ana Silva, João Souza...">
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold text-body">Matrícula</label>
+                            <input type="text" id="colaboradores-matricula" class="form-control bg-body text-body shadow-none" placeholder="Ex: 12345...">
+                        </div>
+        
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold text-body">Cargos</label>
+                            <select class="form-select bg-body text-body shadow-none" id="colaboradores-cargo">
+                                <option value="">Selecione o cargo...</option>
+                            </select>
+                        </div>
+        
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold text-body">Email</label>
+                            <input type="email" id="colaboradores-email" class="form-control bg-body text-body shadow-none" placeholder="Ex: ana.silva@email.com...">
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold text-body">Situação</label>
+                            <select class="form-select bg-body text-body shadow-none" id="colaboradores-situacao">
+                                <option value="Ativo">Ativo</option>
+                                <option value="Inativo">Inativo</option>
+                            </select>
+                        </div>
+                    </form>
+                    
                 </div>
-                
-                <form id="formCliente" class="row g-3 align-items-end">
-                    <input type="hidden" id="cli-id">
-                    
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold text-body">Nome</label>
-                        <input type="text" id="cli-nome" class="form-control bg-body text-body shadow-none" required placeholder="Ex: Ana Silva, João Souza...">
-                    </div>
-                    
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold text-body">Matrícula</label>
-                        <input type="text" id="cli-tel" class="form-control bg-body text-body shadow-none" placeholder="Ex: 1, 2, 3...">
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold text-body">Cargos</label>
-                        <select class="form-select bg-body text-body shadow-none" id="cargos-nome">
-                            <option value="">Selecione o cargo...</option>
-                        </select>
-                    </div>
-
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold text-body">Email</label>
-                        <input type="text" id="cli-tel" class="form-control bg-body text-body shadow-none" placeholder="Ex: ana.silva@email.com, joao.souza@email.com...">
-                    </div>
-                    
-                    <div class="col-md-4">
-                        <label class="form-label fw-semibold text-body">Situação</label>
-                        <select class="form-select bg-body text-body shadow-none" id="cli-situacao">
-                            <option value="Ativo">Ativo</option>
-                            <option value="Inativo">Inativo</option>
-                        </select>
-                    </div>
-                </form>
-                
             </div>
         </div>
     </section>
-
+    
     <section class="mt-4">
         <div class="row align-items-center mb-4">
             <div class="col-12 col-md-auto">
@@ -139,8 +141,8 @@
             </div>
         
             <div class="col-12 col-md-5 ms-auto mt-3 mt-md-0">
-                <div class="position-relative style-busca style-busca-colaboradores shadow-sm rounded">
-                    <input type="text" id="pesquisa-colaboradores" class="form-control w-100 ps-5 shadow-none border-0 bg-body text-body" placeholder="Buscar colaboradores por nome...">
+                <div class="position-relative style-busca style-busca-colaborador shadow-sm rounded">
+                    <input type="text" id="pesquisa-colaborador" class="form-control w-100 ps-5 shadow-none border-0 bg-body text-body" placeholder="Buscar colaboradores por nome...">
                     <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
                 </div>
             </div>
@@ -153,31 +155,29 @@
                         <tr>                                
                             <th>Nome</th>
                             <th>Matrícula</th>
-                            <th>Cargos</th>
+                            <th>Cargo</th>
                             <th>Email</th>
                             <th>Situação</th>                                
                             <th class="text-end">Ações</th>
                         </tr>
                     </thead>
-                    <tbody id="corpo-tabela-colaboradores"> <tr id="loading-row">
+                    <tbody id="tabela-colaboradores"> 
+                        <tr id="loading-row">
                             <td colspan="6" class="text-center py-4 text-muted">
                                 ⌛ Carregando colaboradores...
                             </td>
                         </tr>
                     </tbody>
-                </table>
-            </div>
-    
-            <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
-                <span class="text-muted small" id="info-paginacao-colaboradores">Página 1 de 1</span>
-                <div>
-                    <button class="btn btn-sm btn-outline-secondary me-1" id="btn-anterior-colaboradores" disabled>
-                        <i class="bi bi-chevron-left"></i> Anterior
-                    </button>
-                    <button class="btn btn-sm btn-outline-secondary" id="btn-proximo-colaboradores" disabled>
-                        Próximo <i class="bi bi-chevron-right"></i>
-                    </button>
-                </div>
+                </table> </div> </div> </section>
+            
+            <div class="d-flex justify-content-between align-items-center mt-4">
+                <button class="btn btn-sm btn-outline-secondary" id="btn-anterior-colaboradores" disabled>
+                    <i class="bi bi-chevron-left"></i> Anterior
+                </button>
+                <span id="info-paginacao-colaboradores" class="text-muted small">Página 1 de 1</span>
+                <button class="btn btn-sm btn-outline-secondary" id="btn-proximo-colaboradores" disabled>
+                    Próximo <i class="bi bi-chevron-right"></i>
+                </button>
             </div>
         </div>
     </section>
