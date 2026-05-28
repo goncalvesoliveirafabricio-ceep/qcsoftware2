@@ -89,6 +89,7 @@ class ColaboradorBase(BaseModel):
     matricula: int
     id_cargos: int
     email: Optional[EmailStr] = None
+    ativo: Optional[bool] = True # <--- Adicione aqui com valor padrão True
 
 class ColaboradorCreate(ColaboradorBase):
     pass
@@ -99,9 +100,6 @@ class ColaboradorUpdate(BaseModel):
     id_cargos: Optional[int] = None
     email: Optional[EmailStr] = None
     ativo: Optional[bool] = None
-
-class Colaborador(ColaboradorBase, TimestampMixin):
-    id_colaboradores: int
 
 # --- USUÁRIOS ---
 class UsuarioBase(BaseModel):

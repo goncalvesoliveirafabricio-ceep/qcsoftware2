@@ -264,9 +264,32 @@ def criar_colaborador(obj: schemas.ColaboradorCreate, db: Session = Depends(get_
     return novo  
 
 @app.put("/colaboradores/{id}", response_model=schemas.Colaborador, tags=["Colaboradores"])
-def atualizar_colaborador(id: int, obj: schemas.ColaboradorCreate, db: Session = Depends(get_db)):
+def atualizar_colaborador(id: int, obj: schemas.ColaboradorUpdate, db: Session = Depends(get_db)):
+    # 1. Busca o colaborador no banco pelo ID correto
     db_obj = db.query(models.Colaborador).filter(models.Colaborador.id_colaboradores == id).first()
-    return update_item(db, db_obj, obj)
+    
+    if not db_obj:
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="Colaborador não encontrado")
+    
+    # 2. Atualiza apenas os campos que foram enviados no Payload do front-end
+    if obj.nome is not None:
+        db_obj.nome = obj.nome
+    if obj.matricula is not None:
+        db_obj.matricula = obj.matricula
+    if obj.id_cargos is not None:
+        db_obj.id_cargos = obj.id_cargos
+    if obj.email is not None:
+        db_obj.email = obj.email
+        
+    # 3. CORREÇÃO CRÍTICA: Atualiza o booleano 'ativo' mesmo se ele for False
+    if obj.ativo is not None:
+        db_obj.ativo = obj.ativo
+
+    # 4. Grava em definitivo no banco de dados
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
 
 @app.delete("/colaboradores/{id}", tags=["Colaboradores"])
 def deletar_colaborador(id: int, db: Session = Depends(get_db)):
