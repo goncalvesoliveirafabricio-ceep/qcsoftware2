@@ -1092,6 +1092,11 @@ async function listarColaboradoresCRUD() {
         if (tabela) {
             tabela.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">⚠️ Erro ao carregar colaboradores.<br><small class="text-muted">Motivo: ${e.message}</small></td></tr>`;
         }
+        
+        // Alerta visual de falha no carregamento dos dados
+        if (typeof dispararNotificacao === "function") {
+            dispararNotificacao("Não foi possível carregar a lista de colaboradores.", "erro");
+        }
     }
 }
 
@@ -1135,12 +1140,22 @@ function renderizarTabelaColaboradores(colaboradores) {
                 </tr>`;
         }
 
-        // Padronização da Situação
-        let situacaoTratada = c.ativo !== undefined ? c.ativo : (c.situacao ?? "Ativo");
-        if (typeof situacaoTratada === 'boolean') situacaoTratada = situacaoTratada ? "Ativo" : "Inativo";
-        if (typeof situacaoTratada === 'string' && situacaoTratada.length > 0) {
-            situacaoTratada = situacaoTratada.charAt(0).toUpperCase() + situacaoTratada.slice(1).toLowerCase();
-        }
+        // =========================================================================
+        // PADRONIZAÇÃO DA SITUAÇÃO (SEM MEXER NO ESTILO DO BADGE - COMPATIBILIDADE TOTAL)
+        // =========================================================================
+        // 1. Identifica o estado lógico real (verdadeiro ou falso) de forma rápida
+        const registroEstaAtivo = c.ativo === true || c.ativo === "true" || 
+                                  (c.ativo === undefined && (c.situacao === "Ativo" || String(c.situacao).toLowerCase() === "ativo")) ||
+                                  (c.ativo === undefined && c.situacao === undefined);
+
+        // 2. Define o texto de exibição exato ("Ativo" ou "Inativo")
+        let situacaoTratada = registroEstaAtivo ? "Ativo" : "Inativo";
+
+        // 3. Salva os dados tratados diretamente no objeto 'c'
+        // Isso garante que o formulário de edição consiga ler o valor correto para mudar para Inativo
+        c.situacaoTratada = situacaoTratada;
+        c.idUnificado = colaboradorId;
+        c.ativo = registroEstaAtivo;
 
         let nomeCargoExibicao = "-";
         const cargoBruto = c.cargos ?? c.cargo ?? c.id_cargos ?? c.id_cargo; 
@@ -1177,7 +1192,7 @@ function renderizarTabelaColaboradores(colaboradores) {
                 <td>${c.email || "-"}</td>
                 <td><span class="badge ${badgeClasse}">${situacaoTratada}</span></td>
                 <td class="text-end">
-                    <button class="btn btn-sm btn-outline-primary me-1 border-0" 
+                    <button class="btn btn-sm btn-outline-primary me-1 border-0"                     
                             onclick="prepararEdicaoPorId('${colaboradorId}')" 
                             title="Editar colaborador">
                         <i class="bi bi-pencil"></i>
@@ -1218,23 +1233,32 @@ document.getElementById('formColaboradores')?.addEventListener('submit', async (
     try {
         const selectCargo = document.getElementById('colaboradores-cargo') || document.querySelector('select[id*="cargo"]');
         const valorCargo = selectCargo ? selectCargo.value : "";
-        
-        // Agora isso vai funcionar pois valorCargo será um número (ex: "5"), e não um nome (ex: "Gerente")
         const idCargoInt = parseInt(valorCargo, 10);
 
         if (isNaN(idCargoInt)) {
             console.error("Valor capturado no select do cargo:", valorCargo);
-            alert("Erro: Não foi possível identificar o código do cargo selecionado. Verifique o console.");
+            if (typeof dispararNotificacao === "function") {
+                dispararNotificacao("Selecione um cargo válido para o colaborador.", "erro");
+            } else {
+                alert("Erro: Não foi possível identificar o código do cargo selecionado.");
+            }
             return; 
         }
 
-        const payloadJSON = {
-            nome: document.getElementById('colaboradores-nome')?.value || "",
-            matricula: document.getElementById('colaboradores-matricula')?.value || "",
-            id_cargos: idCargoInt, 
-            email: document.getElementById('colaboradores-email')?.value || "",
-            situacao: document.getElementById('colaboradores-situacao')?.value || ""
-        };
+        // 1. Captura o valor string ("true" ou "false") do select
+            const valorSituacaoTela = document.getElementById('colaboradores-situacao')?.value;
+
+            // 2. Transforma estritamente em um Booleano real
+            const ehAtivoBoolean = (valorSituacaoTela === "true");
+
+            // 3. Monta o payload limpo para a sua API
+            const payloadJSON = {
+                nome: document.getElementById('colaboradores-nome')?.value || "",
+                matricula: parseInt(document.getElementById('colaboradores-matricula')?.value, 10) || 0,
+                id_cargos: idCargoInt, 
+                email: document.getElementById('colaboradores-email')?.value || "",
+                ativo: ehAtivoBoolean // Envia true ou false nativo (lógico) para o banco
+            };
 
         const res = await fetch(url, {
             method: metodo,
@@ -1244,32 +1268,48 @@ document.getElementById('formColaboradores')?.addEventListener('submit', async (
             body: JSON.stringify(payloadJSON)
         });
         
-        if (res.ok) {
-            e.target.reset(); 
+        if (res.ok) { 
+            const ehCriacao = metodo === 'POST' || !id; 
+
+            if (typeof dispararNotificacao === "function") {
+                const acao = ehCriacao ? 'criar' : 'atualizar';
+                const mensagem = ehCriacao ? "Novo colaborador cadastrado com sucesso!" : "Cadastro de colaborador alterado!";
+                dispararNotificacao(mensagem, acao);
+            } else {
+                const mensagemAlert = ehCriacao ? "Colaborador cadastrado com sucesso!" : "Cadastro atualizado com sucesso!";
+                alert(mensagemAlert);
+            }
+            
+            // CORREÇÃO CRÍTICA: Reseta o formulário e limpa MANUALMENTE o ID oculto
+            document.getElementById('formColaboradores').reset();
+            document.getElementById('colaboradores-situacao').value = "true";
             if (campoId) campoId.value = ""; 
             
+            // Altera o título de volta para o estado original de "Novo Colaborador"
             const tituloForm = document.getElementById('titulo-form-colab');
             if (tituloForm) {
                 tituloForm.innerHTML = '<i class="bi bi-person-plus text-primary me-2"></i>Novo Colaborador';
             }
-            
-            if (typeof dispararNotificacao === "function") {
-                const acao = metodo === 'POST' ? 'criar' : 'atualizar';
-                const mensagem = metodo === 'POST' ? "Novo colaborador cadastrado com sucesso!" : "Cadastro de colaborador alterado!";
-                dispararNotificacao(mensagem, acao);
-            } else {
-                alert(id ? "Cadastro atualizado com sucesso!" : "Colaborador cadastrado com sucesso!");
-            }
-            
+
+            // Atualiza a tabela com os novos dados modificados
             listarColaboradoresCRUD();
         } else {
             const erroApi = await res.json().catch(() => ({}));
             console.error("Detalhes do erro do servidor:", erroApi);
-            alert(`Erro ao salvar colaborador. Status do servidor: ${res.status}`);
+            
+            if (typeof dispararNotificacao === "function") {
+                dispararNotificacao(`Não foi possível salvar os dados do colaborador. Erro ${res.status}`, "erro");
+            } else {
+                alert(`Erro ao salvar colaborador. Status do servidor: ${res.status}`);
+            }
         }
     } catch (err) { 
         console.error("Erro no envio:", err);
-        alert("Erro de rede ou conexão ao tentar salvar o colaborador."); 
+        if (typeof dispararNotificacao === "function") {
+            dispararNotificacao("Erro de conexão ao tentar salvar o colaborador.", "erro");
+        } else {
+            alert("Erro de conexão ao tentar salvar o colaborador.");
+        }
     }
 });
 
@@ -1284,6 +1324,9 @@ window.prepararEdicaoPorId = function(id) {
     
     if (!c) {
         console.error("Colaborador não encontrado na memória local.");
+        if (typeof dispararNotificacao === "function") {
+            dispararNotificacao("Erro ao carregar dados do colaborador para edição.", "erro");
+        }
         return;
     }
 
@@ -1318,12 +1361,19 @@ window.prepararEdicaoPorId = function(id) {
     
     if (campoEmail) campoEmail.value = c.email || "";
     
+    // =========================================================================
+    // TRATAMENTO DEFINITIVO DA SITUAÇÃO NA EDIÇÃO (ANTI-ERRO)
+    // =========================================================================
     if (campoSituacao) {
-        let situacaoTratada = c.ativo ?? c.situacao ?? "Ativo";
-        if (typeof situacaoTratada === 'boolean') {
-            situacaoTratada = situacaoTratada ? "Ativo" : "Inativo";
-        }
-        campoSituacao.value = situacaoTratada;
+        // Verifica todas as possibilidades do status ativo (boolean ou string)
+        const statusAtivo = c.ativo === true || 
+                            c.ativo === "true" || 
+                            c.situacao === "Ativo" || 
+                            String(c.situacao).toLowerCase() === "ativo" ||
+                            (c.ativo === undefined && c.situacao === undefined); // fallback padrão ativo
+
+        // Força o select HTML a marcar exatamente o "true" ou "false" correspondente
+        campoSituacao.value = statusAtivo ? "true" : "false";
     }
     
     const tituloForm = document.getElementById('titulo-form-colab');
@@ -1350,19 +1400,28 @@ window.deletarItemGeral = async function(endpoint, id) {
         if (res.ok) {
             if (typeof dispararNotificacao === "function") {
                 dispararNotificacao("Registro excluído com sucesso!", "excluir");
+            } else {
+                alert("Registro excluído com sucesso!");
             }
             
-            // Recarrega a tabela correta dependendo do endpoint
             if (endpoint === 'colaboradores') {
                 listarColaboradoresCRUD();
             }
         } else {
             console.error("Erro na exclusão. Status:", res.status);
-            alert(`Erro ao excluir. O servidor retornou: ${res.status}`);
+            if (typeof dispararNotificacao === "function") {
+                dispararNotificacao(`Não foi possível excluir o registro. Status: ${res.status}`, "erro");
+            } else {
+                alert(`Erro ao excluir. O servidor retornou: ${res.status}`);
+            }
         }
     } catch (err) {
         console.error("Erro de conexão ao excluir:", err);
-        alert("Erro de conexão ao tentar excluir o registro.");
+        if (typeof dispararNotificacao === "function") {
+            dispararNotificacao("Erro de conexão ao tentar excluir o registro.", "erro");
+        } else {
+            alert("Erro de conexão ao tentar excluir o registro.");
+        }
     }
 };
 

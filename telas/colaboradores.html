@@ -120,10 +120,10 @@
                         </div>
                         
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold text-body">Situação</label>
-                            <select class="form-select bg-body text-body shadow-none" id="colaboradores-situacao">
-                                <option value="Ativo">Ativo</option>
-                                <option value="Inativo">Inativo</option>
+                            <label for="colaboradores-situacao" class="form-label fw-semibold text-body">Situação</label>
+                            <select id="colaboradores-situacao" class="form-select">
+                                <option value="true" selected>Ativo</option>
+                                <option value="false">Inativo</option>
                             </select>
                         </div>
                     </form>
@@ -183,6 +183,19 @@
         </div>
     </section>
 </main>
+
+<!-- CONTENEUR PARA TOASTS DE NOTIFICAÇÃO (OPCIONAL - USADO PELO SEU SCRIPT) -->
+<div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="toast-cadastro" class="toast align-items-center text-white border-0 shadow" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+            <div class="toast-body d-flex align-items-center gap-2">
+                <span id="toast-mensagem-icone"></span>
+                <span id="toast-mensagem-texto"></span>
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
 
     <script>
         function toggleSidebar() {
