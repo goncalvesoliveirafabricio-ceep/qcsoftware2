@@ -1141,18 +1141,23 @@ function renderizarTabelaColaboradores(colaboradores) {
         }
 
         // =========================================================================
-        // PADRONIZAÇÃO DA SITUAÇÃO (ALTA PERFORMANCE - SEM BADGE CLASSE)
+        // PADRONIZAÇÃO DA SITUAÇÃO (AJUSTE CRÍTICO DE PERFORMANCE E REFERÊNCIA)
         // =========================================================================
+        // 1. Identifica o id correto do registro para manter o vínculo com o array global
+        const idRegistroAtual = c.id_colaboradores ?? c.id ?? c._id;
+
+        // 2. Identifica com precisão cirúrgica se o registro está ativo
         const registroEstaAtivo = c.ativo === true || c.ativo === "true" || 
                                   (c.ativo === undefined && (c.situacao === "Ativo" || String(c.situacao).toLowerCase() === "ativo")) ||
                                   (c.ativo === undefined && c.situacao === undefined);
 
+        // 3. Define a string exata para o HTML ler na tabela
         let situacaoTratada = registroEstaAtivo ? "Ativo" : "Inativo";
 
-        // Grava de volta no objeto para garantir consistência de dados
+        // 4. ATUALIZAÇÃO DE MEMÓRIA: Sincroniza todas as chaves possíveis para o formulário ler
         c.situacaoTratada = situacaoTratada;
-        c.idUnificado = colaboradorId;
-        c.ativo = registroEstaAtivo;
+        c.idUnificado = idRegistroAtual; // Garante o ID correto amarrado na linha da tabela
+        c.ativo = registroEstaAtivo;     // Garante o booleano puro atualizado no array
 
         let nomeCargoExibicao = "-";
         const cargoBruto = c.cargos ?? c.cargo ?? c.id_cargos ?? c.id_cargo; 
@@ -1242,20 +1247,26 @@ document.getElementById('formColaboradores')?.addEventListener('submit', async (
             return; 
         }
 
-        // 1. Captura o value do select ("true" ou "false")
-        const valorSituacaoTela = document.getElementById('colaboradores-situacao')?.value;
+        // =========================================================================
+        // CAPTURA E CONVERSÃO ULTRA RÍGIDA DA SITUAÇÃO (GARANTE FALSE NO BANCO)
+        // =========================================================================
+        const selectSituacao = document.getElementById('colaboradores-situacao');
+        const valorSituacaoTela = selectSituacao ? selectSituacao.value.toString().trim() : "true";
         
-        // 2. Converte em booleano puro (true se for a string "true", false caso contrário)
+        // Validação estrita: se for exatamente a string "false", assume o booleano false
         const ehAtivoBoolean = (valorSituacaoTela === "true");
 
-        // 3. Monta o payload com a estrutura exata aceita pelo banco
+        // Monta o payload idêntico à estrutura esperada pela sua API
         const payloadJSON = {
             nome: document.getElementById('colaboradores-nome')?.value || "",
             matricula: parseInt(document.getElementById('colaboradores-matricula')?.value, 10) || 0,
             id_cargos: idCargoInt, 
             email: document.getElementById('colaboradores-email')?.value || "",
-            ativo: ehAtivoBoolean // <--- Envia true ou false lógico para a API
+            ativo: ehAtivoBoolean // <--- Aqui vai true ou false nativo puro
         };
+
+        // Log de inspeção no painel F12 antes de disparar a requisição HTTP
+        console.log(`[Envio API] Método: ${metodo} | URL: ${url} | Payload:`, payloadJSON);
 
         const res = await fetch(url, {
             method: metodo,
@@ -1277,19 +1288,23 @@ document.getElementById('formColaboradores')?.addEventListener('submit', async (
                 alert(mensagemAlert);
             }
             
-            // CORREÇÃO CRÍTICA: Reseta o formulário e limpa MANUALMENTE o ID oculto
+            // Reseta todos os campos padrão do formulário
             document.getElementById('formColaboradores').reset();
-            document.getElementById('colaboradores-situacao').value = "true";
+            
+            // CORREÇÃO CRÍTICA: Garante o reset visual do select e esvaziamento do ID
+            if (selectSituacao) selectSituacao.value = "true";
             if (campoId) campoId.value = ""; 
             
-            // Altera o título de volta para o estado original de "Novo Colaborador"
+            // Restaura o título para o modo de criação
             const tituloForm = document.getElementById('titulo-form-colab');
             if (tituloForm) {
                 tituloForm.innerHTML = '<i class="bi bi-person-plus text-primary me-2"></i>Novo Colaborador';
             }
 
-            // Atualiza a tabela com os novos dados modificados
-            listarColaboradoresCRUD();
+            // Atualiza a tabela dinamicamente
+            if (typeof listarColaboradoresCRUD === "function") {
+                listarColaboradoresCRUD();
+            }
         } else {
             const erroApi = await res.json().catch(() => ({}));
             console.error("Detalhes do erro do servidor:", erroApi);
@@ -1359,22 +1374,24 @@ window.prepararEdicaoPorId = function(id) {
     if (campoEmail) campoEmail.value = c.email || "";
     
     // =========================================================================
-    // TRATAMENTO DEFINITIVO DA SITUAÇÃO NA EDIÇÃO
+    // CORREÇÃO CRÍTICA: ASSINCRONICIDADE COM TIMEOUT PARA EVITAR RESET DO DOM
     // =========================================================================
     if (campoSituacao) {
-        // 1. Identifica de forma segura se o registro atual é ativo (retorna true ou false)
+        // 1. Identifica se o registro é ativo (true/false) baseado no banco
         const statusAtivo = c.ativo === true || 
                             c.ativo === "true" || 
                             c.situacao === "Ativo" || 
                             String(c.situacao).toLowerCase() === "ativo" ||
                             (c.ativo === undefined && c.situacao === undefined);
 
-        // 2. Transforma o booleano na string correspondente ao "value" do HTML ("true" ou "false")
         const valorParaOSelect = statusAtivo ? "true" : "false";
         
-        // 3. Injeta no campo e força o navegador a atualizar a interface visual
-        campoSituacao.value = valorParaOSelect;
-        campoSituacao.dispatchEvent(new Event('change', { bubbles: true }));
+        // 2. O setTimeout garante que o valor vai ser injetado APÓS qualquer reset de tela
+        setTimeout(() => {
+            campoSituacao.value = valorParaOSelect;
+            campoSituacao.dispatchEvent(new Event('change', { bubbles: true }));
+            console.log(`[DOM Forçado] Select atualizado para: ${campoSituacao.value}`);
+        }, 50);
     }
     
     const tituloForm = document.getElementById('titulo-form-colab');
