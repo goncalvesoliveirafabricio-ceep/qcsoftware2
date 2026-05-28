@@ -269,7 +269,6 @@ def atualizar_colaborador(id: int, obj: schemas.ColaboradorUpdate, db: Session =
     db_obj = db.query(models.Colaborador).filter(models.Colaborador.id_colaboradores == id).first()
     
     if not db_obj:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Colaborador não encontrado")
     
     # 2. Atualiza apenas os campos que foram enviados no Payload do front-end

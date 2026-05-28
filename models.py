@@ -36,12 +36,16 @@ class Perfil(Base):
 
 class Colaborador(Base):
     __tablename__ = "colaboradores"
+    
     id_colaboradores = Column(Integer, primary_key=True, index=True)
     nome = Column(String(100), nullable=False)
     matricula = Column(Integer, nullable=False)
     id_cargos = Column(Integer, ForeignKey("cargos.id_cargos"))
     email = Column(String(100), unique=True)
-    ativo = Column(Boolean, default=True)
+    
+    # AJUSTE CRÍTICO: nullable=False garante que o banco de dados crie uma 
+    # restrição correta e não aceite valores nulos, assumindo sempre True por padrão
+    ativo = Column(Boolean, default=True, nullable=False)
 
 class Usuario(Base):
     __tablename__ = "usuarios"
