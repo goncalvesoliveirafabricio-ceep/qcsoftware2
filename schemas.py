@@ -89,7 +89,6 @@ class ColaboradorBase(BaseModel):
     matricula: int
     id_cargos: int
     email: Optional[EmailStr] = None
-    ativo: Optional[bool] = True # <--- Adicione aqui com valor padrão True
 
 class ColaboradorCreate(ColaboradorBase):
     pass
@@ -100,6 +99,13 @@ class ColaboradorUpdate(BaseModel):
     id_cargos: Optional[int] = None
     email: Optional[EmailStr] = None
     ativo: Optional[bool] = None
+
+# CLASSE QUE ESTAVA FALTANDO E QUEBROU O DEPLOY:
+class Colaborador(ColaboradorBase, TimestampMixin):
+    id_colaboradores: int
+    
+    # Configuração do Pydantic v2 para ler dados do SQLAlchemy
+    model_config = ConfigDict(from_attributes=True)
 
 # --- USUÁRIOS ---
 class UsuarioBase(BaseModel):
