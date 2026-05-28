@@ -1141,18 +1141,15 @@ function renderizarTabelaColaboradores(colaboradores) {
         }
 
         // =========================================================================
-        // PADRONIZAÇÃO DA SITUAÇÃO (SEM MEXER NO ESTILO DO BADGE - COMPATIBILIDADE TOTAL)
+        // PADRONIZAÇÃO DA SITUAÇÃO (ALTA PERFORMANCE - SEM BADGE CLASSE)
         // =========================================================================
-        // 1. Identifica o estado lógico real (verdadeiro ou falso) de forma rápida
         const registroEstaAtivo = c.ativo === true || c.ativo === "true" || 
                                   (c.ativo === undefined && (c.situacao === "Ativo" || String(c.situacao).toLowerCase() === "ativo")) ||
                                   (c.ativo === undefined && c.situacao === undefined);
 
-        // 2. Define o texto de exibição exato ("Ativo" ou "Inativo")
         let situacaoTratada = registroEstaAtivo ? "Ativo" : "Inativo";
 
-        // 3. Salva os dados tratados diretamente no objeto 'c'
-        // Isso garante que o formulário de edição consiga ler o valor correto para mudar para Inativo
+        // Grava de volta no objeto para garantir consistência de dados
         c.situacaoTratada = situacaoTratada;
         c.idUnificado = colaboradorId;
         c.ativo = registroEstaAtivo;
@@ -1245,20 +1242,20 @@ document.getElementById('formColaboradores')?.addEventListener('submit', async (
             return; 
         }
 
-        // 1. Captura o valor string ("true" ou "false") do select
-            const valorSituacaoTela = document.getElementById('colaboradores-situacao')?.value;
+        // 1. Captura o value do select ("true" ou "false")
+        const valorSituacaoTela = document.getElementById('colaboradores-situacao')?.value;
+        
+        // 2. Converte em booleano puro (true se for a string "true", false caso contrário)
+        const ehAtivoBoolean = (valorSituacaoTela === "true");
 
-            // 2. Transforma estritamente em um Booleano real
-            const ehAtivoBoolean = (valorSituacaoTela === "true");
-
-            // 3. Monta o payload limpo para a sua API
-            const payloadJSON = {
-                nome: document.getElementById('colaboradores-nome')?.value || "",
-                matricula: parseInt(document.getElementById('colaboradores-matricula')?.value, 10) || 0,
-                id_cargos: idCargoInt, 
-                email: document.getElementById('colaboradores-email')?.value || "",
-                ativo: ehAtivoBoolean // Envia true ou false nativo (lógico) para o banco
-            };
+        // 3. Monta o payload com a estrutura exata aceita pelo banco
+        const payloadJSON = {
+            nome: document.getElementById('colaboradores-nome')?.value || "",
+            matricula: parseInt(document.getElementById('colaboradores-matricula')?.value, 10) || 0,
+            id_cargos: idCargoInt, 
+            email: document.getElementById('colaboradores-email')?.value || "",
+            ativo: ehAtivoBoolean // <--- Envia true ou false lógico para a API
+        };
 
         const res = await fetch(url, {
             method: metodo,
@@ -1362,18 +1359,22 @@ window.prepararEdicaoPorId = function(id) {
     if (campoEmail) campoEmail.value = c.email || "";
     
     // =========================================================================
-    // TRATAMENTO DEFINITIVO DA SITUAÇÃO NA EDIÇÃO (ANTI-ERRO)
+    // TRATAMENTO DEFINITIVO DA SITUAÇÃO NA EDIÇÃO
     // =========================================================================
     if (campoSituacao) {
-        // Verifica todas as possibilidades do status ativo (boolean ou string)
+        // 1. Identifica de forma segura se o registro atual é ativo (retorna true ou false)
         const statusAtivo = c.ativo === true || 
                             c.ativo === "true" || 
                             c.situacao === "Ativo" || 
                             String(c.situacao).toLowerCase() === "ativo" ||
-                            (c.ativo === undefined && c.situacao === undefined); // fallback padrão ativo
+                            (c.ativo === undefined && c.situacao === undefined);
 
-        // Força o select HTML a marcar exatamente o "true" ou "false" correspondente
-        campoSituacao.value = statusAtivo ? "true" : "false";
+        // 2. Transforma o booleano na string correspondente ao "value" do HTML ("true" ou "false")
+        const valorParaOSelect = statusAtivo ? "true" : "false";
+        
+        // 3. Injeta no campo e força o navegador a atualizar a interface visual
+        campoSituacao.value = valorParaOSelect;
+        campoSituacao.dispatchEvent(new Event('change', { bubbles: true }));
     }
     
     const tituloForm = document.getElementById('titulo-form-colab');
