@@ -46,10 +46,35 @@ async function listarProdutosCRUD() {
 function filtrarEAtualizarTabela() {
     const termoPesquisa = document.getElementById('pesquisa-produto')?.value.toLowerCase() || "";
     
-    // Filtra pelo nome digitado na caixa de pesquisa
-    produtosFiltrados = todosProdutos.filter(p => 
-        p.nome && p.nome.toLowerCase().includes(termoPesquisa)
+    // Filtra pelo nome do produto digitado
+produtosFiltrados = todosProdutos.filter(p =>
+    p.nome && p.nome.toLowerCase().includes(termoPesquisa)
+);
+
+// ===============================
+// ORDENAÇÃO ALFABÉTICA
+// ===============================
+produtosFiltrados.sort((a, b) =>
+    a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' })
+);
+
+// ===============================
+// ÚLTIMO CADASTRADO NO TOPO
+// ===============================
+
+// Pega o último item cadastrado da API
+const ultimoCadastro = todosProdutos[todosProdutos.length - 1];
+
+if (ultimoCadastro) {
+
+    // Remove ele da posição atual
+    produtosFiltrados = produtosFiltrados.filter(
+        p => p.id_produtos !== ultimoCadastro.id_produtos
     );
+
+    // Adiciona no topo
+    produtosFiltrados.unshift(ultimoCadastro);
+}
 
     const totalPaginas = Math.ceil(produtosFiltrados.length / ITENS_POR_PAGINA) || 1;
     
@@ -769,10 +794,35 @@ async function listarMaquinasCRUD() {
 function filtrarEAtualizarTabelaMaquinas() {
     const termoPesquisa = document.getElementById('pesquisa-maquina')?.value.toLowerCase() || "";
     
-    // Filtra pelo nome da máquina digitado
-    maquinasFiltrados = todasMaquinas.filter(m => 
-        m.nome && m.nome.toLowerCase().includes(termoPesquisa)
+    // Filtra pelo nome da máquina digitada
+maquinasFiltrados = todasMaquinas.filter(m =>
+    m.nome && m.nome.toLowerCase().includes(termoPesquisa)
+);
+
+// ===============================
+// ORDENAÇÃO ALFABÉTICA
+// ===============================
+maquinasFiltrados.sort((a, b) =>
+    a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' })
+);
+
+// ===============================
+// ÚLTIMO CADASTRADO NO TOPO
+// ===============================
+
+// Pega o último item cadastrado da API
+const ultimoCadastro = todasMaquinas[todasMaquinas.length - 1];
+
+if (ultimoCadastro) {
+
+    // Remove ele da posição atual
+    maquinasFiltrados = maquinasFiltrados.filter(
+        m => m.id_maquinas !== ultimoCadastro.id_maquinas
     );
+
+    // Adiciona no topo
+    maquinasFiltrados.unshift(ultimoCadastro);
+}
 
     const totalPaginas = Math.ceil(maquinasFiltrados.length / ITENS_POR_PAGINA) || 1;
     
@@ -797,7 +847,7 @@ function renderizarTabelaMaquinas(maquinas) {
     if (!maquinas || maquinas.length === 0) {
         tabela.innerHTML = `
             <tr>
-                <td colspan="4" class="text-center py-4 text-muted">Nenhuma máquina encontrada.</td>
+                <td colspan="3" class="text-center py-4 text-muted">Nenhuma máquina encontrada.</td>
             </tr>
         `;
         return;
@@ -820,7 +870,6 @@ function renderizarTabelaMaquinas(maquinas) {
             return `
                 <tr class="table-warning">
                     <td><strong>${m.nome || "Sem Nome"}</strong></td>
-                    <td>${m.codigo || m.tipo || "Sem Código"}</td>
                     <td><span class="badge bg-warning text-dark">Erro de ID</span></td>
                     <td class="text-end text-muted small">⚠️ ID ausente</td>
                 </tr>
@@ -856,7 +905,6 @@ function renderizarTabelaMaquinas(maquinas) {
         return `
             <tr class="align-middle">                
                 <td><strong>${m.nome || "Sem Nome"}</strong></td>
-                <td>${m.codigo || m.tipo || "Geral"}</td>
                 <td><span class="badge ${badgeClasse}">${situacaoTratada}</span></td>
                 <td class="text-end">
                     <button class="btn btn-sm btn-outline-primary me-1 border-0" 
@@ -1103,9 +1151,35 @@ async function listarColaboradoresCRUD() {
 function filtrarEAtualizarTabelaColaboradores() {
     const termoPesquisa = document.getElementById('pesquisa-colaborador')?.value.toLowerCase() || "";
     
-    colaboradoresFiltrados = todosColaboradores.filter(c => 
-        c.nome && c.nome.toLowerCase().includes(termoPesquisa)
+    // Filtra pelo nome de colaborador digitado
+colaboradoresFiltrados = todosColaboradores.filter(c =>
+    c.nome && c.nome.toLowerCase().includes(termoPesquisa)
+);
+
+// ===============================
+// ORDENAÇÃO ALFABÉTICA
+// ===============================
+colaboradoresFiltrados.sort((a, b) =>
+    a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' })
+);
+
+// ===============================
+// ÚLTIMO CADASTRADO NO TOPO
+// ===============================
+
+// Pega o último item cadastrado da API
+const ultimoCadastro = todosColaboradores[todosColaboradores.length - 1];
+
+if (ultimoCadastro) {
+
+    // Remove ele da posição atual
+    colaboradoresFiltrados = colaboradoresFiltrados.filter(
+        c => c.id_colaboradores !== ultimoCadastro.id_colaboradores
     );
+
+    // Adiciona no topo
+    colaboradoresFiltrados.unshift(ultimoCadastro);
+}
 
     const totalPaginas = Math.ceil(colaboradoresFiltrados.length / ITENS_POR_PAGINA) || 1;
     if (paginaAtualColaboradores > totalPaginas) paginaAtualColaboradores = totalPaginas;
