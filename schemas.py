@@ -169,13 +169,15 @@ class OcorrenciaBase(BaseModel):
     data_prazo: Optional[datetime] = None
 
 class OcorrenciaCreate(OcorrenciaBase):
-    # Na criação, as chaves primárias compostas NÃO podem ser nulas (exceto a data que gera automática se omitida)
+    # Chaves primárias compostas obrigatórias na criação (exceto a data)
     id_maquinas: int
     id_colaboradores: int
     id_produtos: int
-    data_ocorrencias: Optional[datetime] = None  # Opcional aqui pois o banco gera o DEFAULT se não enviado
+    numero_ocorrencias: int  # Agora obrigatório aqui por fazer parte da PK
     
-    # Tornando campos obrigatórios na criação conforme o seu script SQL
+    data_ocorrencias: Optional[datetime] = None  # Opcional pois o banco gera o DEFAULT
+    
+    # Campos que passam a ser obrigatórios no momento da criação
     lote_produtos: str
     numero_nota: int
     problema: str
@@ -187,8 +189,8 @@ class OcorrenciaCreate(OcorrenciaBase):
     acao_corretiva: str
 
 class OcorrenciaUpdate(OcorrenciaBase):
-    # No Update, todos os campos da base continuam opcionais. 
-    # Geralmente não alteramos os IDs da chave primária em um update.
+    # No Update, todos os campos de OcorrenciaBase continuam opcionais.
+    # Geralmente não alteramos os IDs da chave primária em um PUT.
     pass
 
 class Ocorrencia(OcorrenciaBase):
@@ -197,10 +199,7 @@ class Ocorrencia(OcorrenciaBase):
     id_maquinas: int
     id_colaboradores: int
     id_produtos: int
-    
-    # Timestamps de controle retornados pelo banco
-    data_criacao: datetime
-    data_atualizacao: datetime
+    numero_ocorrencias: int
 
     # Configuração do Pydantic v2 para ler dados do ORM (SQLAlchemy)
     model_config = ConfigDict(from_attributes=True)

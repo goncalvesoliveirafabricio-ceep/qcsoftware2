@@ -69,15 +69,16 @@ class Permissao(Base):
 class Ocorrencia(Base):
     __tablename__ = "ocorrencias"
     
-    # --- Chave Primária Composta (PK) e Chaves Estrangeiras (FK) ---
+    # --- Chave Primária Composta (PK) com 5 campos e Chaves Estrangeiras (FK) ---
     data_ocorrencias = Column(DateTime(timezone=True), primary_key=True, server_default=text("CURRENT_TIMESTAMP"))
     id_maquinas = Column(Integer, ForeignKey("maquinas.id_maquinas"), primary_key=True)
     id_colaboradores = Column(Integer, ForeignKey("colaboradores.id_colaboradores"), primary_key=True)
     id_produtos = Column(Integer, ForeignKey("produtos.id_produtos"), primary_key=True)
+    numero_ocorrencias = Column(Integer, primary_key=True)  # Adicionado como PK para fechar os 5 campos
     
     # --- Outros Campos ---
     lote_produtos = Column(String(255), nullable=False)
-    numero_nota = Column(Integer, nullable=False)
+    numero_nota = Column(Integer, nullable=False)  # Mantido aqui (removido a duplicata do final)
     problema = Column(String(255), nullable=False)
     falha_onde = Column(String(255), nullable=False)
     falha_como = Column(String(255), nullable=False)

@@ -139,10 +139,10 @@ def listar_ocorrencias(db: Session = Depends(get_db)):
     try:
         return db.query(models.Ocorrencia).all()
     except Exception as e:
-        logger.error(f"Erro ao listar: {str(e)}")
+        # Retorna o erro real do banco na resposta HTTP para você ler no Swagger/Postman
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
-            detail="Erro ao carregar dados do banco."
+            detail=f"Erro real do banco: {str(e)}"
         )
 
 # --- CRIAR ---
@@ -164,27 +164,33 @@ def criar_ocorrencia(obj: schemas.OcorrenciaCreate, db: Session = Depends(get_db
             detail=f"Erro nos dados enviados: {str(e)}"
         )
     
-    # --- ATUALIZAR ---
+# --- ATUALIZAR ---
 @app.put("/ocorrencias/", response_model=schemas.Ocorrencia, tags=["Ocorrências"])
 def atualizar_ocorrencia(
+    *,
     data_ocorrencias: datetime,
     id_maquinas: int,
     id_colaboradores: int,
     id_produtos: int,
-    obj: schemas.OcorrenciaUpdate, 
+    numero_ocorrencias: int,  # Adicionado na assinatura da query
+    obj: schemas.OcorrenciaUpdate,  # Movido para o final para organizar o escopo do body
     db: Session = Depends(get_db)
 ):
-    # Filtro usando a chave primária composta de 4 campos
+    # Filtro usando a chave primária composta de 5 campos
     db_query = db.query(models.Ocorrencia).filter(
         models.Ocorrencia.data_ocorrencias == data_ocorrencias,
         models.Ocorrencia.id_maquinas == id_maquinas,
         models.Ocorrencia.id_colaboradores == id_colaboradores,
-        models.Ocorrencia.id_produtos == id_produtos
+        models.Ocorrencia.id_produtos == id_produtos,
+        models.Ocorrencia.numero_ocorrencias == numero_ocorrencias  # Adicionado no filtro
     )
     db_obj = db_query.first()
 
     if not db_obj:
-        raise HTTPException(status_code=404, detail="Ocorrência não encontrada com a chave informada.")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, 
+            detail="Ocorrência não encontrada com a chave informada."
+        )
 
     try:
         update_data = obj.model_dump(exclude_unset=True)
@@ -208,14 +214,16 @@ def deletar_ocorrencia(
     id_maquinas: int,
     id_colaboradores: int,
     id_produtos: int,
+    numero_ocorrencias: int,  # Adicionado na assinatura da query
     db: Session = Depends(get_db)
 ):
-    # Filtro usando a chave primária composta de 4 campos
+    # Filtro usando a chave primária composta de 5 campos
     db_query = db.query(models.Ocorrencia).filter(
         models.Ocorrencia.data_ocorrencias == data_ocorrencias,
         models.Ocorrencia.id_maquinas == id_maquinas,
         models.Ocorrencia.id_colaboradores == id_colaboradores,
-        models.Ocorrencia.id_produtos == id_produtos
+        models.Ocorrencia.id_produtos == id_produtos,
+        models.Ocorrencia.numero_ocorrencias == numero_ocorrencias  # Adicionado no filtro
     )
     db_obj = db_query.first()
     
@@ -237,7 +245,8 @@ def deletar_ocorrencia(
                 "data_ocorrencias": data_ocorrencias,
                 "id_maquinas": id_maquinas,
                 "id_colaboradores": id_colaboradores,
-                "id_produtos": id_produtos
+                "id_produtos": id_produtos,
+                "numero_ocorrencias": numero_ocorrencias  # Adicionado no retorno de confirmação
             }
         }
     except Exception as e:
