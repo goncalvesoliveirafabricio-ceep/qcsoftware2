@@ -1,24 +1,23 @@
-from pydantic import BaseModel, ConfigDict, EmailStr
-from typing import Optional, List
-from datetime import datetime
+from pydantic import BaseModel, ConfigDict
+from typing import Optional, Any
 
-# --- MIXINS PARA REUTILIZAÇÃO ---
-class TimestampMixin(BaseModel):
-    data_criacao: Optional[datetime] = None
-    data_atualizacao: Optional[datetime] = None
-    ativo: Optional[bool] = True
+# --- MIXIN COM TOLERÂNCIA TOTAL A DIVERGÊNCIAS ---
+class SafeModel(BaseModel):
+    model_config = ConfigDict(from_attributes=True, extra="ignore")
 
-    class Config:
-        from_attributes = True
+class TimestampMixin(SafeModel):
+    data_criacao: Optional[Any] = None
+    data_atualizacao: Optional[Any] = None
+    ativo: Optional[Any] = True
 
 # --- CARGOS ---
-class CargoBase(BaseModel):
+class CargoBase(SafeModel):
     nome: str
 
 class CargoCreate(CargoBase):
     pass
 
-class CargoUpdate(BaseModel):
+class CargoUpdate(SafeModel):
     nome: Optional[str] = None
     ativo: Optional[bool] = None
 
@@ -26,14 +25,14 @@ class Cargo(CargoBase, TimestampMixin):
     id_cargos: int
 
 # --- PRODUTOS ---
-class ProdutoBase(BaseModel):
+class ProdutoBase(SafeModel):
     nome: str
     categoria: str
 
 class ProdutoCreate(ProdutoBase):
     pass
 
-class ProdutoUpdate(BaseModel):
+class ProdutoUpdate(SafeModel):
     nome: Optional[str] = None
     categoria: Optional[str] = None
     ativo: Optional[bool] = None
@@ -42,13 +41,13 @@ class Produto(ProdutoBase, TimestampMixin):
     id_produtos: int
 
 # --- MÁQUINAS ---
-class MaquinaBase(BaseModel):
+class MaquinaBase(SafeModel):
     nome: str
 
 class MaquinaCreate(MaquinaBase):
     pass
 
-class MaquinaUpdate(BaseModel):
+class MaquinaUpdate(SafeModel):
     nome: Optional[str] = None
     ativo: Optional[bool] = None
 
@@ -56,13 +55,13 @@ class Maquina(MaquinaBase, TimestampMixin):
     id_maquinas: int
 
 # --- TELAS ---
-class TelaBase(BaseModel):
+class TelaBase(SafeModel):
     nome: str
 
 class TelaCreate(TelaBase):
     pass
 
-class TelaUpdate(BaseModel):
+class TelaUpdate(SafeModel):
     nome: Optional[str] = None
     ativo: Optional[bool] = None
 
@@ -70,13 +69,13 @@ class Tela(TelaBase, TimestampMixin):
     id_telas: int
 
 # --- PERFIS ---
-class PerfilBase(BaseModel):
+class PerfilBase(SafeModel):
     nome: str
 
 class PerfilCreate(PerfilBase):
     pass
 
-class PerfilUpdate(BaseModel):
+class PerfilUpdate(SafeModel):
     nome: Optional[str] = None
     ativo: Optional[bool] = None
 
@@ -84,43 +83,39 @@ class Perfil(PerfilBase, TimestampMixin):
     id_perfis: int
 
 # --- COLABORADORES ---
-class ColaboradorBase(BaseModel):
+class ColaboradorBase(SafeModel):
     nome: str
     matricula: int
     id_cargos: int
-    email: Optional[EmailStr] = None
+    email: Optional[str] = None
 
 class ColaboradorCreate(ColaboradorBase):
     pass
 
-class ColaboradorUpdate(BaseModel):
+class ColaboradorUpdate(SafeModel):
     nome: Optional[str] = None
     matricula: Optional[int] = None
     id_cargos: Optional[int] = None
-    email: Optional[EmailStr] = None
+    email: Optional[str] = None
     ativo: Optional[bool] = None
 
-# CLASSE QUE ESTAVA FALTANDO E QUEBROU O DEPLOY:
 class Colaborador(ColaboradorBase, TimestampMixin):
     id_colaboradores: int
-    
-    # Configuração do Pydantic v2 para ler dados do SQLAlchemy
-    model_config = ConfigDict(from_attributes=True)
 
 # --- USUÁRIOS ---
-class UsuarioBase(BaseModel):
+class UsuarioBase(SafeModel):
     usuario: str
     id_colaboradores: int
     id_perfis: int
-    email: Optional[EmailStr] = None
+    email: Optional[str] = None
 
 class UsuarioCreate(UsuarioBase):
     senha_hash: str 
 
-class UsuarioUpdate(BaseModel):
+class UsuarioUpdate(SafeModel):
     usuario: Optional[str] = None
     id_perfis: Optional[int] = None
-    email: Optional[EmailStr] = None
+    email: Optional[str] = None
     senha_hash: Optional[str] = None
     ativo: Optional[bool] = None
 
@@ -128,18 +123,18 @@ class Usuario(UsuarioBase, TimestampMixin):
     id_usuarios: int
 
 # --- PERMISSÕES ---
-class PermissaoBase(BaseModel):
+class PermissaoBase(SafeModel):
     id_perfis: int
     id_telas: int
-    visualizar: bool
-    inserir: bool
-    alterar: bool
-    excluir: bool
+    visualizar: Optional[bool] = False
+    inserir: Optional[bool] = False
+    alterar: Optional[bool] = False
+    excluir: Optional[bool] = False
 
 class PermissaoCreate(PermissaoBase):
     pass
 
-class PermissaoUpdate(BaseModel):
+class PermissaoUpdate(SafeModel):
     id_perfis: Optional[int] = None
     id_telas: Optional[int] = None
     visualizar: Optional[bool] = None
@@ -152,9 +147,7 @@ class Permissao(PermissaoBase, TimestampMixin):
     id_permissoes: int
 
 # --- OCORRÊNCIAS ---
-
-class OcorrenciaBase(BaseModel):
-    # Campos comuns com valores opcionais ou padrões
+class OcorrenciaBase(SafeModel):
     lote_produtos: Optional[str] = None
     numero_nota: Optional[int] = None
     problema: Optional[str] = None 
@@ -166,18 +159,15 @@ class OcorrenciaBase(BaseModel):
     acao_corretiva: Optional[str] = None
     situacao: Optional[str] = "Pendente"
     foto: Optional[str] = None
-    data_prazo: Optional[datetime] = None
+    data_prazo: Optional[Any] = None
 
 class OcorrenciaCreate(OcorrenciaBase):
-    # Chaves primárias compostas obrigatórias na criação (exceto a data)
     id_maquinas: int
     id_colaboradores: int
     id_produtos: int
-    numero_ocorrencias: int  # Agora obrigatório aqui por fazer parte da PK
+    numero_ocorrencias: int
+    data_ocorrencias: Optional[Any] = None
     
-    data_ocorrencias: Optional[datetime] = None  # Opcional pois o banco gera o DEFAULT
-    
-    # Campos que passam a ser obrigatórios no momento da criação
     lote_produtos: str
     numero_nota: int
     problema: str
@@ -189,17 +179,13 @@ class OcorrenciaCreate(OcorrenciaBase):
     acao_corretiva: str
 
 class OcorrenciaUpdate(OcorrenciaBase):
-    # No Update, todos os campos de OcorrenciaBase continuam opcionais.
-    # Geralmente não alteramos os IDs da chave primária em um PUT.
     pass
 
 class Ocorrencia(OcorrenciaBase):
-    # Esquema de resposta completa (Output) que a API retorna
-    data_ocorrencias: datetime
+    data_ocorrencias: Any
     id_maquinas: int
     id_colaboradores: int
     id_produtos: int
     numero_ocorrencias: int
-
-    # Configuração do Pydantic v2 para ler dados do ORM (SQLAlchemy)
-    model_config = ConfigDict(from_attributes=True)
+    data_criacao: Optional[Any] = None
+    data_atualizacao: Optional[Any] = None

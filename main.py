@@ -62,10 +62,25 @@ def criar_cargo(obj: schemas.CargoCreate, db: Session = Depends(get_db)):
     return novo
 
 @app.put("/cargos/{id}", response_model=schemas.Cargo, tags=["Cargos"])
-def atualizar_cargo(id: int, obj: schemas.CargoCreate, db: Session = Depends(get_db)):
+def atualizar_cargo(id: int, obj: schemas.CargoUpdate, db: Session = Depends(get_db)):
+    # 1. Busca o cargo no banco pelo ID correto
     db_obj = db.query(models.Cargo).filter(models.Cargo.id_cargos == id).first()
-    if not db_obj: raise HTTPException(404, "Cargo não encontrado")
-    return update_item(db, db_obj, obj)
+    
+    if not db_obj:
+        raise HTTPException(status_code=404, detail="Cargo não encontrado")
+    
+    # 2. Atualiza os campos de texto se forem enviados
+    if obj.nome is not None:
+        db_obj.nome = obj.nome
+        
+    # 3. CORREÇÃO CRÍTICA: Atualiza o booleano 'ativo' mesmo se ele for False
+    if obj.ativo is not None:
+        db_obj.ativo = obj.ativo
+
+    # 4. Grava em definitivo no banco de dados
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
 
 @app.delete("/cargos/{id}", tags=["Cargos"])
 def deletar_cargo(id: int, db: Session = Depends(get_db)):
@@ -91,10 +106,27 @@ def criar_produto(obj: schemas.ProdutoCreate, db: Session = Depends(get_db)):
     return novo
 
 @app.put("/produtos/{id}", response_model=schemas.Produto, tags=["Produtos"])
-def atualizar_produto(id: int, obj: schemas.ProdutoCreate, db: Session = Depends(get_db)):
+def atualizar_produto(id: int, obj: schemas.ProdutoUpdate, db: Session = Depends(get_db)):
+    # 1. Busca o produto no banco pelo ID correto
     db_obj = db.query(models.Produto).filter(models.Produto.id_produtos == id).first()
-    if not db_obj: raise HTTPException(404, "Produto não encontrado")
-    return update_item(db, db_obj, obj)
+    
+    if not db_obj:
+        raise HTTPException(status_code=404, detail="Produto não encontrado")
+    
+    # 2. Atualiza os campos de texto e categoria se forem enviados
+    if obj.nome is not None:
+        db_obj.nome = obj.nome
+    if obj.categoria is not None:
+        db_obj.categoria = obj.categoria
+        
+    # 3. CORREÇÃO CRÍTICA: Atualiza o booleano 'ativo' mesmo se ele for False
+    if obj.ativo is not None:
+        db_obj.ativo = obj.ativo
+
+    # 4. Grava em definitivo no banco de dados
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
 
 @app.delete("/produtos/{id}", tags=["Produtos"])
 def deletar_produto(id: int, db: Session = Depends(get_db)):
@@ -119,9 +151,25 @@ def criar_maquina(obj: schemas.MaquinaCreate, db: Session = Depends(get_db)):
     return novo
 
 @app.put("/maquinas/{id}", response_model=schemas.Maquina, tags=["Máquinas"])
-def atualizar_maquina(id: int, obj: schemas.MaquinaCreate, db: Session = Depends(get_db)):
+def atualizar_maquina(id: int, obj: schemas.MaquinaUpdate, db: Session = Depends(get_db)):
+    # 1. Busca a máquina no banco pelo ID correto
     db_obj = db.query(models.Maquina).filter(models.Maquina.id_maquinas == id).first()
-    return update_item(db, db_obj, obj)
+    
+    if not db_obj:
+        raise HTTPException(status_code=404, detail="Máquina não encontrada")
+    
+    # 2. Atualiza os campos de texto se forem enviados
+    if obj.nome is not None:
+        db_obj.nome = obj.nome
+        
+    # 3. CORREÇÃO CRÍTICA: Atualiza o booleano 'ativo' mesmo se ele for False
+    if obj.ativo is not None:
+        db_obj.ativo = obj.ativo
+
+    # 4. Grava em definitivo no banco de dados
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
 
 @app.delete("/maquinas/{id}", tags=["Máquinas"])
 def deletar_maquina(id: int, db: Session = Depends(get_db)):
@@ -172,38 +220,55 @@ def atualizar_ocorrencia(
     id_maquinas: int,
     id_colaboradores: int,
     id_produtos: int,
-    numero_ocorrencias: int,  # Adicionado na assinatura da query
-    obj: schemas.OcorrenciaUpdate,  # Movido para o final para organizar o escopo do body
+    numero_ocorrencias: int,
+    obj: schemas.OcorrenciaUpdate,
     db: Session = Depends(get_db)
 ):
-    # Filtro usando a chave primária composta de 5 campos
-    db_query = db.query(models.Ocorrencia).filter(
+    # 1. Filtro usando a chave primária composta de 5 campos
+    db_obj = db.query(models.Ocorrencia).filter(
         models.Ocorrencia.data_ocorrencias == data_ocorrencias,
         models.Ocorrencia.id_maquinas == id_maquinas,
         models.Ocorrencia.id_colaboradores == id_colaboradores,
         models.Ocorrencia.id_produtos == id_produtos,
-        models.Ocorrencia.numero_ocorrencias == numero_ocorrencias  # Adicionado no filtro
-    )
-    db_obj = db_query.first()
+        models.Ocorrencia.numero_ocorrencias == numero_ocorrencias
+    ).first()
 
     if not db_obj:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, 
+            status_code=404, 
             detail="Ocorrência não encontrada com a chave informada."
         )
 
     try:
-        update_data = obj.model_dump(exclude_unset=True)
+        # 2. Atualiza os campos de texto e informações gerais se enviados
+        if obj.lote_produtos is not None: db_obj.lote_produtos = obj.lote_produtos
+        if obj.numero_nota is not None: db_obj.numero_nota = obj.numero_nota
+        if obj.problema is not None: db_obj.problema = obj.problema
+        if obj.falha_onde is not None: db_obj.falha_onde = obj.falha_onde
+        if obj.falha_como is not None: db_obj.falha_como = obj.falha_como
+        if obj.falha_quando is not None: db_obj.falha_quando = obj.falha_quando
+        if obj.falha_quem is not None: db_obj.falha_quem = obj.falha_quem
+        if obj.observacoes is not None: db_obj.observacoes = obj.observacoes
+        if obj.acao_corretiva is not None: db_obj.acao_corretiva = obj.acao_corretiva
+        if obj.foto is not None: db_obj.foto = obj.foto
+        if obj.data_prazo is not None: db_obj.data_prazo = obj.data_prazo
         
-        db_query.update(update_data, synchronize_session=False)
+        # 3. CORREÇÃO CRÍTICA PARA A SITUAÇÃO:
+        # Garante a troca de "Pendente" para qualquer outra string enviada pelo front-end
+        if obj.situacao is not None:
+            db_obj.situacao = obj.situacao
+
+        # 4. Grava em definitivo no banco de dados
         db.commit()
         db.refresh(db_obj)
         return db_obj
+
     except Exception as e:
         db.rollback()
-        logger.error(f"Erro ao atualizar ocorrência: {str(e)}")
+        # Caso não tenha configurado o logger, use o print ou certifique-se de que o 'logger' está importado
+        print(f"Erro ao atualizar ocorrência: {str(e)}") 
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            status_code=500, 
             detail=f"Erro interno ao atualizar banco de dados: {str(e)}"
         )
 
@@ -322,9 +387,33 @@ def criar_usuario(obj: schemas.UsuarioCreate, db: Session = Depends(get_db)):
     return novo
 
 @app.put("/usuarios/{id}", response_model=schemas.Usuario, tags=["Usuários"])
-def atualizar_usuario(id: int, obj: schemas.UsuarioCreate, db: Session = Depends(get_db)):
+def atualizar_usuario(id: int, obj: schemas.UsuarioUpdate, db: Session = Depends(get_db)):
+    # 1. Busca o usuário no banco pelo ID correto
     db_obj = db.query(models.Usuario).filter(models.Usuario.id_usuarios == id).first()
-    return update_item(db, db_obj, obj)
+    
+    if not db_obj:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado")
+    
+    # 2. Atualiza apenas os campos de texto e relacionamentos enviados
+    if obj.usuario is not None:
+        db_obj.usuario = obj.usuario
+    if obj.id_perfis is not None:
+        db_obj.id_perfis = obj.id_perfis
+    if obj.email is not None:
+        db_obj.email = obj.email
+        
+    # 3. Tratamento da senha (só atualiza se uma nova senha for enviada)
+    if obj.senha_hash is not None:
+        db_obj.senha_hash = obj.senha_hash # Se você usar hash (ex: passlib), faça o hash aqui
+        
+    # 4. CORREÇÃO CRÍTICA: Atualiza o booleano 'ativo' mesmo se ele for False
+    if obj.ativo is not None:
+        db_obj.ativo = obj.ativo
+
+    # 5. Grava em definitivo no banco de dados
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
 
 @app.delete("/usuarios/{id}", tags=["Usuários"])
 def deletar_usuario(id: int, db: Session = Depends(get_db)):
@@ -349,9 +438,36 @@ def criar_permissao(obj: schemas.PermissaoCreate, db: Session = Depends(get_db))
     return novo
 
 @app.put("/permissoes/{id}", response_model=schemas.Permissao, tags=["Permissões"])
-def atualizar_permissao(id: int, obj: schemas.PermissaoCreate, db: Session = Depends(get_db)):
+def atualizar_permissao(id: int, obj: schemas.PermissaoUpdate, db: Session = Depends(get_db)):
+    # 1. Busca a permissão no banco pelo ID correto
     db_obj = db.query(models.Permissao).filter(models.Permissao.id_permissoes == id).first()
-    return update_item(db, db_obj, obj)
+    
+    if not db_obj:
+        raise HTTPException(status_code=404, detail="Permissão não encontrada")
+    
+    # 2. Atualiza os relacionamentos (se enviados)
+    if obj.id_perfis is not None:
+        db_obj.id_perfis = obj.id_perfis
+    if obj.id_telas is not None:
+        db_obj.id_telas = obj.id_telas
+        
+    # 3. CORREÇÃO CRÍTICA PARA TODOS OS BOOLEANOS:
+    # Garante que o sistema aceite 'False' para revogar acessos!
+    if obj.visualizar is not None:
+        db_obj.visualizar = obj.visualizar
+    if obj.inserir is not None:
+        db_obj.inserir = obj.inserir
+    if obj.alterar is not None:
+        db_obj.alterar = obj.alterar
+    if obj.excluir is not None:
+        db_obj.excluir = obj.excluir
+    if obj.ativo is not None:
+        db_obj.ativo = obj.ativo
+
+    # 4. Grava em definitivo no banco de dados
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
 
 @app.delete("/permissoes/{id}", tags=["Permissões"])
 def deletar_permissao(id: int, db: Session = Depends(get_db)):
@@ -376,10 +492,25 @@ def criar_tela(obj: schemas.TelaCreate, db: Session = Depends(get_db)):
     return novo
 
 @app.put("/tela/{id}", response_model=schemas.Tela, tags=["Tela"])
-def atualizar_tela(id: int, obj: schemas.TelaCreate, db: Session = Depends(get_db)):
-    db_obj = db.query(models.Tela).filter(models.Tela.id_tela == id).first()
-    if not db_obj: raise HTTPException(404, "Tela não encontrada")
-    return update_item(db, db_obj, obj)
+def atualizar_tela(id: int, obj: schemas.TelaUpdate, db: Session = Depends(get_db)):
+    # 1. Busca a tela no banco (verifique se no seu models é id_telas ou id_tela)
+    db_obj = db.query(models.Tela).filter(models.Tela.id_telas == id).first()
+    
+    if not db_obj:
+        raise HTTPException(status_code=404, detail="Tela não encontrada")
+    
+    # 2. Atualiza o campo de texto se for enviado
+    if obj.nome is not None:
+        db_obj.nome = obj.nome
+        
+    # 3. CORREÇÃO CRÍTICA: Atualiza o booleano 'ativo' mesmo se ele for False
+    if obj.ativo is not None:
+        db_obj.ativo = obj.ativo
+
+    # 4. Grava em definitivo no banco de dados
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
 
 @app.delete("/tela/{id}", tags=["Tela"])
 def deletar_tela(id: int, db: Session = Depends(get_db)):
@@ -405,10 +536,25 @@ def criar_perfil(obj: schemas.PerfilCreate, db: Session = Depends(get_db)):
     return novo
 
 @app.put("/perfis/{id}", response_model=schemas.Perfil, tags=["Perfis"])
-def atualizar_perfil(id: int, obj: schemas.PerfilCreate, db: Session = Depends(get_db)):
+def atualizar_perfil(id: int, obj: schemas.PerfilUpdate, db: Session = Depends(get_db)):
+    # 1. Busca o perfil no banco pelo ID correto
     db_obj = db.query(models.Perfil).filter(models.Perfil.id_perfis == id).first()
-    if not db_obj: raise HTTPException(404, "Perfil não encontrado")
-    return update_item(db, db_obj, obj)
+    
+    if not db_obj:
+        raise HTTPException(status_code=404, detail="Perfil não encontrado")
+    
+    # 2. Atualiza o campo de texto se for enviado
+    if obj.nome is not None:
+        db_obj.nome = obj.nome
+        
+    # 3. CORREÇÃO CRÍTICA: Atualiza o booleano 'ativo' mesmo se ele for False
+    if obj.ativo is not None:
+        db_obj.ativo = obj.ativo
+
+    # 4. Grava em definitivo no banco de dados
+    db.commit()
+    db.refresh(db_obj)
+    return db_obj
 
 @app.delete("/perfis/{id}", tags=["Perfis"])
 def deletar_perfil(id: int, db: Session = Depends(get_db)):
