@@ -100,21 +100,21 @@
                     </div>
                     
                     <form id="formOcorrencias" class="row g-3 align-items-end">
-                        <input type="hidden" id="colab-id">
+                        <input type="hidden" id="ocorrencias-id">
                         
                         <div class="col-md-4">
                             <label class="form-label fw-semibold text-body">Número da Ocorrência</label>
-                            <input type="text" id="ocorrencias-numero-da-ocorrencia" class="form-control bg-body text-body shadow-none" required placeholder="Digite o número da ocorrência...">
-                        </div>
+                            <input type="number" id="ocorrencias-numero" class="form-control bg-body text-body shadow-none" required placeholder="Digite o número da ocorrência...">
+                        </div>  
                         
                         <div class="col-md-4">
                             <label class="form-label fw-semibold text-body">Data da Ocorrência</label>
-                            <input type="text" id="colaboradores-matricula" class="form-control bg-body text-body shadow-none" placeholder="Digite...">
+                            <input type="datetime-local" id="ocorrencias-data" class="form-control bg-body text-body shadow-none" placeholder="Digite...">
                         </div>
         
                         <div class="col-md-4">
                             <label class="form-label fw-semibold text-body">Máquina</label>
-                            <select class="form-select bg-body text-body shadow-none" id="ocorrências-máquina">
+                            <select class="form-select bg-body text-body shadow-none" id="ocorencias-máquinas">
                                 <option value="">Selecione a máquina...</option>
                             </select>
                         </div>
@@ -135,39 +135,39 @@
 
                         <div class="col-md-3">
                             <label class="form-label fw-semibold text-body">Lote do Produto</label>
-                            <input type="email" id="ocorrencias-lote-do-produto" class="form-control bg-body text-body shadow-none" placeholder="Digite o lote do produto...">
+                            <input type="number" id="ocorrencias-lote-produto" class="form-control bg-body text-body shadow-none" placeholder="Digite o lote do produto...">
                         </div>
 
                         <div class="col-md-3">
                             <label class="form-label fw-semibold text-body">Número da Nota Fiscal</label>
-                            <input type="email" id="ocorrencias-numero-da-nota-fiscal" class="form-control bg-body text-body shadow-none" placeholder="Digite o número da nota fiscal...">
+                            <input type="number" id="ocorrencias-numero-nota" class="form-control bg-body text-body shadow-none" placeholder="Digite o número da nota fiscal...">
                         </div>
 
-                        <h4 class="mb-0 fw-bold text-body" id="titulo-form-colab">
+                        <h4 class="mb-0 fw-bold text-body" id="titulo-form-ocorrencias">
                             <i class="sidebar-texto fa-solid me-3"></i> Descrição do Problema e Falhas
                         </h4>
 
                         <div class="col-md-6">
                             <label class="form-label fw-semibold text-body">Descrição do Problema</label>
-                            <input type="text" id="ocorrencias-descrição-do-problema" class="form-control bg-body text-body shadow-none" required placeholder="Digite a descrição do problema...">
+                            <input type="text" id="ocorrencias-problema" class="form-control bg-body text-body shadow-none" required placeholder="Digite a descrição do problema...">
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label fw-semibold text-body">Como ocorreu a falha?</label>
-                            <input type="text" id="ocorrencias-como-ocorreu-a-falha" class="form-control bg-body text-body shadow-none" required placeholder="Digite como ocorreu a falha..">
+                            <input type="text" id="ocorrencias-falha-como" class="form-control bg-body text-body shadow-none" required placeholder="Digite como ocorreu a falha..">
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label fw-semibold text-body">Quando ocorreu a falha?</label>
-                            <input type="text" id="ocorrencias-quando-ocorreu-a-falha" class="form-control bg-body text-body shadow-none" required placeholder="Digite quando ocorreu a falha..">
+                            <input type="text" id="ocorrencias-falha-quando" class="form-control bg-body text-body shadow-none" required placeholder="Digite quando ocorreu a falha..">
                         </div>
 
                         <div class="col-md-6">
                             <label class="form-label fw-semibold text-body">Quem estava envolvido na falha?</label>
-                            <input type="text" id="ocorrencias-quem-estava-envolvido-na-falha" class="form-control bg-body text-body shadow-none" required placeholder="Digite quem estava envolvido na falha..">
+                            <input type="text" id="ocorrencias-falha-quem" class="form-control bg-body text-body shadow-none" required placeholder="Digite quem estava envolvido na falha..">
                         </div>
 
-                        <h4 class="mb-0 fw-bold text-body" id="titulo-form-colab">
+                        <h4 class="mb-0 fw-bold text-body" id="titulo-form-ocorrencias">
                             <i class="sidebar-texto fa-solid me-3"></i> Ação e Situação
                         </h4>
 
@@ -178,12 +178,12 @@
 
                         <div class="col-md-3">
                             <label class="form-label fw-semibold text-body">Ações Corretivas</label>
-                            <input type="text" id="ocorrencias-observacoes-adicionais" class="form-control bg-body text-body shadow-none" required placeholder="Digite ..">
+                            <input type="text" id="ocorrencias-observacoes" class="form-control bg-body text-body shadow-none" required placeholder="Digite ..">
                         </div>
 
                         <div class="col-md-3">
                             <label class="form-label fw-semibold text-body">Data Prazo</label>
-                            <input type="text" id="ocorrencias-data-prazo" class="form-control bg-body text-body shadow-none" required placeholder="Digite ..">
+                            <input type="date" id="ocorrencias-data-prazo" class="form-control bg-body text-body shadow-none" required placeholder="Digite ..">
                         </div>
 
                         <div class="col-md-4">
@@ -195,20 +195,6 @@
                                 <option value>Concluido</option>
                             </select>
                         </div>
-
-
-
-
-
-                        <div class="col-md-4">
-                            <label for="colaboradores-situacao" class="form-label fw-semibold text-body">Situação</label>
-                            <select id="colaboradores-situacao" class="form-select">
-                                <option value="true">Ativo</option>
-                                <option value="false">Inativo</option>
-                            </select>
-                        </div>
-
-
 
                     </form>
                     
