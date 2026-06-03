@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Roboto:400,500,700,900&display=swap');
 
 :root {
     --sidebar-width: 280px;
@@ -17,6 +17,11 @@
     --fundotela: #1d3151; /*variável cor de fundo da tela*/
     --verdeciano1: #7AF6EE; /*variável cor verde ciano clara declarada*/
     --verdeciano2: #EAFFFE; /*variável cor verde ciano escura declarada*/
+}
+
+/* Define Roboto como padrão para todo o sistema */
+* {
+    font-family: 'Roboto', sans-serif;
 }
 
 body {
@@ -97,7 +102,7 @@ body {
 
 .sidebar-texto2 {
     font-size: 1.5rem; 
-    font-weight: 800;
+    font-weight: 700; /* Ajustado para o peso máximo padrão do Roboto comercial */
     display: inline-block;   
     background: var(--verdeciano1);
     -webkit-background-clip: text;
@@ -107,16 +112,15 @@ body {
     color: var(--verdeciano1); 
 }
 
-/* --- 2. AJUSTE EXCLUSIVO PARA O TEXTO (Ativa a Poppins SEM quebrar o Ícone) --- */
-/* Usamos 'span.sidebar-texto' para que a fonte Poppins mude APENAS nas letras */
+/* --- 2. AJUSTE EXCLUSIVO PARA O TEXTO (Usa Roboto com peso forte) --- */
 span.sidebar-texto {
-    font-family: 'Poppins', system-ui, -apple-system, sans-serif;
-    font-weight: 800; /* Peso extra-bold para o texto */
+    font-family: 'Roboto', sans-serif;
+    font-weight: 700; 
 }
 
 /* --- 3. AJUSTE EXCLUSIVO PARA O ÍCONE (Garante o peso visual dele) --- */
 i.sidebar-texto {
-    font-weight: 900; /* Peso ideal para os ícones do FontAwesome ficarem fortes */
+    font-weight: 900; /* Mantido para compatibilidade com os ícones do FontAwesome */
 }
 
 /* --- 4. REGRA PARA QUANDO A SIDEBAR FECHAR --- */
@@ -127,16 +131,6 @@ i.sidebar-texto {
 .sidebar.collapsed i.sidebar-texto {
     margin-right: 0 !important;
     margin-left: 0 !important;
-}
-
-/* --- REGRA PARA QUANDO A SIDEBAR FECHAR --- */
-.sidebar.collapsed span.sidebar-texto {
-    display: none !important;
-}
-
-.sidebar.collapsed i.sidebar-texto {
-    margin-right: 0 !important;
-    margin-left: 0 !important; 
 }
 
 .logo-text {
@@ -224,7 +218,6 @@ i.sidebar-texto {
 .collapsed .hide-on-collapse {
     opacity: 0;
     visibility: hidden;
-    
 }
 
 .collapsed .logo-text {
@@ -258,7 +251,7 @@ i.sidebar-texto {
     background-color: var(--fundo);
     padding: 12px 16px;
     text-align: left;
-    font-weight: 600;
+    font-weight: 500; /* Peso médio do Roboto adequado para cabeçalhos */
     font-size: 0.9rem;
     color: var(--texto);
     border-bottom: 2px solid var(--cinza);
