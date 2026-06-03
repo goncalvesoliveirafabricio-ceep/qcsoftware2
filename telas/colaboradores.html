@@ -113,10 +113,14 @@
                         </div>
         
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold text-body">Cargos</label>
-                            <select class="form-select bg-body text-body shadow-none" id="colaboradores-cargo">
-                                <option value="">Selecione o cargo...</option>
-                            </select>
+                            <label class="form-label fw-semibold text-body">Cargos</label>                            
+                            <input type="text" 
+                                   class="form-select bg-body text-body shadow-none" 
+                                   id="colaboradores-cargo-busca" 
+                                   placeholder="Digite para buscar o cargo..." 
+                                   autocomplete="off">                            
+                            <datalist id="lista-cargos-datalist"></datalist>                            
+                            <input type="hidden" id="colaboradores-cargo" name="cargo_id">
                         </div>
         
                         <div class="col-md-4">

@@ -1098,25 +1098,48 @@ let listaDeCargos = [];            // CORREÇÃO: Declarada globalmente para evi
 // 1. CARREGAR OPÇÕES DO SELECT DE CARGOS (DINÂMICO)
 // =========================================================================
 async function carregarCargosNoSelect() {
-    // CORREÇÃO: Adicionado o :not([id*="situacao"]) para impedir que ele altere o campo Ativo/Inativo na tela de Cargos
-    const selectCargo = document.getElementById('colaboradores-cargo') || document.querySelector('select[id*="cargo"]:not([id*="situacao"])');
-    if (!selectCargo) return;
+    // Captura os novos elementos do HTML
+    const inputBusca = document.getElementById('colaboradores-cargo-busca');
+    const datalistCargos = document.getElementById('lista-cargos-datalist');
+    const inputIdOculto = document.getElementById('colaboradores-cargo') || document.querySelector('input[id*="cargo"]:not([id*="situacao"])');
+
+    if (!inputBusca || !datalistCargos || !inputIdOculto) return;
 
     try {
         const res = await fetch(`${API_URL}/cargos/`);
         if (res.ok) {
             const cargos = await res.json();
-            listaDeCargos = cargos; // Salva os cargos para uso na tabela
+            listaDeCargos = cargos; // Mantém seu salvamento para uso na tabela
+
+            // 1. Ordena os cargos recebidos em ordem alfabética pelo nome
+            cargos.sort((a, b) => a.nome.localeCompare(b.nome));
             
-            // Passando o ID numérico para o 'value' em vez do nome.
-            selectCargo.innerHTML = '<option value="">Selecione o cargo</option>' + 
-                cargos.map(c => {
-                    const idCargo = c.id_cargos ?? c.id ?? c._id;
-                    return `<option value="${idCargo}">${c.nome}</option>`;
-                }).join('');
+            // 2. Vincula o input de busca ao datalist
+            inputBusca.setAttribute('list', 'lista-cargos-datalist');
+
+            // 3. Popula o datalist apenas com os nomes (o data-id guarda o ID de suporte)
+            datalistCargos.innerHTML = cargos.map(c => {
+                const idCargo = c.id_cargos ?? c.id ?? c._id;
+                return `<option value="${c.nome}" data-id="${idCargo}"></option>`;
+            }).join('');
+
+            // 4. Evento para capturar quando o usuário selecionar um cargo da lista
+            inputBusca.addEventListener('input', function() {
+                const valorDigitado = this.value;
+                // Procura se o que foi digitado existe exatamente na lista de opções
+                const opcaoSelecionada = Array.from(datalistCargos.options).find(opt => opt.value === valorDigitado);
+
+                if (opcaoSelecionada) {
+                    // Se achou, joga o ID numérico no campo oculto
+                    inputIdOculto.value = opcaoSelecionada.getAttribute('data-id');
+                } else {
+                    // Se o usuário apagou ou digitou algo que não existe, limpa o ID
+                    inputIdOculto.value = "";
+                }
+            });
         }
     } catch (e) {
-        console.error("Erro ao carregar cargos para o formulário:", e);
+        console.error("Erro ao carregar e ordenar cargos para o formulário:", e);
     }
 }
 
