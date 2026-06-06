@@ -94,7 +94,7 @@
                         
                         <div class="d-flex gap-2">
                             <button type="submit" form="formColaboradores" class="btn btn-success px-4 fw-bold">
-                                <i class="bi bi-floppy"></i> Salvar
+                                <i class="bi bi-floppy"></i>&nbsp;&nbsp; Salvar
                             </button>
                         </div>
                     </div>
@@ -109,7 +109,13 @@
                         
                         <div class="col-md-4">
                             <label class="form-label fw-semibold text-body">Matrícula</label>
-                            <input type="text" id="colaboradores-matricula" class="form-control bg-body text-body shadow-none" placeholder="Digite a matrícula...">
+                            <input type="text" 
+                            inputmode="numeric" 
+                            pattern="[0-9]*" 
+                            id="colaboradores-matricula" 
+                            class="form-control bg-body text-body shadow-none" 
+                            placeholder="Digite a matrícula..."
+                            oninput="this.value = this.value.replace(/[^0-9]/g, '');">
                         </div>
         
                         <div class="col-md-4">
@@ -159,9 +165,9 @@
     
     <div class="tabela-container card border-0 p-3 shadow-sm bg-body">
         <div class="table-responsive">
-            <table class="tabela table table-hover align-middle mb-0 text-body" id="tabela-colaboradores-recentes">
+            <table class="tabela table table-hover align-middle mb-0 text-body" id="container-tabela-colaboradores">
                 <thead class="table-light fw-bold">
-                    <tr>                                
+                    <tr>                                                
                         <th>Nome</th>
                         <th>Matrícula</th>
                         <th>Cargo</th>
@@ -179,6 +185,8 @@
                 </tbody>
             </table>
         </div>
+    </div>
+</section>
                   
             <div class="d-flex justify-content-between align-items-center mt-4">
                 <button class="btn btn-sm btn-outline-secondary" id="btn-anterior-colaboradores" disabled>

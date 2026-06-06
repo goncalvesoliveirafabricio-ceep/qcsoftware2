@@ -45,6 +45,8 @@ async function carregarOcorrenciasNoSelect() {
 async function listarOcorrenciasCRUD() {
     try {
         const res = await fetch(`${API_URL}/ocorrencias/`);
+        cache: 'no-store' // <--- ISSO DIZ PARA O NAVEGADOR BUSCAR SEMPRE DO BANCO
+
         if (!res.ok) throw new Error(`Erro no servidor: Status ${res.status}`);
 
         todosOcorrencias = await res.json();
