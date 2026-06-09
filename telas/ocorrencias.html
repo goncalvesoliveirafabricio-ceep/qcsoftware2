@@ -122,24 +122,36 @@
                         </div>
         
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold text-body">Máquina</label>
-                            <select class="form-select bg-body text-body shadow-none" id="ocorencias-máquinas">
-                                <option value="">Selecione a máquina...</option>
-                            </select>
+                            <label class="form-label fw-semibold text-body">Máquina</label>                            
+                            <input type="text" 
+                                   class="form-control bg-body text-body shadow-none" 
+                                   id="maquinas-nome-busca" 
+                                   placeholder="Selecione a máquina..." 
+                                   autocomplete="off">                            
+                            <datalist id="lista-maquinas-datalist"></datalist>                            
+                            <input type="hidden" id="maquinas-nome" name="id_maquinas">
                         </div>
 
                         <div class="col-md-3">
-                            <label class="form-label fw-semibold text-body">Colaborador</label>
-                            <select class="form-select bg-body text-body shadow-none" id="ocorrências-colaborador">
-                                <option value="">Selecione o colaborador...</option>
-                            </select>
+                            <label class="form-label fw-semibold text-body">Colaborador</label>                            
+                            <input type="text" 
+                                   class="form-control bg-body text-body shadow-none" 
+                                   id="colaboradores-nome-busca" 
+                                   placeholder="Selecione o colaborador..." 
+                                   autocomplete="off">                            
+                            <datalist id="lista-colaboradores-datalist"></datalist>                            
+                            <input type="hidden" id="colaboradores-nome" name="id_colaboradores">
                         </div>
 
                         <div class="col-md-3">
-                            <label class="form-label fw-semibold text-body">Produto</label>
-                            <select class="form-select bg-body text-body shadow-none" id="ocorrências-produto">
-                                <option value="">Selecione o produto...</option>
-                            </select>
+                            <label class="form-label fw-semibold text-body">Produto</label>                            
+                            <input type="text" 
+                                   class="form-control bg-body text-body shadow-none" 
+                                   id="produtos-nome-busca" 
+                                   placeholder="Selecione o produto..." 
+                                   autocomplete="off">                            
+                            <datalist id="lista-produtos-datalist"></datalist>                            
+                            <input type="hidden" id="produtos-nome" name="id_produtos">
                         </div>
 
                         <div class="col-md-3">

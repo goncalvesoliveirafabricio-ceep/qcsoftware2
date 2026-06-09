@@ -11,33 +11,181 @@ const ITENS_POR_PAGINA = 10;
 let todasOcorrencias = [];       // Armazena a lista bruta vinda da API
 let OcorrenciasFiltradas = [];   // Armazena o resultado da busca por nome
 let paginaAtualOcorrencias = 1;  // Controle de paginação exclusivo
-let listaDeOcorrencias = [];            // CORREÇÃO: Declarada globalmente para evitar o erro "is not defined"
+let listaDeOcorrencias = [];     // CORREÇÃO: Declarada globalmente para evitar o erro "is not defined"
 
 // =========================================================================
-// 1. CARREGAR OPÇÕES DO SELECT DE OCORRÊNCIAS (DINÂMICO)
+// 1. CARREGAR OPÇÕES DO SELECT DE MÁQUINAS (DINÂMICO)
 // =========================================================================
-async function carregarOcorrenciasNoSelect() {
-    // CORREÇÃO: Adicionado o :not([id*="situacao"]) para impedir que ele altere o campo Ativo/Inativo na tela de Ocorrencias
-    const selectOcorrencias = document.getElementById('ocorrencias-produtos') || document.querySelector('select[id*="produtos"]:not([id*="situacao"])');
-    if (!selectProdutos) return;
+async function carregarMaquinasNoSelect() {
+    const inputBusca = document.getElementById('maquinas-nome-busca');
+    const datalistMaquinas = document.getElementById('lista-maquinas-datalist');
+    const inputIdOculto = document.getElementById('maquinas-nome') || document.querySelector('input[id*="maquinas"]:not([id*="situacao"])');
+
+    if (!inputBusca || !datalistMaquinas || !inputIdOculto) return;
 
     try {
-        const res = await fetch(`${API_URL}/produtos/`);
+        const res = await fetch(`${API_URL}/maquinas/`, { cache: 'no-store' });
         if (res.ok) {
-            const cargos = await res.json();
-            listaDeCargos = cargos; // Salva os produtos para uso na tabela
+            const maquinas = await res.json();
+            window.listaDeMaquinas = maquinas; // Salva globalmente se necessário
+
+            // 1. Ordena as máquinas em ordem alfabética pelo nome
+            maquinas.sort((a, b) => a.nome.localeCompare(b.nome));
             
-            // Passando o ID numérico para o 'value' em vez do nome.
-            selectCargo.innerHTML = '<option value="">Selecione o produto</option>' + 
-                produtos.map(c => {
-                    const idProdutos = c.id_produtos ?? c.id ?? c._id;
-                    return `<option value="${idCargo}">${c.nome}</option>`;
-                }).join('');
+            // 2. Vincula o input de busca ao datalist
+            inputBusca.setAttribute('list', 'lista-maquinas-datalist');
+
+            // 3. Popula o datalist (Garante compatibilidade com id_maquinas vindo do banco)
+            datalistMaquinas.innerHTML = maquinas.map(m => {
+                const id_Maquinas = m.id_maquinas || m.id;
+                return `<option value="${m.nome}" data-id="${id_Maquinas}"></option>`;
+            }).join('');
+
+            // 4. FUNÇÃO REVERSA PARA A EDIÇÃO
+            window.atualizarInputVisualMaquina = function(idAlvo) {
+                const opcao = Array.from(datalistMaquinas.options).find(opt => opt.getAttribute('data-id')?.toString() === idAlvo?.toString());
+                if (opcao) {
+                    inputBusca.value = opcao.value;
+                } else {
+                    inputBusca.value = "";
+                }
+            };
+
+            // 5. Evento para capturar a seleção do usuário
+            inputBusca.addEventListener('input', function() {
+                const valorDigitado = this.value;
+                const opcaoSelecionada = Array.from(datalistMaquinas.options).find(opt => opt.value === valorDigitado);
+
+                if (opcaoSelecionada) {
+                    inputIdOculto.value = opcaoSelecionada.getAttribute('data-id');
+                } else {
+                    inputIdOculto.value = ""; // Limpa se o usuário apagar ou digitar algo inválido
+                }
+            });
         }
     } catch (e) {
-        console.error("Erro ao carregar cargos para o formulário:", e);
+        console.error("Erro ao carregar e ordenar máquinas para o formulário:", e);
     }
 }
+
+// Garante que a função rode assim que a página carregar
+document.addEventListener('DOMContentLoaded', carregarMaquinasNoSelect);
+
+// =========================================================================
+// 1.1 CARREGAR OPÇÕES DO SELECT DE COLABORADORES (DINÂMICO)
+// =========================================================================
+async function carregarColaboradoresNoSelect() {
+    const inputBusca = document.getElementById('colaboradores-nome-busca');
+    const datalistColaboradores = document.getElementById('lista-colaboradores-datalist');
+    const inputIdOculto = document.getElementById('colaboradores-nome') || document.querySelector('input[id*="colaboradores"]:not([id*="situacao"])');
+
+    if (!inputBusca || !datalistColaboradores || !inputIdOculto) return;
+
+    try {
+        const res = await fetch(`${API_URL}/colaboradores/`, { cache: 'no-store' });
+        if (res.ok) {
+            const colaboradores = await res.json();
+            window.listaDeColaboradores = colaboradores; // Salva globalmente se necessário
+
+            // 1. Ordena os colaboradores em ordem alfabética pelo nome
+            colaboradores.sort((a, b) => a.nome.localeCompare(b.nome));
+            
+            // 2. Vincula o input de busca ao datalist
+            inputBusca.setAttribute('list', 'lista-colaboradores-datalist');
+
+            // 3. Popula o datalist (Garante compatibilidade com colaboradores vindo do banco)
+            datalistColaboradores.innerHTML = colaboradores.map(c => {
+                const id_Colaboradores = c.id_Colaboradores || c.id;
+                return `<option value="${c.nome}" data-id="${id_Colaboradores}"></option>`;
+            }).join('');
+
+            // 4. FUNÇÃO REVERSA PARA A EDIÇÃO
+            window.atualizarInputVisualColaboradores = function(idAlvo) {
+                const opcao = Array.from(datalistColaboradores.options).find(opt => opt.getAttribute('data-id')?.toString() === idAlvo?.toString());
+                if (opcao) {
+                    inputBusca.value = opcao.value;
+                } else {
+                    inputBusca.value = "";
+                }
+            };
+
+            // 5. Evento para capturar a seleção do usuário
+            inputBusca.addEventListener('input', function() {
+                const valorDigitado = this.value;
+                const opcaoSelecionada = Array.from(datalistColaboradores.options).find(opt => opt.value === valorDigitado);
+
+                if (opcaoSelecionada) {
+                    inputIdOculto.value = opcaoSelecionada.getAttribute('data-id');
+                } else {
+                    inputIdOculto.value = ""; // Limpa se o usuário apagar ou digitar algo inválido
+                }
+            });
+        }
+    } catch (e) {
+        console.error("Erro ao carregar e ordenar colaboradores para o formulário:", e);
+    }
+}
+
+// Garante que a função rode assim que a página carregar
+document.addEventListener('DOMContentLoaded', carregarColaboradoresNoSelect);
+
+// =========================================================================
+// 1.1.1 CARREGAR OPÇÕES DO SELECT DE PRODUTOS (DINÂMICO)
+// =========================================================================
+async function carregarProdutosNoSelect() {
+    const inputBusca = document.getElementById('produtos-nome-busca');
+    const datalistProdutos = document.getElementById('lista-produtos-datalist');
+    const inputIdOculto = document.getElementById('produtos-nome') || document.querySelector('input[id*="produtos"]:not([id*="situacao"])');
+
+    if (!inputBusca || !datalistProdutos || !inputIdOculto) return;
+
+    try {
+        const res = await fetch(`${API_URL}/produtos/`, { cache: 'no-store' });
+        if (res.ok) {
+            const produtos = await res.json();
+            window.listaDeProdutos = produtos; // Salva globalmente se necessário
+
+            // 1. Ordena os produtos em ordem alfabética pelo nome
+            produtos.sort((a, b) => a.nome.localeCompare(b.nome));
+            
+            // 2. Vincula o input de busca ao datalist
+            inputBusca.setAttribute('list', 'lista-produtos-datalist');
+
+            // 3. Popula o datalist (Garante compatibilidade com colaboradores vindo do banco)
+            datalistProdutos.innerHTML = produtos.map(p => {
+                const id_Produtos = p.id_Produtos || p.id;
+                return `<option value="${p.nome}" data-id="${id_Produtos}"></option>`;
+            }).join('');
+
+            // 4. FUNÇÃO REVERSA PARA A EDIÇÃO
+            window.atualizarInputVisualProdutos = function(idAlvo) {
+                const opcao = Array.from(datalistProdutos.options).find(opt => opt.getAttribute('data-id')?.toString() === idAlvo?.toString());
+                if (opcao) {
+                    inputBusca.value = opcao.value;
+                } else {
+                    inputBusca.value = "";
+                }
+            };
+
+            // 5. Evento para capturar a seleção do usuário
+            inputBusca.addEventListener('input', function() {
+                const valorDigitado = this.value;
+                const opcaoSelecionada = Array.from(datalistProdutos.options).find(opt => opt.value === valorDigitado);
+
+                if (opcaoSelecionada) {
+                    inputIdOculto.value = opcaoSelecionada.getAttribute('data-id');
+                } else {
+                    inputIdOculto.value = ""; // Limpa se o usuário apagar ou digitar algo inválido
+                }
+            });
+        }
+    } catch (e) {
+        console.error("Erro ao carregar e ordenar produtos para o formulário:", e);
+    }
+}
+
+// Garante que a função rode assim que a página carregar
+document.addEventListener('DOMContentLoaded', carregarProdutosNoSelect);
 
 // =========================================================================
 // 2. LISTAR OCORRENCIAS (READ com Filtro e Paginação)
@@ -221,35 +369,60 @@ function atualizarControlesPaginacaoOcorrencias(totalPaginas) {
 document.getElementById('formOcorrencias')?.addEventListener('submit', async (e) => {
     e.preventDefault();
     
-    const campoId = document.getElementById('colab-id');
+    const campoId = document.getElementById('ocorrencias-id');
     const id = campoId ? campoId.value.trim() : "";
     
     const url = id ? `${API_URL}/ocorrencias/${id}` : `${API_URL}/ocorrencias/`;
     const metodo = id ? 'PUT' : 'POST';
 
     try {
-        const selectCargo = document.getElementById('ocorrencias-cargo') || document.querySelector('select[id*="cargo"]');
-        const valorCargo = selectCargo ? selectCargo.value : "";
-        const idCargoInt = parseInt(valorCargo, 10);
+        // ==========================================
+        // 1. CAPTURA E VALIDAÇÃO: MÁQUINAS
+        // ==========================================
+        const selectMaquinas = document.getElementById('maquinas-nome') || document.querySelector('input[id*="maquinas"]:not([id*="situacao"])');
+        const valorMaquinas = selectMaquinas ? selectMaquinas.value : "";
+        const idMaquinasInt = parseInt(valorMaquinas, 10);
 
-        if (isNaN(idCargoInt)) {
-            console.error("Valor capturado no select do cargo:", valorCargo);
-            if (typeof dispararNotificacao === "function") {
-                dispararNotificacao("Selecione um cargo válido para a ocorrencia.", "erro");
-            } else {
-                alert("Erro: Não foi possível identificar o código do cargo selecionado.");
-            }
+        if (isNaN(idMaquinasInt)) {
+            console.error("Valor capturado para Maquinas:", valorMaquinas);
+            executarNotificacao("Selecione uma máquina válida para a ocorrência.");
             return; 
         }
 
+        // ==========================================
+        // 2. CAPTURA E VALIDAÇÃO: PRODUTOS
+        // ==========================================
+        const selectProdutos = document.getElementById('produtos-nome') || document.querySelector('input[id*="produtos"]');
+        const valorProdutos = selectProdutos ? selectProdutos.value : "";
+        const idProdutosInt = parseInt(valorProdutos, 10);
+
+        if (isNaN(idProdutosInt)) {
+            console.error("Valor capturado para Produtos:", valorProdutos);
+            executarNotificacao("Selecione um produto válido para a ocorrência.");
+            return; 
+        }
+
+        // ==========================================
+        // 3. CAPTURA E VALIDAÇÃO: COLABORADORES
+        // ==========================================
+        const selectColaboradores = document.getElementById('colaboradores-nome') || document.querySelector('input[id*="colaborador"]');
+        const valorColaboradores = selectColaboradores ? selectColaboradores.value : "";
+        const idColaboradoresInt = parseInt(valorColaboradores, 10);
+
+        if (isNaN(idColaboradoresInt)) {
+            console.error("Valor capturado para Colaboradores:", valorColaboradores);
+            executarNotificacao("Selecione um colaborador válido para a ocorrência.");
+            return; 
+        }
+
+   
         // =========================================================================
-        // CAPTURA E CONVERSÃO ULTRA RÍGIDA DA SITUAÇÃO (GARANTE FALSE NO BANCO)
+        // CAPTURA DO STATUS DA OCORRÊNCIA (TEXTO PURO)
         // =========================================================================
         const selectSituacao = document.getElementById('ocorrencias-situacao');
-        const valorSituacaoTela = selectSituacao ? selectSituacao.value.toString().trim() : "true";
-        
-        // Validação estrita: se for exatamente a string "false", assume o booleano false
-        const ehAtivoBoolean = (valorSituacaoTela === "true");
+        // Captura o texto selecionado (Pendente, Em Andamento, Em Análise ou Concluído)
+        // Se estiver vazio, define um valor padrão de segurança, ex: "Pendente"
+        const situacaoTexto = selectSituacao ? selectSituacao.value.trim() : "Pendente";
 
         // Monta o payload idêntico à estrutura esperada pela sua API
         const payloadJSON = {
