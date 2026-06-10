@@ -561,7 +561,7 @@ function dispararNotificacao(mensagem, acao = 'sucesso') {
 }
 
 // =========================================================================
-// 4. CONTROLE DE DRAG AND DROP DA FOTO
+// 4. CONTROLE DE DRAG AND DROP E CLIQUE PARA FOTO (CELULAR E PC)
 // =========================================================================
 document.addEventListener('DOMContentLoaded', () => {
     const dropzone = document.getElementById('dropzone-foto');
@@ -573,6 +573,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!dropzone || !inputFoto) return;
 
+    // CORREÇÃO CRÍTICA: Faz a área cinza (dropzone) abrir a câmera/galeria ao ser clicada
+    dropzone.addEventListener('click', (e) => {
+        // Evita abrir o seletor duas vezes se o usuário clicar diretamente no botão de remover
+        if (e.target.closest('#btn-remover-foto')) return;
+        
+        inputFoto.click();
+    });
+
+    // Efeito visual de arrastar arquivo (opcional para PC)
+    dropzone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropzone.classList.add('border-primary');
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+        dropzone.classList.remove('border-primary');
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone.classList.remove('border-primary');
+        if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+            inputFoto.files = e.dataTransfer.files; // Sincroniza os arquivos arrastados com o input
+            processarArquivoFoto(e.dataTransfer.files[0]);
+        }
+    });
+
+    // Função que processa a imagem e exibe a miniatura
     function processarArquivoFoto(arquivo) {
         if (!arquivo) return;
 
@@ -596,10 +624,12 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.readAsDataURL(arquivo);
     }
 
+    // Escuta a mudança do input (quando o usuário tira a foto ou escolhe da galeria)
     inputFoto.addEventListener('change', (e) => {
         processarArquivoFoto(e.target.files[0]);
     });
 
+    // Função global de reset da foto
     window.resetarVisualFoto = function() {
         inputFoto.value = "";
         if (fotoPreview) fotoPreview.src = "";
@@ -607,7 +637,10 @@ document.addEventListener('DOMContentLoaded', () => {
         uploadInstrucoes?.classList.remove('d-none');
     };
 
-    btnRemover?.addEventListener('click', window.resetarVisualFoto);
+    btnRemover?.addEventListener('click', (e) => {
+        e.stopPropagation(); // Evita que o clique para remover abra a câmera novamente
+        window.resetarVisualFoto();
+    });
 });
     
     // -- DEFINIR DATA E HORA DE BRASÍLIA --
