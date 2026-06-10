@@ -522,10 +522,23 @@ document.getElementById('formOcorrencias')?.addEventListener('submit', async (e)
         if (res.ok) { 
             alert("Cadastro realizado com sucesso!");
 
-            if (typeof dispararNotificacao === "function") {
-                const ehCriacao = metodo === 'POST' || !id;
-                dispararNotificacao(ehCriacao ? "Nova ocorrência cadastrada!" : "Cadastro alterado!", ehCriacao ? 'criar' : 'atualizar');
+            // DISPARO DA NOTIFICAÇÃO DE SUCESSO (Canto inferior direito)
+            if (metodo === 'POST') {
+                dispararNotificacao("Novo cadastro criado com sucesso!", "criar");
+            } else {
+                dispararNotificacao("Cadastro alterado com sucesso!", "atualizar");
             }
+            
+            listarOcorrenciasCRUD();
+        } else {
+            const erroApi = await res.json().catch(() => ({}));
+            console.error("Detalhes do erro do servidor:", erroApi);
+            alert(`Erro ao salvar produto. Status: ${res.status}\nMotivo: ${erroApi.detail || erroApi.message || 'Erro interno no backend'}`);
+        }
+    } catch (err) { 
+        console.error("Erro no envio:", err);
+        alert("Erro de conexão ao salvar ocorrencias."); 
+    }
             
             // 1. LIMPEZA PADRÃO DA TELA (Isso limpa todos os campos, inclusive a data)
             document.getElementById('formOcorrencias').reset();
@@ -564,16 +577,6 @@ document.getElementById('formOcorrencias')?.addEventListener('submit', async (e)
             }
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
-
-        } else {
-            const erroApi = await res.json().catch(() => ({}));
-            console.error("Erro retornado pelo servidor:", erroApi);
-            alert(`Erro ao salvar ocorrência: ${erroApi.detail || "Dados inconsistentes."}`);
-        }
-    } catch (err) { 
-        console.error("Falha grave na requisição:", err);
-        alert("Erro de conexão com o servidor.");
-    }
 });
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -685,18 +688,6 @@ function obterDataHoraAtualLocal() {
     const minutos = String(agora.getMinutes()).padStart(2, '0');
     
     return `${ano}-${mes}-${dia}T${horas}:${minutos}`;
-}
-
-// --- COPIE E COLE ESTE BLOCO DENTRO DO SEU PROCESSO DE SALVAMENTO DE OCORRÊNCIAS ---
-
-if (typeof dispararNotificacao === "function") {
-    // Identifica se é uma criação nova ou atualização
-    const acao = ehCriacao ? 'criar' : 'atualizar';
-    const mensagem = ehCriacao ? "Nova ocorrência cadastrada com sucesso!" : "Cadastro de ocorrência alterado!";
-    dispararNotificacao(mensagem, acao);
-} else {
-    const mensagemAlert = ehCriacao ? "Ocorrência cadastrada com sucesso!" : "Ocorrência atualizada com sucesso!";
-    alert(mensagemAlert);
 }
 
 // =========================================================================
