@@ -82,12 +82,12 @@ class Permissao(Base):
 class Ocorrencia(Base):
     __tablename__ = "ocorrencias"    
     
-    # --- CHAVE PRIMÁRIA DA TABELA ---
-    # Como id_ocorrencias NÃO EXISTE, definimos o número ou a data como primary_key 
-    # para satisfazer o ORM sem alterar colunas físicas do banco de dados.
-    numero_ocorrencias = Column(Integer, primary_key=True, nullable=False, default=0)
+    # 💡 AJUSTE CRÍTICO PARA O POST: 
+    # autoincrement=False impede o SQLAlchemy de tentar ler um ID serial gerado pelo banco.
+    # primary_key=True é mantido apenas como uma exigência estrutural da API.
+    numero_ocorrencias = Column(Integer, primary_key=True, autoincrement=False, nullable=False, default=0)
     
-    # --- DEMAIS CAMPOS CONFORME LOG DE ERRO DO POSTGRES ---
+    # --- Restante das colunas idênticas ao seu banco ---
     data_ocorrencias = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     id_maquinas = Column(Integer, ForeignKey("maquinas.id_maquinas"), nullable=False)
     id_colaboradores = Column(Integer, ForeignKey("colaboradores.id_colaboradores"), nullable=False)
