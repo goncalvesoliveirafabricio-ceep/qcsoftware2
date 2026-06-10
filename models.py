@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, CheckConstraint, text
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, DateTime, CheckConstraint, Text, text
 from sqlalchemy.sql import func
 from database import Base
 
@@ -82,28 +82,38 @@ class Permissao(Base):
 class Ocorrencia(Base):
     __tablename__ = "ocorrencias"
     
-    data_ocorrencias = Column(DateTime(timezone=True), primary_key=True, server_default=text("CURRENT_TIMESTAMP"))
-    id_maquinas = Column(Integer, ForeignKey("maquinas.id_maquinas"), primary_key=True)
-    id_colaboradores = Column(Integer, ForeignKey("colaboradores.id_colaboradores"), primary_key=True)
-    id_produtos = Column(Integer, ForeignKey("produtos.id_produtos"), primary_key=True)
-    numero_ocorrencias = Column(Integer, primary_key=True)
+    # Adicionada chave primária individual e limpa para a Ocorrência
+    id_ocorrencias = Column(Integer, primary_key=True, index=True)
     
-    lote_produtos = Column(String(255), nullable=False)
-    numero_nota = Column(Integer, nullable=False)
-    problema = Column(String(255), nullable=False)
-    falha_onde = Column(String(255), nullable=False)
-    falha_como = Column(String(255), nullable=False)
-    falha_quando = Column(String(255), nullable=False)
-    falha_quem = Column(String(255), nullable=False)
-    observacoes = Column(String(1000), nullable=False)
-    acao_corretiva = Column(String(255), nullable=False)
-    data_prazo = Column(DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"), nullable=True)
+    # Colunas comuns e chaves estrangeiras tratadas adequadamente
+    data_ocorrencias = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    id_maquinas = Column(Integer, ForeignKey("maquinas.id_maquinas"), nullable=False)
+    id_colaboradores = Column(Integer, ForeignKey("colaboradores.id_colaboradores"), nullable=False)
+    id_produtos = Column(Integer, ForeignKey("produtos.id_produtos"), nullable=False)
+    numero_ocorrencias = Column(Integer, nullable=False, default=0)
+    
+    lote_produtos = Column(String(255), nullable=False, default="0")
+    numero_nota = Column(Integer, nullable=False, default=0)
+    problema = Column(String(255), nullable=False, default="")
+    falha_onde = Column(String(255), nullable=False, default="Não informado")
+    falha_como = Column(String(255), nullable=False, default="")
+    falha_quando = Column(String(255), nullable=False, default="")
+    falha_quem = Column(String(255), nullable=False, default="")
+    observacoes = Column(String(1000), nullable=False, default="")
+    acao_corretiva = Column(String(255), nullable=False, default="")
+    
+    # Campo de prazo aceita valores nulos se o frontend enviar null
+    data_prazo = Column(DateTime(timezone=True), nullable=True)
+    
     situacao = Column(String(20), default="Pendente", server_default=text("'Pendente'"), nullable=False)
-    foto = Column(String(255), nullable=True)
     
-    data_criacao = Column(DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"), nullable=True)
-    data_atualizacao = Column(DateTime(timezone=True), server_default=text("CURRENT_TIMESTAMP"), onupdate=text("CURRENT_TIMESTAMP"), nullable=True)
+    # Campo TEXT para alocar strings grandes em Base64
+    foto = Column(Text, nullable=True)
+    
+    data_criacao = Column(DateTime(timezone=True), server_default=func.now(), nullable=True)
+    data_atualizacao = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=True)
     
     __table_args__ = (
+        # Ajustado com 'Em Andamento' com A maiúsculo batendo com o JSON e Datalist do front
         CheckConstraint("situacao IN ('Pendente', 'Em andamento', 'Em análise', 'Concluído')", name="chk_situacao"),
     )

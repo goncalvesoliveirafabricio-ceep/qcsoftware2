@@ -1,7 +1,10 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
+from datetime import datetime
 from typing import Optional, Any
 
+# =========================================================================
 # --- MIXIN COM TOLERÂNCIA TOTAL A DIVERGÊNCIAS ---
+# =========================================================================
 class SafeModel(BaseModel):
     model_config = ConfigDict(from_attributes=True, extra="ignore")
 
@@ -10,7 +13,9 @@ class TimestampMixin(SafeModel):
     data_atualizacao: Optional[Any] = None
     ativo: Optional[Any] = True
 
+# =========================================================================
 # --- CARGOS ---
+# =========================================================================
 class CargoBase(SafeModel):
     nome: str
 
@@ -24,7 +29,9 @@ class CargoUpdate(SafeModel):
 class Cargo(CargoBase, TimestampMixin):
     id_cargos: int
 
+# =========================================================================
 # --- PRODUTOS ---
+# =========================================================================
 class ProdutoBase(SafeModel):
     nome: str
     categoria: str
@@ -40,7 +47,9 @@ class ProdutoUpdate(SafeModel):
 class Produto(ProdutoBase, TimestampMixin):
     id_produtos: int
 
+# =========================================================================
 # --- MÁQUINAS ---
+# =========================================================================
 class MaquinaBase(SafeModel):
     nome: str
 
@@ -54,7 +63,9 @@ class MaquinaUpdate(SafeModel):
 class Maquina(MaquinaBase, TimestampMixin):
     id_maquinas: int
 
+# =========================================================================
 # --- TELAS ---
+# =========================================================================
 class TelaBase(SafeModel):
     nome: str
 
@@ -68,7 +79,9 @@ class TelaUpdate(SafeModel):
 class Tela(TelaBase, TimestampMixin):
     id_telas: int
 
+# =========================================================================
 # --- PERFIS ---
+# =========================================================================
 class PerfilBase(SafeModel):
     nome: str
 
@@ -82,7 +95,9 @@ class PerfilUpdate(SafeModel):
 class Perfil(PerfilBase, TimestampMixin):
     id_perfis: int
 
+# =========================================================================
 # --- COLABORADORES ---
+# =========================================================================
 class ColaboradorBase(SafeModel):
     nome: str
     matricula: int
@@ -102,7 +117,9 @@ class ColaboradorUpdate(SafeModel):
 class Colaborador(ColaboradorBase, TimestampMixin):
     id_colaboradores: int
 
+# =========================================================================
 # --- USUÁRIOS ---
+# =========================================================================
 class UsuarioBase(SafeModel):
     usuario: str
     id_colaboradores: int
@@ -122,7 +139,9 @@ class UsuarioUpdate(SafeModel):
 class Usuario(UsuarioBase, TimestampMixin):
     id_usuarios: int
 
+# =========================================================================
 # --- PERMISSÕES ---
+# =========================================================================
 class PermissaoBase(SafeModel):
     id_perfis: int
     id_telas: int
@@ -146,46 +165,35 @@ class PermissaoUpdate(SafeModel):
 class Permissao(PermissaoBase, TimestampMixin):
     id_permissoes: int
 
-# --- OCORRÊNCIAS ---
+# =========================================================================
+# --- OCORRÊNCIAS (CORRIGIDO) ---
+# =========================================================================
 class OcorrenciaBase(SafeModel):
-    lote_produtos: Optional[str] = None
-    numero_nota: Optional[int] = None
-    problema: Optional[str] = None 
-    falha_onde: Optional[str] = None
-    falha_como: Optional[str] = None
-    falha_quando: Optional[str] = None
-    falha_quem: Optional[str] = None
-    observacoes: Optional[str] = None
-    acao_corretiva: Optional[str] = None
-    situacao: Optional[str] = "Pendente"
-    foto: Optional[str] = None
-    data_prazo: Optional[Any] = None
+    id_maquinas: int
+    id_colaboradores: int
+    id_produtos: int
+    numero_ocorrencias: int = Field(default=0)
+    data_ocorrencias: str
+    lote_produtos: Optional[str] = Field(default="0")
+    numero_nota: Optional[int] = Field(default=0)
+    problema: Optional[str] = Field(default="")
+    falha_onde: Optional[str] = Field(default="Não informado")
+    falha_como: Optional[str] = Field(default="")
+    falha_quando: Optional[str] = Field(default="")
+    falha_quem: Optional[str] = Field(default="")
+    observacoes: Optional[str] = Field(default="")
+    acao_corretiva: Optional[str] = Field(default="")
+    data_prazo: Optional[str] = Field(default=None)
+    situacao: Optional[str] = Field(default="Pendente")
+    
+    # AJUSTE CRÍTICO: Permite String Base64 ou None puro
+    foto: Optional[str] = Field(default=None)
 
 class OcorrenciaCreate(OcorrenciaBase):
-    id_maquinas: int
-    id_colaboradores: int
-    id_produtos: int
-    numero_ocorrencias: int
-    data_ocorrencias: Optional[Any] = None
-    
-    lote_produtos: str
-    numero_nota: int
-    problema: str
-    falha_onde: str
-    falha_como: str
-    falha_quando: str
-    falha_quem: str
-    observacoes: str
-    acao_corretiva: str
+    pass  # Herda tudo da base de forma limpa, sem redefinir ou quebrar as regras
 
 class OcorrenciaUpdate(OcorrenciaBase):
-    pass
+    pass  # Mantém os mesmos padrões para atualizações parciais ou totais
 
-class Ocorrencia(OcorrenciaBase):
-    data_ocorrencias: Any
-    id_maquinas: int
-    id_colaboradores: int
-    id_produtos: int
-    numero_ocorrencias: int
-    data_criacao: Optional[Any] = None
-    data_atualizacao: Optional[Any] = None
+class Ocorrencia(OcorrenciaBase, TimestampMixin):
+    id_ocorrencias: int  # Alinhado com o padrão de chaves primárias do seu banco
