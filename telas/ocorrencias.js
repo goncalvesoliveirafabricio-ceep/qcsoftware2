@@ -3,15 +3,25 @@ const API_URL = "https://qcsoftware2.onrender.com";
 let paginaAtual = 1;
 const ITENS_POR_PAGINA = 10;
 
-//-- Ocorrências
-
 // =========================================================================
 // VARIÁVEIS DE CONTROLE DE ESTADO PARA OCORRENCIAS
 // =========================================================================
 let todasOcorrencias = [];       // Armazena a lista bruta vinda da API
 let OcorrenciasFiltradas = [];   // Armazena o resultado da busca por nome
 let paginaAtualOcorrencias = 1;  // Controle de paginação exclusivo
-let listaDeOcorrencias = [];     // CORREÇÃO: Declarada globalmente para evitar o erro "is not defined"
+let listaDeOcorrencias = [];     // Declarada globalmente para evitar o erro "is not defined"
+let listaDeCargos = [];          // Adicionado fallback para evitar erro de referência se não declarada global em outro arquivo
+
+// Auxiliar para obter data local formatada para o input datetime-local
+function obterDataHoraAtualLocal() {
+    const agora = new Date();
+    const ano = agora.getFullYear();
+    const mes = String(agora.getMonth() + 1).padStart(2, '0');
+    const dia = String(agora.getDate()).padStart(2, '0');
+    const horas = String(agora.getHours()).padStart(2, '0');
+    const minutos = String(agora.getMinutes()).padStart(2, '0');
+    return `${ano}-${mes}-${dia}T${horas}:${minutos}`;
+}
 
 // =========================================================================
 // 1. CARREGAR OPÇÕES DO SELECT DE MÁQUINAS (DINÂMICO)
@@ -66,7 +76,6 @@ async function carregarMaquinasNoSelect() {
                 if (opcaoSelecionada) {
                     inputIdOculto.value = opcaoSelecionada.getAttribute('data-id');
                 } else {
-                    // Só esvazia o ID se o campo estiver completamente em branco
                     if (valorDigitado === "") inputIdOculto.value = "";
                 }
             });
@@ -93,19 +102,15 @@ async function carregarColaboradoresNoSelect() {
             const colaboradores = await res.json();
             window.listaDeColaboradores = colaboradores;
 
-            // 1. Ordena os colaboradores em ordem alfabética pelo nome
             colaboradores.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
             
-            // 2. Vincula o input de busca ao datalist
             inputBusca.setAttribute('list', 'lista-colaboradores-datalist');
 
-            // 3. Popula o datalist mapeando a chave id_colaboradores do banco
             datalistColaboradores.innerHTML = colaboradores.map(c => {
                 const id_Colaboradores = c.id_colaboradores || c.id_Colaboradores || c.id;
                 return `<option value="${c.nome}" data-id="${id_Colaboradores}"></option>`;
             }).join('');
 
-            // 4. FUNÇÃO REVERSA PARA A EDIÇÃO
             window.atualizarInputVisualColaboradores = function(idAlvo) {
                 if (!idAlvo) {
                     inputBusca.value = "";
@@ -122,7 +127,6 @@ async function carregarColaboradoresNoSelect() {
                 }
             };
 
-            // 5. Evento inteligente para capturar a seleção do usuário
             inputBusca.addEventListener('input', function() {
                 const valorDigitado = this.value.trim();
                 const opcaoSelecionada = Array.from(datalistColaboradores.options).find(opt => opt.value.trim() === valorDigitado);
@@ -156,19 +160,15 @@ async function carregarProdutosNoSelect() {
             const produtos = await res.json();
             window.listaDeProdutos = produtos;
 
-            // 1. Ordena os produtos em ordem alfabética pelo nome
             produtos.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
             
-            // 2. Vincula o input de busca ao datalist
             inputBusca.setAttribute('list', 'lista-produtos-datalist');
 
-            // 3. Popula o datalist mapeando a chave id_produtos do banco
             datalistProdutos.innerHTML = produtos.map(p => {
                 const id_Produtos = p.id_produtos || p.id_Produtos || p.id;
                 return `<option value="${p.nome}" data-id="${id_Produtos}"></option>`;
             }).join('');
 
-            // 4. FUNÇÃO REVERSA PARA A EDIÇÃO
             window.atualizarInputVisualProdutos = function(idAlvo) {
                 if (!idAlvo) {
                     inputBusca.value = "";
@@ -185,7 +185,6 @@ async function carregarProdutosNoSelect() {
                 }
             };
 
-            // 5. Evento inteligente para capturar a seleção do usuário
             inputBusca.addEventListener('input', function() {
                 const valorDigitado = this.value.trim();
                 const opcaoSelecionada = Array.from(datalistProdutos.options).find(opt => opt.value.trim() === valorDigitado);
@@ -208,15 +207,15 @@ document.addEventListener('DOMContentLoaded', carregarProdutosNoSelect);
 // =========================================================================
 async function listarOcorrenciasCRUD() {
     try {
-        const res = await fetch(`${API_URL}/ocorrencias/`);
-        cache: 'no-store' // <--- ISSO DIZ PARA O NAVEGADOR BUSCAR SEMPRE DO BANCO
+        // CORREÇÃO: cache colocado dentro das opções do fetch de forma válida
+        const res = await fetch(`${API_URL}/ocorrencias/`, { cache: 'no-store' });
 
         if (!res.ok) throw new Error(`Erro no servidor: Status ${res.status}`);
 
-        todosOcorrencias = await res.json();
+        todasOcorrencias = await res.json();
         
         const totalBadge = document.getElementById('total-ocorrencias') || document.querySelector('.badge');
-        if (totalBadge) totalBadge.innerText = todosOcorrencias.length;
+        if (totalBadge) totalBadge.innerText = todasOcorrencias.length;
 
         filtrarEAtualizarTabelaOcorrencias();
     } catch (e) { 
@@ -225,53 +224,38 @@ async function listarOcorrenciasCRUD() {
         if (tabela) {
             tabela.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">⚠️ Erro ao carregar ocorrencias.<br><small class="text-muted">Motivo: ${e.message}</small></td></tr>`;
         }
-        
-        // Alerta visual de falha no carregamento dos dados
-        if (typeof dispararNotificacao === "function") {
-            dispararNotificacao("Não foi possível carregar a lista de ocorrencias.", "erro");
-        }
     }
 }
 
 function filtrarEAtualizarTabelaOcorrencias() {
     const termoPesquisa = document.getElementById('pesquisa-ocorrencias')?.value.toLowerCase() || "";
     
-    // Filtra pelo nome da ocorrencia digitada
-ocorrenciasFiltradas = todasOcorrencias.filter(c =>
-    c.nome && c.nome.toLowerCase().includes(termoPesquisa)
-);
-
-// ===============================
-// ORDENAÇÃO ALFABÉTICA
-// ===============================
-ocorrenciasFiltradas.sort((a, b) =>
-    a.nome.localeCompare(b.nome, 'pt-BR', { sensitivity: 'base' })
-);
-
-// ===============================
-// ÚLTIMO CADASTRADO NO TOPO
-// ===============================
-
-// Pega o último item cadastrado da API
-const ultimoCadastro = todasOcorrencias[todasOcorrencias.length - 1];
-
-if (ultimoCadastro) {
-
-    // Remove ele da posição atual
-    ocorrenciasFiltradas = ocorrenciasFiltradas.filter(
-        c => c.id_ocorrencias !== ultimoCadastro.id_ocorrencias
+    // CORREÇÃO: Padronizado para camelCase para conversar com o escopo global
+    OcorrenciasFiltradas = todasOcorrencias.filter(c =>
+        c.nome && c.nome.toLowerCase().includes(termoPesquisa)
     );
 
-    // Adiciona no topo
-    ocorrenciasFiltradas.unshift(ultimoCadastro);
-}
+    // ORDENAÇÃO ALFABÉTICA
+    OcorrenciasFiltradas.sort((a, b) =>
+        (a.nome || "").localeCompare(b.nome || "", 'pt-BR', { sensitivity: 'base' })
+    );
 
-    const totalPaginas = Math.ceil(ocorrenciasFiltradas.length / ITENS_POR_PAGINA) || 1;
+    // ÚLTIMO CADASTRADO NO TOPO
+    const ultimoCadastro = todasOcorrencias[todasOcorrencias.length - 1];
+
+    if (ultimoCadastro) {
+        OcorrenciasFiltradas = OcorrenciasFiltradas.filter(
+            c => (c.id_ocorrencias ?? c.id) !== (ultimoCadastro.id_ocorrencias ?? ultimoCadastro.id)
+        );
+        OcorrenciasFiltradas.unshift(ultimoCadastro);
+    }
+
+    const totalPaginas = Math.ceil(OcorrenciasFiltradas.length / ITENS_POR_PAGINA) || 1;
     if (paginaAtualOcorrencias > totalPaginas) paginaAtualOcorrencias = totalPaginas;
 
     const indiceInicial = (paginaAtualOcorrencias - 1) * ITENS_POR_PAGINA;
     const indiceFinal = indiceInicial + ITENS_POR_PAGINA;
-    const ocorrenciasExibidas = ocorrenciasFiltradas.slice(indiceInicial, indiceFinal);
+    const ocorrenciasExibidas = OcorrenciasFiltradas.slice(indiceInicial, indiceFinal);
 
     renderizarTabelaOcorrencias(ocorrenciasExibidas);
     atualizarControlesPaginacaoOcorrencias(totalPaginas);
@@ -287,9 +271,8 @@ function renderizarTabelaOcorrencias(ocorrencias) {
     }
 
     tabela.innerHTML = ocorrencias.map(c => {
-        // Padronização do ID
         let idBruto = c.id_ocorrencias ?? c.id ?? c._id;
-        const ocorrenciasId = idBruto !== undefined ? idBruto.toString().trim() : "";
+        const ocorrenciaId = idBruto !== undefined ? idBruto.toString().trim() : ""; // CORREÇÃO: Variável unificada para evitar "not defined"
 
         if (!ocorrenciaId) {
             return `
@@ -299,24 +282,17 @@ function renderizarTabelaOcorrencias(ocorrencias) {
                 </tr>`;
         }
 
-        // =========================================================================
-        // PADRONIZAÇÃO DA SITUAÇÃO (AJUSTE CRÍTICO DE PERFORMANCE E REFERÊNCIA)
-        // =========================================================================
-        // 1. Identifica o id correto do registro para manter o vínculo com o array global
-        const idRegistroAtual = c.id_ocorrencias ?? c.id ?? c._id;
+        const idRegistroAtual = idBruto;
 
-        // 2. Identifica com precisão cirúrgica se o registro está ativo
         const registroEstaAtivo = c.ativo === true || c.ativo === "true" || 
                                   (c.ativo === undefined && (c.situacao === "Ativo" || String(c.situacao).toLowerCase() === "ativo")) ||
                                   (c.ativo === undefined && c.situacao === undefined);
 
-        // 3. Define a string exata para o HTML ler na tabela
         let situacaoTratada = registroEstaAtivo ? "Ativo" : "Inativo";
 
-        // 4. ATUALIZAÇÃO DE MEMÓRIA: Sincroniza todas as chaves possíveis para o formulário ler
         c.situacaoTratada = situacaoTratada;
-        c.idUnificado = idRegistroAtual; // Garante o ID correto amarrado na linha da tabela
-        c.ativo = registroEstaAtivo;     // Garante o booleano puro atualizado no array
+        c.idUnificado = idRegistroAtual; 
+        c.ativo = registroEstaAtivo;     
 
         let nomeCargoExibicao = "-";
         const cargoBruto = c.cargos ?? c.cargo ?? c.id_cargos ?? c.id_cargo; 
@@ -324,8 +300,7 @@ function renderizarTabelaOcorrencias(ocorrencias) {
         if (cargoBruto) {
             if (typeof cargoBruto === 'object') {
                 nomeCargoExibicao = cargoBruto.nome || "-";
-            } else {
-                // CORREÇÃO: Agora 'listaDeCargos' existe e o ID será devidamente cruzado
+            } else if (Array.isArray(listaDeCargos)) {
                 const cargoEncontrado = listaDeCargos.find(cargo => {
                     const idCargo = cargo.id_cargos ?? cargo.id ?? cargo._id;
                     return idCargo == cargoBruto;
@@ -334,14 +309,10 @@ function renderizarTabelaOcorrencias(ocorrencias) {
                 if (cargoEncontrado) {
                     nomeCargoExibicao = cargoEncontrado.nome;
                 } else {
-                    nomeCargoExibicao = `Cargo ${cargoBruto}`; // Fallback caso não ache o ID na lista
+                    nomeCargoExibicao = `Cargo ${cargoBruto}`; 
                 }
             }
         }
-
-        // Salva as propriedades unificadas de volta no objeto para uso no Edit
-        c.idUnificado = ocorrenciaId;
-        c.situacaoTratada = situacaoTratada;
 
         const badgeClasse = situacaoTratada === 'Ativo' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary';
 
@@ -394,9 +365,6 @@ document.getElementById('formOcorrencias')?.addEventListener('submit', async (e)
     const metodo = id ? 'PUT' : 'POST';
 
     try {
-        // ==========================================
-        // AUXILIAR DE CAPTURA DE ID DO DATALIST
-        // ==========================================
         const obtenerIdValido = (idInputBusca, idDatalist, idInputHidden) => {
             const inputBusca = document.getElementById(idInputBusca);
             const inputHidden = document.getElementById(idInputHidden);
@@ -422,22 +390,17 @@ document.getElementById('formOcorrencias')?.addEventListener('submit', async (e)
         if (isNaN(idColaboradoresInt) || idColaboradoresInt <= 0) { alert("Por favor, selecione um Colaborador válido."); return; }
         if (isNaN(idProdutosInt) || idProdutosInt <= 0) { alert("Por favor, selecione um Produto válido."); return; }
 
-// =========================================================================
-        // CONVERSÃO CRÍTICA: FOTO PARA BASE64 (CORRIGIDO ESCOPO)
-        // =========================================================================
         const inputFoto = document.getElementById('ocorrencias-foto-ocorrencia');
-        let fotoBase64 = ""; // Declarada aqui fora, garante que SEMPRE existirá (vazia ou preenchida)
+        let fotoBase64 = ""; 
 
         if (inputFoto && inputFoto.files && inputFoto.files[0]) {
             const arquivo = inputFoto.files[0];
             
-            // Validação de tamanho (máximo 5MB)
             if (arquivo.size > 5 * 1024 * 1024) {
                 alert("A imagem selecionada é muito pesada! Escolha uma foto de até 5MB.");
-                return; // Para a execução se o arquivo for muito grande
+                return; 
             }
 
-            // Transforma o arquivo em Base64 de forma assíncrona
             fotoBase64 = await new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.onloadend = () => resolve(reader.result);
@@ -446,13 +409,8 @@ document.getElementById('formOcorrencias')?.addEventListener('submit', async (e)
             });
         }
 
-        // =========================================================================
-        // PADRONIZAÇÃO HIGIENIZADA DA SITUAÇÃO (EVITA QUEBRA NO BANCO)
-        // =========================================================================
         const selectSituacao = document.getElementById('ocorrencias-situacao');
         let situacaoTexto = selectSituacao ? selectSituacao.value.trim() : "Pendente";
-
-        // Força a padronização exata independente de como veio do HTML
         const situacaoLower = situacaoTexto.toLowerCase();
         
         if (situacaoLower === "em andamento") {
@@ -461,34 +419,20 @@ document.getElementById('formOcorrencias')?.addEventListener('submit', async (e)
             situacaoTexto = "Em análise";
         } else if (situacaoLower === "concluído" || situacaoLower === "concluido") {
             situacaoTexto = "Concluído";
-        } else if (situacaoLower === "pendente") {
-            situacaoTexto = "Pendente";
         } else {
-            situacaoTexto = "Pendente"; // Fallback seguro caso venha vazio ou inválido
+            situacaoTexto = "Pendente"; 
         }
 
-        // =========================================================================
-        // 2. TRATAMENTO SEGURO DAS DATAS (EVITA ERRO DE CONVERSÃO NO POSTGRES)
-        // =========================================================================
         const campoDataOcorrencia = document.getElementById('ocorrencias-data')?.value;
-        // Transforma o formato do HTML "2026-06-09T20:23" no formato aceito pelo SQL "2026-06-09 20:23:00"
         let dataOcorrenciaIso = campoDataOcorrencia 
             ? campoDataOcorrencia.replace('T', ' ') 
             : new Date().toISOString().slice(0, 19).replace('T', ' ');
 
         const campoDataPrazo = document.getElementById('ocorrencias-data-prazo')?.value;
-        // Se o prazo estiver em branco, envia explicitamente null em vez de "" para não estourar o banco
         let dataPrazoTratada = campoDataPrazo && campoDataPrazo.trim() !== "" ? campoDataPrazo : null;
 
-        // =========================================================================
-        // 3. TRATAMENTO DA FOTO (MUDADO PARA NULL SE ESTIVER VAZIA)
-        // =========================================================================
-        // CORREÇÃO: Em vez de enviar "", enviamos null puro. Isso limpa a coluna no banco sem erros de tipo.
         let fotoData = (typeof fotoBase64 !== "undefined" && fotoBase64 && fotoBase64.trim() !== "") ? fotoBase64 : null;
 
-        // =========================================================================
-        // 4. MONTAGEM DO PAYLOAD BLINDADO E COMPLETO
-        // =========================================================================
         const payloadJSON = {
             numero_ocorrencias: parseInt(document.getElementById('ocorrencias-numero')?.value, 10) || 0,
             data_ocorrencias: dataOcorrenciaIso,
@@ -505,51 +449,30 @@ document.getElementById('formOcorrencias')?.addEventListener('submit', async (e)
             observacoes: document.getElementById('ocorrencias-observacoes')?.value || "",
             acao_corretiva: document.getElementById('ocorrencias-acao-corretiva')?.value || "",
             data_prazo: dataPrazoTratada, 
-            situacao: situacaoTexto, // String higienizada e garantida dentro das Constraints do banco
-            foto: fotoData          // Envia a string Base64 legítima ou null
+            situacao: situacaoTexto, 
+            foto: fotoData          
         };
 
         console.log(`[Envio API] Enviando dados via ${metodo}:`, payloadJSON);
 
         const res = await fetch(url, {
             method: metodo,
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(payloadJSON)
         });
         
         if (res.ok) { 
-            alert("Cadastro realizado com sucesso!");
+            // Chame sua lógica de notificação aqui se necessário
+            dispararNotificacao(id ? "Ocorrência alterada com sucesso!" : "Nova ocorrência cadastrada com sucesso!", id ? "atualizar" : "criar");
 
-            // DISPARO DA NOTIFICAÇÃO DE SUCESSO (Canto inferior direito)
-            if (metodo === 'POST') {
-                dispararNotificacao("Novo cadastro criado com sucesso!", "criar");
-            } else {
-                dispararNotificacao("Cadastro alterado com sucesso!", "atualizar");
-            }
-            
-            listarOcorrenciasCRUD();
-        } else {
-            const erroApi = await res.json().catch(() => ({}));
-            console.error("Detalhes do erro do servidor:", erroApi);
-            alert(`Erro ao salvar produto. Status: ${res.status}\nMotivo: ${erroApi.detail || erroApi.message || 'Erro interno no backend'}`);
-        }
-    } catch (err) { 
-        console.error("Erro no envio:", err);
-        alert("Erro de conexão ao salvar ocorrencias."); 
-    }
-            
-            // 1. LIMPEZA PADRÃO DA TELA (Isso limpa todos os campos, inclusive a data)
+            // Limpezas de tela pós-sucesso
             document.getElementById('formOcorrencias').reset();
             
-            // 2. REINSERÇÃO DA DATA E HORA ATUAL (Roda logo após o reset para preencher novamente)
             const inputDataOcorrencia = document.getElementById('ocorrencias-data');
-                if (inputDataOcorrencia) {
-                    inputDataOcorrencia.value = obterDataHoraAtualLocal();
-    }
+            if (inputDataOcorrencia) {
+                inputDataOcorrencia.value = obterDataHoraAtualLocal();
+            }
 
-            // 3. LIMPEZA DOS CAMPOS OCULTOS E EXTRAS
             if (campoId) campoId.value = ""; 
             document.getElementById('maquinas-nome').value = "";
             document.getElementById('produtos-nome').value = "";
@@ -557,28 +480,89 @@ document.getElementById('formOcorrencias')?.addEventListener('submit', async (e)
             
             if (selectSituacao) selectSituacao.value = "Pendente";
 
-            // Limpa os textos das buscas visíveis
             document.getElementById('maquinas-nome-busca').value = "";
             document.getElementById('colaboradores-nome-busca').value = "";
             document.getElementById('produtos-nome-busca').value = "";
 
-            // Limpa a miniatura da foto se a função existir
-            if (typeof resetarVisualFoto === "function") {
-                resetarVisualFoto();
-            }
+            if (typeof resetarVisualFoto === "function") resetarVisualFoto();
 
             const tituloForm = document.getElementById('titulo-form-colab');
             if (tituloForm) {
                 tituloForm.innerHTML = '<i class="sidebar-texto fa-solid fa-triangle-exclamation me-3"></i> Nova Ocorrência';
             }
 
-            if (typeof listarOcorrenciasCRUD === "function") {
-                listarOcorrenciasCRUD();
-            }
+            if (typeof listarOcorrenciasCRUD === "function") listarOcorrenciasCRUD();
 
             window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            alert("Erro ao salvar ocorrência no servidor.");
+        }
+    } catch (err) {
+        console.error("Erro no processo de salvamento:", err);
+        alert("Ocorreu um erro interno ao tentar salvar.");
+    }
 });
 
+// =========================================================================
+// FUNÇÕES AUXILIARES ISOLADAS CORRETAMENTE DO ESCOPO DO EVENTO SUBMIT
+// =========================================================================
+function salvarOcorrencia(dadosFormulario) {
+    const ehCriacao = true; 
+
+    fetch('https://qcsoftware2.onrender.com/ocorrencias/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+        },
+        body: JSON.stringify(dadosFormulario)
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Erro na resposta do servidor');
+        return response.json();
+    })
+    .then(data => {
+        const mensagem = ehCriacao ? "Nova ocorrência cadastrada com sucesso!" : "Ocorrência alterada com sucesso!";
+        dispararNotificacao(mensagem, ehCriacao ? 'criar' : 'atualizar');
+
+        const formulario = document.getElementById('formOcorrencias') || document.getElementById('meuFormulario');
+        if (formulario) formulario.reset();
+    })
+    .catch(error => {
+        console.error('Erro retornado pelo servidor:', error);
+        alert("Erro ao salvar ocorrência.");
+    });
+}
+
+function dispararNotificacao(mensagem, acao = 'sucesso') {
+    const elementoToast = document.getElementById('toast-cadastro');
+    const textoToast = document.getElementById('toast-mensagem-texto');
+    const iconeToast = document.getElementById('toast-mensagem-icone');
+    
+    if (!elementoToast || !textoToast) return;
+
+    elementoToast.classList.remove('bg-danger', 'bg-warning', 'bg-primary');
+    elementoToast.className = "toast align-items-center text-white bg-success border-0 shadow";
+    
+    if (acao === 'criar') {
+        if (iconeToast) iconeToast.innerHTML = '<i class="bi bi-plus-circle-fill fs-5"></i>';
+    } else if (acao === 'atualizar') {
+        if (iconeToast) iconeToast.innerHTML = '<i class="bi bi-pencil-square fs-5"></i>';
+    } else {
+        if (iconeToast) iconeToast.innerHTML = '<i class="bi bi-check-circle-fill fs-5"></i>';
+    }
+
+    textoToast.innerText = message = mensagem;
+
+    if (typeof bootstrap !== "undefined" && bootstrap.Toast) {
+        const bootstrapToast = new bootstrap.Toast(elementoToast, { delay: 3500 });
+        bootstrapToast.show();
+    }
+}
+
+// =========================================================================
+// 4. CONTROLE DE DRAG AND DROP DA FOTO
+// =========================================================================
 document.addEventListener('DOMContentLoaded', () => {
     const dropzone = document.getElementById('dropzone-foto');
     const inputFoto = document.getElementById('ocorrencias-foto-ocorrencia');
@@ -589,17 +573,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!dropzone || !inputFoto) return;
 
-    // --- 1. FUNÇÃO DE PROCESSAMENTO E PREVIEW DA IMAGEM ---
     function processarArquivoFoto(arquivo) {
         if (!arquivo) return;
 
-        // Validação de tipo de arquivo
         if (!arquivo.type.startsWith('image/')) {
             alert("Por favor, selecione apenas arquivos de imagem (PNG, JPG, JPEG).");
             return;
         }
 
-        // Validação de tamanho (5MB máximo)
         if (arquivo.size > 5 * 1024 * 1024) {
             alert("A imagem selecionada é muito pesada! Escolha uma foto de até 5MB.");
             inputFoto.value = "";
@@ -615,107 +596,18 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.readAsDataURL(arquivo);
     }
 
-    // --- 2. EVENTO DE CLIQUE / TOQUE (Abre a câmera no mobile ou arquivos no PC) ---
-    dropzone.addEventListener('click', () => {
-        inputFoto.click();
-    });
-
-    inputFoto.addEventListener('change', function(e) {
+    inputFoto.addEventListener('change', (e) => {
         processarArquivoFoto(e.target.files[0]);
     });
 
-    // --- 3. EVENTOS DE DRAG & DROP (Arrastar e soltar no PC) ---
-    // Evita o comportamento padrão do navegador de abrir a imagem em outra aba
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        dropzone.addEventListener(eventName, (e) => e.preventDefault(), false);
-    });
-
-    // Efeito visual ao passar o arquivo por cima da área
-    ['dragenter', 'dragover'].forEach(eventName => {
-        dropzone.addEventListener(eventName, () => {
-            dropzone.classList.add('border-primary', 'bg-light');
-        }, false);
-    });
-
-    ['dragleave', 'drop'].forEach(eventName => {
-        dropzone.addEventListener(eventName, () => {
-            dropzone.classList.remove('border-primary', 'bg-light');
-        }, false);
-    });
-
-    // Captura o arquivo solto na Dropzone
-    dropzone.addEventListener('drop', (e) => {
-        const dt = e.dataTransfer;
-        const arquivos = dt.files;
-        
-        if (arquivos.length > 0) {
-            inputFoto.files = arquivos; // Sincroniza o arquivo arrastado com o input hidden
-            processarArquivoFoto(arquivos[0]);
-        }
-    });
-
-    // --- 4. BOTÃO REMOVER FOTO (O botão X vermelho) ---
-    btnRemover?.addEventListener('click', function(e) {
-        e.stopPropagation(); // Impede que o clique no X abra a câmera novamente
-        inputFoto.value = ""; // Reseta o input
+    window.resetarVisualFoto = function() {
+        inputFoto.value = "";
         if (fotoPreview) fotoPreview.src = "";
         previewContainer?.classList.add('d-none');
         uploadInstrucoes?.classList.remove('d-none');
-    });
-});
+    };
 
-// --- 5. FUNÇÃO DE RESET GLOBAL ---
-// Chame esta função 'resetarVisualFoto()' dentro do 'if (res.ok)' do seu evento 'submit'
-// logo após rodar o formOcorrencias.reset(), para limpar a miniatura da tela!
-function resetarVisualFoto() {
-    const previewContainer = document.getElementById('preview-container');
-    const uploadInstrucoes = document.getElementById('upload-instrucoes');
-    const fotoPreview = document.getElementById('foto-preview');
-    
-    if (fotoPreview) fotoPreview.src = "";
-    previewContainer?.classList.add('d-none');
-    uploadInstrucoes?.classList.remove('d-none');
-}
-
-// Função para obter a data/hora atual local formatada para o input datetime-local
-function obterDataHoraAtualLocal() {
-    const agora = new Date();
-    // Ajusta o fuso horário para o horário local da máquina
-    const ano = agora.getFullYear();
-    const mes = String(agora.getMonth() + 1).padStart(2, '0');
-    const dia = String(agora.getDate()).padStart(2, '0');
-    const horas = String(agora.getHours()).padStart(2, '0');
-    const minutos = String(agora.getMinutes()).padStart(2, '0');
-    
-    return `${ano}-${mes}-${dia}T${horas}:${minutos}`;
-}
-
-// =========================================================================
-// 6. OUVINTES DE EVENTOS DA PÁGINA (DOM)
-// =========================================================================
-document.addEventListener('DOMContentLoaded', () => {
-    listarOcorrenciasCRUD();
-    carregarCargosNoSelect();
-
-    document.getElementById('pesquisa-colaborador')?.addEventListener('input', () => {
-        paginaAtualOcorrencias = 1; 
-        filtrarEAtualizarTabelaOcorrencias();
-    });
-
-    document.getElementById('btn-anterior-ocorrencia')?.addEventListener('click', () => {
-        if (paginaAtualOcorrencias > 1) {
-            paginaAtualOcorrencias--;
-            filtrarEAtualizarTabelaOcorrencias();
-        }
-    });
-
-    document.getElementById('btn-proximo-ocorrencias')?.addEventListener('click', () => {
-        const totalPaginas = Math.ceil(ocorrenciasFiltrados.length / ITENS_POR_PAGINA) || 1;
-        if (paginaAtualOcorrencias < totalPaginas) {
-            paginaAtualOcorrencias++;
-            filtrarEAtualizarTabelaOcorrencias();
-        }
-    });
+    btnRemover?.addEventListener('click', window.resetarVisualFoto);
 });
     
     // -- DEFINIR DATA E HORA DE BRASÍLIA --
