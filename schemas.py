@@ -166,7 +166,7 @@ class Permissao(PermissaoBase, TimestampMixin):
     id_permissoes: int
 
 # =========================================================================
-# --- OCORRÊNCIAS (CORRIGIDO) ---
+# --- OCORRÊNCIAS (CORRIGIDO SEM ID_OCORRENCIAS) ---
 # =========================================================================
 class OcorrenciaBase(SafeModel):
     id_maquinas: int
@@ -185,12 +185,14 @@ class OcorrenciaBase(SafeModel):
     acao_corretiva: Optional[str] = Field(default="")
     data_prazo: Optional[str] = Field(default=None)
     situacao: Optional[str] = Field(default="Pendente")
-    
-    # AJUSTE CRÍTICO: Permite String Base64 ou None puro
     foto: Optional[str] = Field(default=None)
 
 class OcorrenciaCreate(OcorrenciaBase):
-    pass  # Herda tudo da base de forma limpa, sem redefinir ou quebrar as regras
+    pass  
 
 class OcorrenciaUpdate(OcorrenciaBase):
-    pass  # Mantém os mesmos padrões para atualizações parciais ou totais
+    pass  
+
+# Modelo de leitura final sem a propriedade id_ocorrencias
+class Ocorrencia(OcorrenciaBase, TimestampMixin):
+    pass

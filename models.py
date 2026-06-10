@@ -81,12 +81,17 @@ class Permissao(Base):
 
 class Ocorrencia(Base):
     __tablename__ = "ocorrencias"    
-    # Colunas comuns e chaves estrangeiras tratadas adequadamente
+    
+    # --- CHAVE PRIMÁRIA DA TABELA ---
+    # Como id_ocorrencias NÃO EXISTE, definimos o número ou a data como primary_key 
+    # para satisfazer o ORM sem alterar colunas físicas do banco de dados.
+    numero_ocorrencias = Column(Integer, primary_key=True, nullable=False, default=0)
+    
+    # --- DEMAIS CAMPOS CONFORME LOG DE ERRO DO POSTGRES ---
     data_ocorrencias = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     id_maquinas = Column(Integer, ForeignKey("maquinas.id_maquinas"), nullable=False)
     id_colaboradores = Column(Integer, ForeignKey("colaboradores.id_colaboradores"), nullable=False)
     id_produtos = Column(Integer, ForeignKey("produtos.id_produtos"), nullable=False)
-    numero_ocorrencias = Column(Integer, nullable=False, default=0)
     
     lote_produtos = Column(String(255), nullable=False, default="0")
     numero_nota = Column(Integer, nullable=False, default=0)
@@ -98,18 +103,13 @@ class Ocorrencia(Base):
     observacoes = Column(String(1000), nullable=False, default="")
     acao_corretiva = Column(String(255), nullable=False, default="")
     
-    # Campo de prazo aceita valores nulos se o frontend enviar null
     data_prazo = Column(DateTime(timezone=True), nullable=True)
-    
     situacao = Column(String(20), default="Pendente", server_default=text("'Pendente'"), nullable=False)
-    
-    # Campo TEXT para alocar strings grandes em Base64
     foto = Column(Text, nullable=True)
     
     data_criacao = Column(DateTime(timezone=True), server_default=func.now(), nullable=True)
     data_atualizacao = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=True)
     
     __table_args__ = (
-        # Ajustado com 'Em Andamento' com A maiúsculo batendo com o JSON e Datalist do front
         CheckConstraint("situacao IN ('Pendente', 'Em andamento', 'Em análise', 'Concluído')", name="chk_situacao"),
     )
