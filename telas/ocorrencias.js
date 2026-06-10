@@ -687,6 +687,18 @@ function obterDataHoraAtualLocal() {
     return `${ano}-${mes}-${dia}T${horas}:${minutos}`;
 }
 
+// --- COPIE E COLE ESTE BLOCO DENTRO DO SEU PROCESSO DE SALVAMENTO DE OCORRÊNCIAS ---
+
+if (typeof dispararNotificacao === "function") {
+    // Identifica se é uma criação nova ou atualização
+    const acao = ehCriacao ? 'criar' : 'atualizar';
+    const mensagem = ehCriacao ? "Nova ocorrência cadastrada com sucesso!" : "Cadastro de ocorrência alterado!";
+    dispararNotificacao(mensagem, acao);
+} else {
+    const mensagemAlert = ehCriacao ? "Ocorrência cadastrada com sucesso!" : "Ocorrência atualizada com sucesso!";
+    alert(mensagemAlert);
+}
+
 // =========================================================================
 // 6. OUVINTES DE EVENTOS DA PÁGINA (DOM)
 // =========================================================================
