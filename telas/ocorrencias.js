@@ -27,15 +27,15 @@ async function carregarMaquinasNoSelect() {
         const res = await fetch(`${API_URL}/maquinas/`, { cache: 'no-store' });
         if (res.ok) {
             const maquinas = await res.json();
-            window.listaDeMaquinas = maquinas; // Salva globalmente se necessário
+            window.listaDeMaquinas = maquinas;
 
             // 1. Ordena as máquinas em ordem alfabética pelo nome
-            maquinas.sort((a, b) => a.nome.localeCompare(b.nome));
+            maquinas.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
             
             // 2. Vincula o input de busca ao datalist
             inputBusca.setAttribute('list', 'lista-maquinas-datalist');
 
-            // 3. Popula o datalist (Garante compatibilidade com id_maquinas vindo do banco)
+            // 3. Popula o datalist mapeando a chave em minúsculo do seu banco
             datalistMaquinas.innerHTML = maquinas.map(m => {
                 const id_Maquinas = m.id_maquinas || m.id;
                 return `<option value="${m.nome}" data-id="${id_Maquinas}"></option>`;
@@ -43,23 +43,31 @@ async function carregarMaquinasNoSelect() {
 
             // 4. FUNÇÃO REVERSA PARA A EDIÇÃO
             window.atualizarInputVisualMaquina = function(idAlvo) {
+                if (!idAlvo) {
+                    inputBusca.value = "";
+                    inputIdOculto.value = "";
+                    return;
+                }
                 const opcao = Array.from(datalistMaquinas.options).find(opt => opt.getAttribute('data-id')?.toString() === idAlvo?.toString());
                 if (opcao) {
                     inputBusca.value = opcao.value;
+                    inputIdOculto.value = idAlvo;
                 } else {
                     inputBusca.value = "";
+                    inputIdOculto.value = "";
                 }
             };
 
-            // 5. Evento para capturar a seleção do usuário
+            // 5. Evento inteligente para capturar a seleção do usuário
             inputBusca.addEventListener('input', function() {
-                const valorDigitado = this.value;
-                const opcaoSelecionada = Array.from(datalistMaquinas.options).find(opt => opt.value === valorDigitado);
+                const valorDigitado = this.value.trim();
+                const opcaoSelecionada = Array.from(datalistMaquinas.options).find(opt => opt.value.trim() === valorDigitado);
 
                 if (opcaoSelecionada) {
                     inputIdOculto.value = opcaoSelecionada.getAttribute('data-id');
                 } else {
-                    inputIdOculto.value = ""; // Limpa se o usuário apagar ou digitar algo inválido
+                    // Só esvazia o ID se o campo estiver completamente em branco
+                    if (valorDigitado === "") inputIdOculto.value = "";
                 }
             });
         }
@@ -67,8 +75,6 @@ async function carregarMaquinasNoSelect() {
         console.error("Erro ao carregar e ordenar máquinas para o formulário:", e);
     }
 }
-
-// Garante que a função rode assim que a página carregar
 document.addEventListener('DOMContentLoaded', carregarMaquinasNoSelect);
 
 // =========================================================================
@@ -85,39 +91,46 @@ async function carregarColaboradoresNoSelect() {
         const res = await fetch(`${API_URL}/colaboradores/`, { cache: 'no-store' });
         if (res.ok) {
             const colaboradores = await res.json();
-            window.listaDeColaboradores = colaboradores; // Salva globalmente se necessário
+            window.listaDeColaboradores = colaboradores;
 
             // 1. Ordena os colaboradores em ordem alfabética pelo nome
-            colaboradores.sort((a, b) => a.nome.localeCompare(b.nome));
+            colaboradores.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
             
             // 2. Vincula o input de busca ao datalist
             inputBusca.setAttribute('list', 'lista-colaboradores-datalist');
 
-            // 3. Popula o datalist (Garante compatibilidade com colaboradores vindo do banco)
+            // 3. Popula o datalist mapeando a chave id_colaboradores do banco
             datalistColaboradores.innerHTML = colaboradores.map(c => {
-                const id_Colaboradores = c.id_Colaboradores || c.id;
+                const id_Colaboradores = c.id_colaboradores || c.id_Colaboradores || c.id;
                 return `<option value="${c.nome}" data-id="${id_Colaboradores}"></option>`;
             }).join('');
 
             // 4. FUNÇÃO REVERSA PARA A EDIÇÃO
             window.atualizarInputVisualColaboradores = function(idAlvo) {
+                if (!idAlvo) {
+                    inputBusca.value = "";
+                    inputIdOculto.value = "";
+                    return;
+                }
                 const opcao = Array.from(datalistColaboradores.options).find(opt => opt.getAttribute('data-id')?.toString() === idAlvo?.toString());
                 if (opcao) {
                     inputBusca.value = opcao.value;
+                    inputIdOculto.value = idAlvo;
                 } else {
                     inputBusca.value = "";
+                    inputIdOculto.value = "";
                 }
             };
 
-            // 5. Evento para capturar a seleção do usuário
+            // 5. Evento inteligente para capturar a seleção do usuário
             inputBusca.addEventListener('input', function() {
-                const valorDigitado = this.value;
-                const opcaoSelecionada = Array.from(datalistColaboradores.options).find(opt => opt.value === valorDigitado);
+                const valorDigitado = this.value.trim();
+                const opcaoSelecionada = Array.from(datalistColaboradores.options).find(opt => opt.value.trim() === valorDigitado);
 
                 if (opcaoSelecionada) {
                     inputIdOculto.value = opcaoSelecionada.getAttribute('data-id');
                 } else {
-                    inputIdOculto.value = ""; // Limpa se o usuário apagar ou digitar algo inválido
+                    if (valorDigitado === "") inputIdOculto.value = "";
                 }
             });
         }
@@ -125,8 +138,6 @@ async function carregarColaboradoresNoSelect() {
         console.error("Erro ao carregar e ordenar colaboradores para o formulário:", e);
     }
 }
-
-// Garante que a função rode assim que a página carregar
 document.addEventListener('DOMContentLoaded', carregarColaboradoresNoSelect);
 
 // =========================================================================
@@ -143,39 +154,46 @@ async function carregarProdutosNoSelect() {
         const res = await fetch(`${API_URL}/produtos/`, { cache: 'no-store' });
         if (res.ok) {
             const produtos = await res.json();
-            window.listaDeProdutos = produtos; // Salva globalmente se necessário
+            window.listaDeProdutos = produtos;
 
             // 1. Ordena os produtos em ordem alfabética pelo nome
-            produtos.sort((a, b) => a.nome.localeCompare(b.nome));
+            produtos.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
             
             // 2. Vincula o input de busca ao datalist
             inputBusca.setAttribute('list', 'lista-produtos-datalist');
 
-            // 3. Popula o datalist (Garante compatibilidade com colaboradores vindo do banco)
+            // 3. Popula o datalist mapeando a chave id_produtos do banco
             datalistProdutos.innerHTML = produtos.map(p => {
-                const id_Produtos = p.id_Produtos || p.id;
+                const id_Produtos = p.id_produtos || p.id_Produtos || p.id;
                 return `<option value="${p.nome}" data-id="${id_Produtos}"></option>`;
             }).join('');
 
             // 4. FUNÇÃO REVERSA PARA A EDIÇÃO
             window.atualizarInputVisualProdutos = function(idAlvo) {
+                if (!idAlvo) {
+                    inputBusca.value = "";
+                    inputIdOculto.value = "";
+                    return;
+                }
                 const opcao = Array.from(datalistProdutos.options).find(opt => opt.getAttribute('data-id')?.toString() === idAlvo?.toString());
                 if (opcao) {
                     inputBusca.value = opcao.value;
+                    inputIdOculto.value = idAlvo;
                 } else {
                     inputBusca.value = "";
+                    inputIdOculto.value = "";
                 }
             };
 
-            // 5. Evento para capturar a seleção do usuário
+            // 5. Evento inteligente para capturar a seleção do usuário
             inputBusca.addEventListener('input', function() {
-                const valorDigitado = this.value;
-                const opcaoSelecionada = Array.from(datalistProdutos.options).find(opt => opt.value === valorDigitado);
+                const valorDigitado = this.value.trim();
+                const opcaoSelecionada = Array.from(datalistProdutos.options).find(opt => opt.value.trim() === valorDigitado);
 
                 if (opcaoSelecionada) {
                     inputIdOculto.value = opcaoSelecionada.getAttribute('data-id');
                 } else {
-                    inputIdOculto.value = ""; // Limpa se o usuário apagar ou digitar algo inválido
+                    if (valorDigitado === "") inputIdOculto.value = "";
                 }
             });
         }
@@ -183,8 +201,6 @@ async function carregarProdutosNoSelect() {
         console.error("Erro ao carregar e ordenar produtos para o formulário:", e);
     }
 }
-
-// Garante que a função rode assim que a página carregar
 document.addEventListener('DOMContentLoaded', carregarProdutosNoSelect);
 
 // =========================================================================
@@ -368,73 +384,132 @@ function atualizarControlesPaginacaoOcorrencias(totalPaginas) {
 // =========================================================================
 document.getElementById('formOcorrencias')?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    console.log("-> Botão Salvar clicado. Iniciando validação e envio...");
     
     const campoId = document.getElementById('ocorrencias-id');
     const id = campoId ? campoId.value.trim() : "";
     
-    const url = id ? `${API_URL}/ocorrencias/${id}` : `${API_URL}/ocorrencias/`;
+    const urlBase = typeof API_URL !== "undefined" ? API_URL : ""; 
+    const url = id ? `${urlBase}/ocorrencias/${id}` : `${urlBase}/ocorrencias/`;
     const metodo = id ? 'PUT' : 'POST';
 
     try {
         // ==========================================
-        // 1. CAPTURA E VALIDAÇÃO: MÁQUINAS
+        // AUXILIAR DE CAPTURA DE ID DO DATALIST
         // ==========================================
-        const selectMaquinas = document.getElementById('maquinas-nome') || document.querySelector('input[id*="maquinas"]:not([id*="situacao"])');
-        const valorMaquinas = selectMaquinas ? selectMaquinas.value : "";
-        const idMaquinasInt = parseInt(valorMaquinas, 10);
-
-        if (isNaN(idMaquinasInt)) {
-            console.error("Valor capturado para Maquinas:", valorMaquinas);
-            executarNotificacao("Selecione uma máquina válida para a ocorrência.");
-            return; 
-        }
-
-        // ==========================================
-        // 2. CAPTURA E VALIDAÇÃO: PRODUTOS
-        // ==========================================
-        const selectProdutos = document.getElementById('produtos-nome') || document.querySelector('input[id*="produtos"]');
-        const valorProdutos = selectProdutos ? selectProdutos.value : "";
-        const idProdutosInt = parseInt(valorProdutos, 10);
-
-        if (isNaN(idProdutosInt)) {
-            console.error("Valor capturado para Produtos:", valorProdutos);
-            executarNotificacao("Selecione um produto válido para a ocorrência.");
-            return; 
-        }
-
-        // ==========================================
-        // 3. CAPTURA E VALIDAÇÃO: COLABORADORES
-        // ==========================================
-        const selectColaboradores = document.getElementById('colaboradores-nome') || document.querySelector('input[id*="colaborador"]');
-        const valorColaboradores = selectColaboradores ? selectColaboradores.value : "";
-        const idColaboradoresInt = parseInt(valorColaboradores, 10);
-
-        if (isNaN(idColaboradoresInt)) {
-            console.error("Valor capturado para Colaboradores:", valorColaboradores);
-            executarNotificacao("Selecione um colaborador válido para a ocorrência.");
-            return; 
-        }
-
-   
-        // =========================================================================
-        // CAPTURA DO STATUS DA OCORRÊNCIA (TEXTO PURO)
-        // =========================================================================
-        const selectSituacao = document.getElementById('ocorrencias-situacao');
-        // Captura o texto selecionado (Pendente, Em Andamento, Em Análise ou Concluído)
-        // Se estiver vazio, define um valor padrão de segurança, ex: "Pendente"
-        const situacaoTexto = selectSituacao ? selectSituacao.value.trim() : "Pendente";
-
-        // Monta o payload idêntico à estrutura esperada pela sua API
-        const payloadJSON = {
-            nome: document.getElementById('ocorrencias-nome')?.value || "",
-            matricula: parseInt(document.getElementById('ocorrencias-matricula')?.value, 10) || 0,
-            id_cargos: idCargoInt, 
-            email: document.getElementById('ocorrencias-email')?.value || "",
-            ativo: ehAtivoBoolean // <--- Aqui vai true ou false nativo puro
+        const obtenerIdValido = (idInputBusca, idDatalist, idInputHidden) => {
+            const inputBusca = document.getElementById(idInputBusca);
+            const inputHidden = document.getElementById(idInputHidden);
+            const datalist = document.getElementById(idDatalist);
+            
+            let idFinal = parseInt(inputHidden?.value, 10);
+            
+            if ((isNaN(idFinal) || idFinal <= 0) && inputBusca && inputBusca.value.trim() !== "" && datalist) {
+                const opcao = Array.from(datalist.options).find(opt => opt.value.trim() === inputBusca.value.trim());
+                if (opcao) {
+                    idFinal = parseInt(opcao.getAttribute('data-id') || opcao.id, 10);
+                    if (inputHidden) inputHidden.value = idFinal;
+                }
+            }
+            return idFinal;
         };
 
-        // Log de inspeção no painel F12 antes de disparar a requisição HTTP
-        console.log(`[Envio API] Método: ${metodo} | URL: ${url} | Payload:`, payloadJSON);
+        const idMaquinasInt = obtenerIdValido('maquinas-nome-busca', 'lista-maquinas-datalist', 'maquinas-nome');
+        const idColaboradoresInt = obtenerIdValido('colaboradores-nome-busca', 'lista-colaboradores-datalist', 'colaboradores-nome');
+        const idProdutosInt = obtenerIdValido('produtos-nome-busca', 'lista-produtos-datalist', 'produtos-nome');
+
+        if (isNaN(idMaquinasInt) || idMaquinasInt <= 0) { alert("Por favor, selecione uma Máquina válida."); return; }
+        if (isNaN(idColaboradoresInt) || idColaboradoresInt <= 0) { alert("Por favor, selecione um Colaborador válido."); return; }
+        if (isNaN(idProdutosInt) || idProdutosInt <= 0) { alert("Por favor, selecione um Produto válido."); return; }
+
+// =========================================================================
+        // CONVERSÃO CRÍTICA: FOTO PARA BASE64 (CORRIGIDO ESCOPO)
+        // =========================================================================
+        const inputFoto = document.getElementById('ocorrencias-foto-ocorrencia');
+        let fotoBase64 = ""; // Declarada aqui fora, garante que SEMPRE existirá (vazia ou preenchida)
+
+        if (inputFoto && inputFoto.files && inputFoto.files[0]) {
+            const arquivo = inputFoto.files[0];
+            
+            // Validação de tamanho (máximo 5MB)
+            if (arquivo.size > 5 * 1024 * 1024) {
+                alert("A imagem selecionada é muito pesada! Escolha uma foto de até 5MB.");
+                return; // Para a execução se o arquivo for muito grande
+            }
+
+            // Transforma o arquivo em Base64 de forma assíncrona
+            fotoBase64 = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result);
+                reader.onerror = (error) => reject(error);
+                reader.readAsDataURL(arquivo);
+            });
+        }
+
+        // =========================================================================
+        // PADRONIZAÇÃO HIGIENIZADA DA SITUAÇÃO (EVITA QUEBRA NO BANCO)
+        // =========================================================================
+        const selectSituacao = document.getElementById('ocorrencias-situacao');
+        let situacaoTexto = selectSituacao ? selectSituacao.value.trim() : "Pendente";
+
+        // Força a padronização exata independente de como veio do HTML
+        const situacaoLower = situacaoTexto.toLowerCase();
+        
+        if (situacaoLower === "em andamento") {
+            situacaoTexto = "Em andamento";
+        } else if (situacaoLower === "em análise" || situacaoLower === "em analise") {
+            situacaoTexto = "Em análise";
+        } else if (situacaoLower === "concluído" || situacaoLower === "concluido") {
+            situacaoTexto = "Concluído";
+        } else if (situacaoLower === "pendente") {
+            situacaoTexto = "Pendente";
+        } else {
+            situacaoTexto = "Pendente"; // Fallback seguro caso venha vazio ou inválido
+        }
+
+        // =========================================================================
+        // 2. TRATAMENTO SEGURO DAS DATAS (EVITA ERRO DE CONVERSÃO NO POSTGRES)
+        // =========================================================================
+        const campoDataOcorrencia = document.getElementById('ocorrencias-data')?.value;
+        // Transforma o formato do HTML "2026-06-09T20:23" no formato aceito pelo SQL "2026-06-09 20:23:00"
+        let dataOcorrenciaIso = campoDataOcorrencia 
+            ? campoDataOcorrencia.replace('T', ' ') 
+            : new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+        const campoDataPrazo = document.getElementById('ocorrencias-data-prazo')?.value;
+        // Se o prazo estiver em branco, envia explicitamente null em vez de "" para não estourar o banco
+        let dataPrazoTratada = campoDataPrazo && campoDataPrazo.trim() !== "" ? campoDataPrazo : null;
+
+        // =========================================================================
+        // 3. TRATAMENTO DA FOTO (MUDADO PARA NULL SE ESTIVER VAZIA)
+        // =========================================================================
+        // CORREÇÃO: Em vez de enviar "", enviamos null puro. Isso limpa a coluna no banco sem erros de tipo.
+        let fotoData = (typeof fotoBase64 !== "undefined" && fotoBase64 && fotoBase64.trim() !== "") ? fotoBase64 : null;
+
+        // =========================================================================
+        // 4. MONTAGEM DO PAYLOAD BLINDADO E COMPLETO
+        // =========================================================================
+        const payloadJSON = {
+            numero_ocorrencias: parseInt(document.getElementById('ocorrencias-numero')?.value, 10) || 0,
+            data_ocorrencias: dataOcorrenciaIso,
+            id_maquinas: idMaquinasInt,
+            id_colaboradores: idColaboradoresInt,
+            id_produtos: idProdutosInt,
+            lote_produtos: document.getElementById('ocorrencias-lote-produto')?.value || "0",
+            numero_nota: parseInt(document.getElementById('ocorrencias-numero-nota-fiscal')?.value, 10) || 0,
+            problema: document.getElementById('ocorrencias-problema')?.value || "",
+            falha_onde: document.getElementById('ocorrencias-falha-onde')?.value || "Não informado",
+            falha_como: document.getElementById('ocorrencias-falha-como')?.value || "",
+            falha_quando: document.getElementById('ocorrencias-falha-quando')?.value || "",
+            falha_quem: document.getElementById('ocorrencias-falha-quem')?.value || "",
+            observacoes: document.getElementById('ocorrencias-observacoes')?.value || "",
+            acao_corretiva: document.getElementById('ocorrencias-acao-corretiva')?.value || "",
+            data_prazo: dataPrazoTratada, 
+            situacao: situacaoTexto, // String higienizada e garantida dentro das Constraints do banco
+            foto: fotoData          // Envia a string Base64 legítima ou null
+        };
+
+        console.log(`[Envio API] Enviando dados via ${metodo}:`, payloadJSON);
 
         const res = await fetch(url, {
             method: metodo,
@@ -445,171 +520,172 @@ document.getElementById('formOcorrencias')?.addEventListener('submit', async (e)
         });
         
         if (res.ok) { 
-            const ehCriacao = metodo === 'POST' || !id; 
+            alert("Cadastro realizado com sucesso!");
 
             if (typeof dispararNotificacao === "function") {
-                const acao = ehCriacao ? 'criar' : 'atualizar';
-                const mensagem = ehCriacao ? "Nova ocorrencia cadastrada com sucesso!" : "Cadastro de ocorrencia alterado!";
-                dispararNotificacao(mensagem, acao);
-            } else {
-                const mensagemAlert = ehCriacao ? "Ocorrencia cadastrado com sucesso!" : "Cadastro atualizado com sucesso!";
-                alert(mensagemAlert);
+                const ehCriacao = metodo === 'POST' || !id;
+                dispararNotificacao(ehCriacao ? "Nova ocorrência cadastrada!" : "Cadastro alterado!", ehCriacao ? 'criar' : 'atualizar');
             }
             
-            // Reseta todos os campos padrão do formulário
+            // 1. LIMPEZA PADRÃO DA TELA (Isso limpa todos os campos, inclusive a data)
             document.getElementById('formOcorrencias').reset();
             
-            // CORREÇÃO CRÍTICA: Garante o reset visual do select e esvaziamento do ID
-            if (selectSituacao) selectSituacao.value = "true";
+            // 2. REINSERÇÃO DA DATA E HORA ATUAL (Roda logo após o reset para preencher novamente)
+            const inputDataOcorrencia = document.getElementById('ocorrencias-data');
+                if (inputDataOcorrencia) {
+                    inputDataOcorrencia.value = obterDataHoraAtualLocal();
+    }
+
+            // 3. LIMPEZA DOS CAMPOS OCULTOS E EXTRAS
             if (campoId) campoId.value = ""; 
+            document.getElementById('maquinas-nome').value = "";
+            document.getElementById('produtos-nome').value = "";
+            document.getElementById('colaboradores-nome').value = "";
             
-            // Restaura o título para o modo de criação
-            const tituloForm = document.getElementById('titulo-form-colab');
-            if (tituloForm) {
-                tituloForm.innerHTML = '<i class="bi bi-person-plus text-primary me-2"></i>Novo Colaborador';
+            if (selectSituacao) selectSituacao.value = "Pendente";
+
+            // Limpa os textos das buscas visíveis
+            document.getElementById('maquinas-nome-busca').value = "";
+            document.getElementById('colaboradores-nome-busca').value = "";
+            document.getElementById('produtos-nome-busca').value = "";
+
+            // Limpa a miniatura da foto se a função existir
+            if (typeof resetarVisualFoto === "function") {
+                resetarVisualFoto();
             }
 
-            // Atualiza a tabela dinamicamente
+            const tituloForm = document.getElementById('titulo-form-colab');
+            if (tituloForm) {
+                tituloForm.innerHTML = '<i class="sidebar-texto fa-solid fa-triangle-exclamation me-3"></i> Nova Ocorrência';
+            }
+
             if (typeof listarOcorrenciasCRUD === "function") {
                 listarOcorrenciasCRUD();
             }
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+
         } else {
             const erroApi = await res.json().catch(() => ({}));
-            console.error("Detalhes do erro do servidor:", erroApi);
-            
-            if (typeof dispararNotificacao === "function") {
-                dispararNotificacao(`Não foi possível salvar os dados do colaborador. Erro ${res.status}`, "erro");
-            } else {
-                alert(`Erro ao salvar ocorrencia. Status do servidor: ${res.status}`);
-            }
+            console.error("Erro retornado pelo servidor:", erroApi);
+            alert(`Erro ao salvar ocorrência: ${erroApi.detail || "Dados inconsistentes."}`);
         }
     } catch (err) { 
-        console.error("Erro no envio:", err);
-        if (typeof dispararNotificacao === "function") {
-            dispararNotificacao("Erro de conexão ao tentar salvar a ocorrencia.", "erro");
-        } else {
-            alert("Erro de conexão ao tentar salvar a ocorrencia.");
-        }
+        console.error("Falha grave na requisição:", err);
+        alert("Erro de conexão com o servidor.");
     }
 });
 
-// =========================================================================
-// 4. FUNÇÕES DE AUXÍLIO PARA EDIÇÃO (UPDATE)
-// =========================================================================
-window.prepararEdicaoPorId = function(id) {
-    const c = todasOcorrencias.find(colab => {
-        const idColab = colab.id_ocorrencias ?? colab.id ?? colab._id;
-        return idColab?.toString().trim() === id.toString().trim();
+document.addEventListener('DOMContentLoaded', () => {
+    const dropzone = document.getElementById('dropzone-foto');
+    const inputFoto = document.getElementById('ocorrencias-foto-ocorrencia');
+    const previewContainer = document.getElementById('preview-container');
+    const uploadInstrucoes = document.getElementById('upload-instrucoes');
+    const fotoPreview = document.getElementById('foto-preview');
+    const btnRemover = document.getElementById('btn-remover-foto');
+
+    if (!dropzone || !inputFoto) return;
+
+    // --- 1. FUNÇÃO DE PROCESSAMENTO E PREVIEW DA IMAGEM ---
+    function processarArquivoFoto(arquivo) {
+        if (!arquivo) return;
+
+        // Validação de tipo de arquivo
+        if (!arquivo.type.startsWith('image/')) {
+            alert("Por favor, selecione apenas arquivos de imagem (PNG, JPG, JPEG).");
+            return;
+        }
+
+        // Validação de tamanho (5MB máximo)
+        if (arquivo.size > 5 * 1024 * 1024) {
+            alert("A imagem selecionada é muito pesada! Escolha uma foto de até 5MB.");
+            inputFoto.value = "";
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(event) {
+            if (fotoPreview) fotoPreview.src = event.target.result;
+            previewContainer?.classList.remove('d-none');
+            uploadInstrucoes?.classList.add('d-none');
+        };
+        reader.readAsDataURL(arquivo);
+    }
+
+    // --- 2. EVENTO DE CLIQUE / TOQUE (Abre a câmera no mobile ou arquivos no PC) ---
+    dropzone.addEventListener('click', () => {
+        inputFoto.click();
     });
-    
-    if (!c) {
-        console.error("Ocorrencia não encontrada na memória local.");
-        if (typeof dispararNotificacao === "function") {
-            dispararNotificacao("Erro ao carregar dados da ocorrencia para edição.", "erro");
-        }
-        return;
-    }
 
-    const campoId = document.getElementById('colab-id');
-    const campoNome = document.getElementById('ocorrencias-nome');
-    const campoMatricula = document.getElementById('ocorrencias-matricula');
-    const campoCargo = document.getElementById('ocorrencias-cargo');
-    const campoEmail = document.getElementById('ocorrencias-email');
-    const campoSituacao = document.getElementById('ocorrencias-situacao');
-    
-    const idLimpo = (c.id_ocorrencias ?? c.id ?? c._id ?? "").toString().trim();
-    
-    if (campoId) campoId.value = idLimpo;
-    if (campoNome) campoNome.value = c.nome || "";
-    if (campoMatricula) campoMatricula.value = c.matricula || "";
-    
-    if (campoCargo) {
-        let idCargoEdicao = "";
-        if (c.id_cargos) {
-            idCargoEdicao = c.id_cargos;
-        } else if (c.id_cargo) { 
-            idCargoEdicao = c.id_cargo;
-        } else if (c.cargos && typeof c.cargos === 'object') {
-            idCargoEdicao = c.cargos.id_cargos || c.cargos.id || c.cargos.id_cargo;
-        } else if (c.cargo && typeof c.cargo === 'object') {
-            idCargoEdicao = c.cargo.id_cargos || c.cargo.id || c.cargo.id_cargo;
-        } else {
-            idCargoEdicao = c.cargo || "";
-        }
-        campoCargo.value = idCargoEdicao;
-    }
-    
-    if (campoEmail) campoEmail.value = c.email || "";
-    
-    // =========================================================================
-    // CORREÇÃO CRÍTICA: ASSINCRONICIDADE COM TIMEOUT PARA EVITAR RESET DO DOM
-    // =========================================================================
-    if (campoSituacao) {
-        // 1. Identifica se o registro é ativo (true/false) baseado no banco
-        const statusAtivo = c.ativo === true || 
-                            c.ativo === "true" || 
-                            c.situacao === "Ativo" || 
-                            String(c.situacao).toLowerCase() === "ativo" ||
-                            (c.ativo === undefined && c.situacao === undefined);
+    inputFoto.addEventListener('change', function(e) {
+        processarArquivoFoto(e.target.files[0]);
+    });
 
-        const valorParaOSelect = statusAtivo ? "true" : "false";
+    // --- 3. EVENTOS DE DRAG & DROP (Arrastar e soltar no PC) ---
+    // Evita o comportamento padrão do navegador de abrir a imagem em outra aba
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, (e) => e.preventDefault(), false);
+    });
+
+    // Efeito visual ao passar o arquivo por cima da área
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropzone.addEventListener(eventName, () => {
+            dropzone.classList.add('border-primary', 'bg-light');
+        }, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropzone.addEventListener(eventName, () => {
+            dropzone.classList.remove('border-primary', 'bg-light');
+        }, false);
+    });
+
+    // Captura o arquivo solto na Dropzone
+    dropzone.addEventListener('drop', (e) => {
+        const dt = e.dataTransfer;
+        const arquivos = dt.files;
         
-        // 2. O setTimeout garante que o valor vai ser injetado APÓS qualquer reset de tela
-        setTimeout(() => {
-            campoSituacao.value = valorParaOSelect;
-            campoSituacao.dispatchEvent(new Event('change', { bubbles: true }));
-            console.log(`[DOM Forçado] Select atualizado para: ${campoSituacao.value}`);
-        }, 50);
-    }
-    
-    const tituloForm = document.getElementById('titulo-form-colab');
-    if (tituloForm) {
-        tituloForm.innerHTML = '<i class="bi bi-pencil-square text-warning me-2"></i>Editando Colaborador';
-    }
-    
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-};
-
-// =========================================================================
-// 5. EXCLUIR ITEM (DELETE)
-// =========================================================================
-window.deletarItemGeral = async function(endpoint, id) {
-    if (!confirm("Tem certeza que deseja excluir este registro? Esta ação não pode ser desfeita.")) {
-        return;
-    }
-
-    try {
-        const res = await fetch(`${API_URL}/${endpoint}/${id}`, {
-            method: 'DELETE'
-        });
-
-        if (res.ok) {
-            if (typeof dispararNotificacao === "function") {
-                dispararNotificacao("Registro excluído com sucesso!", "excluir");
-            } else {
-                alert("Registro excluído com sucesso!");
-            }
-            
-            if (endpoint === 'ocorrencias') {
-                listarOcorrenciasCRUD();
-            }
-        } else {
-            console.error("Erro na exclusão. Status:", res.status);
-            if (typeof dispararNotificacao === "function") {
-                dispararNotificacao(`Não foi possível excluir o registro. Status: ${res.status}`, "erro");
-            } else {
-                alert(`Erro ao excluir. O servidor retornou: ${res.status}`);
-            }
+        if (arquivos.length > 0) {
+            inputFoto.files = arquivos; // Sincroniza o arquivo arrastado com o input hidden
+            processarArquivoFoto(arquivos[0]);
         }
-    } catch (err) {
-        console.error("Erro de conexão ao excluir:", err);
-        if (typeof dispararNotificacao === "function") {
-            dispararNotificacao("Erro de conexão ao tentar excluir o registro.", "erro");
-        } else {
-            alert("Erro de conexão ao tentar excluir o registro.");
-        }
-    }
-};
+    });
+
+    // --- 4. BOTÃO REMOVER FOTO (O botão X vermelho) ---
+    btnRemover?.addEventListener('click', function(e) {
+        e.stopPropagation(); // Impede que o clique no X abra a câmera novamente
+        inputFoto.value = ""; // Reseta o input
+        if (fotoPreview) fotoPreview.src = "";
+        previewContainer?.classList.add('d-none');
+        uploadInstrucoes?.classList.remove('d-none');
+    });
+});
+
+// --- 5. FUNÇÃO DE RESET GLOBAL ---
+// Chame esta função 'resetarVisualFoto()' dentro do 'if (res.ok)' do seu evento 'submit'
+// logo após rodar o formOcorrencias.reset(), para limpar a miniatura da tela!
+function resetarVisualFoto() {
+    const previewContainer = document.getElementById('preview-container');
+    const uploadInstrucoes = document.getElementById('upload-instrucoes');
+    const fotoPreview = document.getElementById('foto-preview');
+    
+    if (fotoPreview) fotoPreview.src = "";
+    previewContainer?.classList.add('d-none');
+    uploadInstrucoes?.classList.remove('d-none');
+}
+
+// Função para obter a data/hora atual local formatada para o input datetime-local
+function obterDataHoraAtualLocal() {
+    const agora = new Date();
+    // Ajusta o fuso horário para o horário local da máquina
+    const ano = agora.getFullYear();
+    const mes = String(agora.getMonth() + 1).padStart(2, '0');
+    const dia = String(agora.getDate()).padStart(2, '0');
+    const horas = String(agora.getHours()).padStart(2, '0');
+    const minutos = String(agora.getMinutes()).padStart(2, '0');
+    
+    return `${ano}-${mes}-${dia}T${horas}:${minutos}`;
+}
 
 // =========================================================================
 // 6. OUVINTES DE EVENTOS DA PÁGINA (DOM)

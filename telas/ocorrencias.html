@@ -77,175 +77,211 @@
     </nav>
 
     <main class="main-content">
-    <div class="container-fluid mb-4">
-        <i class="sidebar-texto2 fa-solid fa-triangle-exclamation me-3 fw-bold"></i>
-        <span class="sidebar-texto2 fw-bold">Ocorrências</span>
-    </div>
-
-    <section class="mb-4">            
-        <div class="row">
-            <div class="col-12">
-                <div class="card shadow-sm p-4 border-0 bg-body">
-                    
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h4 class="mb-0 fw-bold text-body" id="titulo-form-colab">
-                            <i class="sidebar-texto fa-solid fa-triangle-exclamation me-3"></i> Nova Ocorrência
-                        </h4>
+        <div class="container-fluid mb-4">
+            <i class="sidebar-texto2 fa-solid fa-triangle-exclamation me-3 fw-bold"></i>
+            <span class="sidebar-texto2 fw-bold">Ocorrências</span>
+        </div>
+    
+        <section class="mb-4">            
+            <div class="row">
+                <div class="col-12">
+                    <div class="card shadow-sm p-4 border-0 bg-body">
                         
-                        <div class="d-flex gap-2">
-                            <button type="submit" form="formOcorrencias" class="btn btn-success px-4 fw-bold">
-                                <i class="bi bi-floppy"></i>&nbsp;&nbsp; Salvar
-                            </button>
+                        <div class="d-flex justify-content-between align-items-center mb-4">
+                            <h4 class="mb-0 fw-bold text-body" id="titulo-form-colab">
+                                <i class="sidebar-texto fa-solid fa-triangle-exclamation me-3"></i> Nova Ocorrência
+                            </h4>
+                            
+                            <div class="d-flex gap-2">
+                                <button type="submit" form="formOcorrencias" class="btn btn-success px-4 fw-bold">
+                                    <i class="bi bi-floppy"></i>&nbsp;&nbsp; Salvar
+                                </button>
+                            </div>
                         </div>
+                        
+                        <form id="formOcorrencias" class="row g-3 align-items-end">
+                            <input type="hidden" id="ocorrencias-id">
+                            
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold text-body">Número da Ocorrência</label>
+                                <input type="text" 
+                                    inputmode="numeric" 
+                                    pattern="[0-9]*" 
+                                    id="ocorrencias-numero" 
+                                    class="form-control bg-body text-body shadow-none" 
+                                    placeholder="Digite o número da ocorrência..."
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+                            </div>
+                            
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold text-body">Data da Ocorrência</label>
+                                <input type="datetime-local" 
+                                    id="ocorrencias-data" 
+                                    class="form-control bg-light text-muted shadow-none" 
+                                    readonly>
+                            </div>
+            
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold text-body">Máquina</label>                            
+                                <input type="text" 
+                                       class="form-control bg-body text-body shadow-none" 
+                                       id="maquinas-nome-busca" 
+                                       list="lista-maquinas-datalist"
+                                       placeholder="Selecione a máquina..." 
+                                       autocomplete="off"
+                                       required>                            
+                                <datalist id="lista-maquinas-datalist"></datalist>                            
+                                <input type="hidden" id="maquinas-nome" name="id_maquinas">
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold text-body">Colaborador</label>                            
+                                <input type="text" 
+                                       class="form-control bg-body text-body shadow-none" 
+                                       id="colaboradores-nome-busca" 
+                                       list="lista-colaboradores-datalist"
+                                       placeholder="Selecione o colaborador..." 
+                                       autocomplete="off"
+                                       required>                            
+                                <datalist id="lista-colaboradores-datalist"></datalist>                            
+                                <input type="hidden" id="colaboradores-nome" name="id_colaboradores">
+                            </div>
+                            
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold text-body">Produto</label>                            
+                                <input type="text" 
+                                       class="form-control bg-body text-body shadow-none" 
+                                       id="produtos-nome-busca" 
+                                       list="lista-produtos-datalist"
+                                       placeholder="Selecione o produto..." 
+                                       autocomplete="off"
+                                       required>                            
+                                <datalist id="lista-produtos-datalist"></datalist>                            
+                                <input type="hidden" id="produtos-nome" name="id_produtos">
+                            </div>
+    
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold text-body">Lote do Produto</label>
+                                <input type="text" 
+                                    inputmode="numeric" 
+                                    pattern="[0-9]*" 
+                                    id="ocorrencias-lote-produto" 
+                                    class="form-control bg-body text-body shadow-none" 
+                                    placeholder="Digite o lote do produto..."
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+                            </div>
+    
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold text-body">Número da Nota Fiscal</label>
+                                <input type="text" 
+                                    inputmode="numeric" 
+                                    pattern="[0-9]*" 
+                                    id="ocorrencias-numero-nota-fiscal" 
+                                    class="form-control bg-body text-body shadow-none" 
+                                    placeholder="Digite o número da nota fiscal..."
+                                    oninput="this.value = this.value.replace(/[^0-9]/g, '');">
+                            </div>
+    
+                            <div class="col-12 mt-4">
+                                <h4 class="mb-0 fw-bold text-body" id="titulo-ocorrencias-problema">
+                                    <i class="sidebar-texto fa-solid fa-file-circle-exclamation me-3"></i> Descrição do Problema e Falhas
+                                </h4>
+                            </div>
+    
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-body">Descrição do Problema</label>
+                                <textarea id="ocorrencias-problema" class="form-control bg-body text-body shadow-none" style="height: 80px; resize: vertical;" required placeholder="Digite a descrição do problema..."></textarea>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-body">Onde ocorreu a falha?</label>
+                                <textarea id="ocorrencias-falha-onde" class="form-control bg-body text-body shadow-none" style="height: 80px; resize: vertical;" required placeholder="Digite onde ocorreu a falha..."></textarea>
+                            </div>
+    
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-body">Como ocorreu a falha?</label>
+                                <textarea id="ocorrencias-falha-como" class="form-control bg-body text-body shadow-none" style="height: 80px; resize: vertical;" required placeholder="Digite como ocorreu a falha..."></textarea>
+                            </div>
+    
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-body">Quando ocorreu a falha?</label>
+                                <textarea id="ocorrencias-falha-quando" class="form-control bg-body text-body shadow-none" style="height: 80px; resize: vertical;" required placeholder="Digite quando ocorreu a falha..."></textarea>
+                            </div>
+    
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-body">Quem estava envolvido na falha?</label>
+                                <textarea id="ocorrencias-falha-quem" class="form-control bg-body text-body shadow-none" style="height: 80px; resize: vertical;" required placeholder="Digite quem estava envolvido na falha..."></textarea>
+                            </div>
+    
+                            <div class="col-12 mt-4">
+                                <h4 class="mb-0 fw-bold text-body" id="titulo-form-ocorrencias">
+                                    <i class="sidebar-texto fa-solid fa-screwdriver-wrench me-3"></i> Ação e Situação
+                                </h4>
+                            </div>
+    
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold text-body">Observações Adicionais</label>
+                                <textarea id="ocorrencias-observacoes" class="form-control bg-body text-body shadow-none" style="height: 80px; resize: vertical;" required placeholder="Observações adicionais..."></textarea>
+                            </div>
+    
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold text-body">Ações Corretivas</label>
+                                <textarea id="ocorrencias-acao-corretiva" class="form-control bg-body text-body shadow-none" style="height: 80px; resize: vertical;" required placeholder="Digite as ações corretivas..."></textarea>
+                            </div>
+    
+                            <div class="col-md-4">
+                                <label class="form-label fw-semibold text-body">Data Prazo</label>
+                                <input type="date" id="ocorrencias-data-prazo" class="form-control bg-body text-body shadow-none pt-1 pb-5" style="height: 80px;">
+                            </div>   
+                            
+    
+                            <div class="col-md-6">
+                                <label class="form-label fw-semibold text-body">
+                                    <i class="sidebar-texto fa-solid fa-camera me-1"></i> Foto da Ocorrência
+                                </label>
+                                
+                                <div id="dropzone-foto" 
+                                     class="position-relative d-flex flex-column align-items-center justify-content-center p-3 border border-2 border-dashed rounded-3 bg-body" 
+                                     style="min-height: 120px; border-style: dashed !important; cursor: pointer;">
+                                    
+                                    <div id="preview-container" class="d-none text-center mb-2 position-relative">
+                                        <img id="foto-preview" src="" alt="Preview" class="img-thumbnail rounded shadow-sm" style="max-height: 90px; object-fit: contain;">
+                                        <button type="button" class="btn btn-danger btn-sm position-absolute top-0 start-100 translate-middle rounded-circle p-1" 
+                                                id="btn-remover-foto" title="Remover foto" style="width: 24px; height: 24px; font-size: 10px; line-height: 1;">
+                                            <i class="fa-solid fa-xmark"></i>
+                                        </button>
+                                    </div>
+                            
+                                    <div id="upload-instrucoes" class="text-center text-muted">
+                                        <i class="fa-solid fa-cloud-arrow-up fa-2x mb-2 text-secondary"></i>
+                                        <p class="mb-0 small fw-medium">Clique/Toque para usar a Câmera ou arraste o arquivo aqui</p>
+                                        <span class="text-xs text-secondary" style="font-size: 11px;">Formatos aceitos: JPG, JPEG ou PNG (Máx. 5MB)</span>
+                                    </div>
+                            
+                                    <input type="file" 
+                                           id="ocorrencias-foto-ocorrencia" 
+                                           class="d-none" 
+                                           accept="image/*">
+                                </div>
+                            </div>
+
+                            <div class="col-md-3">
+                                <label class="form-label fw-semibold text-body">Situação</label>
+                                <select id="ocorrencias-situacao" class="form-select bg-body text-body shadow-none">
+                                    <option value="Pendente">Pendente</option>
+                                    <option value="Em andamento">Em andamento</option>
+                                    <option value="Em análise">Em análise</option>
+                                    <option value="Concluído">Concluído</option>
+                                </select>
+                            </div>
+    
+                        </form>
+                        
                     </div>
-                    
-                    <form id="formOcorrencias" class="row g-3 align-items-end">
-                        <input type="hidden" id="ocorrencias-id">
-                        
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold text-body">Número da Ocorrência</label>
-                            <input type="text" 
-                                inputmode="numeric" 
-                                pattern="[0-9]*" 
-                                id="ocorrencias-numero" 
-                                class="form-control bg-body text-body shadow-none" 
-                                placeholder="Digite o número da ocorrência..."
-                                oninput="this.value = this.value.replace(/[^0-9]/g, '');">
-                        </div>
-                        
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold text-body">Data da Ocorrência</label>
-                            <input type="datetime-local" 
-                                id="ocorrencias-data" 
-                                class="form-control bg-light text-muted shadow-none" 
-                                readonly>
-                        </div>
-        
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold text-body">Máquina</label>                            
-                            <input type="text" 
-                                   class="form-control bg-body text-body shadow-none" 
-                                   id="maquinas-nome-busca" 
-                                   placeholder="Selecione a máquina..." 
-                                   autocomplete="off">                            
-                            <datalist id="lista-maquinas-datalist"></datalist>                            
-                            <input type="hidden" id="maquinas-nome" name="id_maquinas">
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label fw-semibold text-body">Colaborador</label>                            
-                            <input type="text" 
-                                   class="form-control bg-body text-body shadow-none" 
-                                   id="colaboradores-nome-busca" 
-                                   placeholder="Selecione o colaborador..." 
-                                   autocomplete="off">                            
-                            <datalist id="lista-colaboradores-datalist"></datalist>                            
-                            <input type="hidden" id="colaboradores-nome" name="id_colaboradores">
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label fw-semibold text-body">Produto</label>                            
-                            <input type="text" 
-                                   class="form-control bg-body text-body shadow-none" 
-                                   id="produtos-nome-busca" 
-                                   placeholder="Selecione o produto..." 
-                                   autocomplete="off">                            
-                            <datalist id="lista-produtos-datalist"></datalist>                            
-                            <input type="hidden" id="produtos-nome" name="id_produtos">
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label fw-semibold text-body">Lote do Produto</label>
-                            <input type="text" 
-                            inputmode="numeric" 
-                            pattern="[0-9]*" 
-                            id="ocorrencias-lote-produto" 
-                            class="form-control bg-body text-body shadow-none" 
-                            placeholder="Digite o lote do produto..."
-                            oninput="this.value = this.value.replace(/[^0-9]/g, '');">
-                        </div>
-
-                        <div class="col-md-3">
-                            <label class="form-label fw-semibold text-body">Número da Nota Fiscal</label>
-                            <input type="text" 
-                            inputmode="numeric" 
-                            pattern="[0-9]*" 
-                            id="ocorrencias-numero-nota-fiscal" 
-                            class="form-control bg-body text-body shadow-none" 
-                            placeholder="Digite o número da nota fiscal..."
-                            oninput="this.value = this.value.replace(/[^0-9]/g, '');">
-                        </div>
-
-                        <h4 class="mb-0 fw-bold text-body" id="titulo-form-descricao">
-                            <i class="sidebar-texto fa-solid fa-file-circle-exclamation me-3"></i> Descrição do Problema e Falhas
-                        </h4>
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold text-body">Descrição do Problema</label>
-                            <input type="text" id="ocorrencias-problema" class="form-control bg-body text-body shadow-none" style="height: 60px; resize: vertical; padding-top: 4px; line-height: 1;padding-bottom: 20px;" required placeholder="Digite a descrição do problema...">
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold text-body">Como ocorreu a falha?</label>
-                            <input type="text" id="ocorrencias-falha-como" class="form-control bg-body text-body shadow-none" style="height: 60px; resize: vertical;padding-top: 4px; line-height: 1;padding-bottom: 20px;" required placeholder="Digite como ocorreu a falha...">
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold text-body">Quando ocorreu a falha?</label>
-                            <input type="text" id="ocorrencias-falha-quando" class="form-control bg-body text-body shadow-none" style="height: 60px; resize: vertical;padding-top: 4px; line-height: 1;padding-bottom: 20px;" required placeholder="Digite quando ocorreu a falha...">
-                        </div>
-
-                        <div class="col-md-6">
-                            <label class="form-label fw-semibold text-body">Quem estava envolvido na falha?</label>
-                            <input type="text" id="ocorrencias-falha-quem" class="form-control bg-body text-body shadow-none" style="height: 60px; resize: vertical;padding-top: 4px; line-height: 1;padding-bottom: 20px;" required placeholder="Digite quem estava envolvido na falha...">
-                        </div>
-
-                        <h4 class="mb-0 fw-bold text-body" id="titulo-form-ocorrencias">
-                            <i class="sidebar-texto fa-solid fa-screwdriver-wrench me-3"></i> Ação e Situação
-                        </h4>
-
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold text-body">Observações Adicionais</label>
-                            <input type="text" id="ocorrencias-observacoes-adicionais" class="form-control bg-body text-body shadow-none" style="height: 60px; resize: vertical;padding-top: 4px; line-height: 1;padding-bottom: 20px;" required placeholder="Observações adicionais...">
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold text-body">Ações Corretivas</label>
-                            <input type="text" id="ocorrencias-observacoes" class="form-control bg-body text-body shadow-none" style="height: 60px; resize: vertical;padding-top: 4px; line-height: 1;padding-bottom: 20px;" required placeholder="Digite as ações corretivas...">
-                        </div>
-
-                        <div class="col-md-4">
-                            <label class="form-label fw-semibold text-body">Data Prazo</label>
-                            <input type="date" id="ocorrencias-data-prazo" class="form-control bg-body text-body shadow-none" style="height: 60px; resize: vertical;padding-top: 4px; line-height: 1;padding-bottom: 20px;">
-                        </div>
-
-                        <div class="col-md-6">
-                            <label for="ocorrencia-situacao" class="form-label fw-semibold text-body">Situação</label>
-                            <select id="ocorrencia-situacao" class="form-select">
-                                <option value>Pendente</option>
-                                <option value>Em andamento</option>
-                                <option value>Em análise</option>
-                                <option value>Concluido</option>
-                            </select>
-                        </div>
-
-                        <div class="col-md-6">
-                            <i class="sidebar-texto fa-solid fa-camera me-3"></i>
-                            <label class="form-label fw-semibold text-body">Foto da Ocorrência</label>
-                            <input type="file" 
-                                id="ocorrencias-foto-ocorrencia" 
-                                class="form-control bg-body text-body shadow-none" 
-                                accept=".jpg, .jpeg, .png">
-                        </div>
-
-                    </form>
-                    
                 </div>
             </div>
-        </div>
-    </section>
-
-</main>
+        </section>
+    </main>
 
 <!-- CONTENEUR PARA TOASTS DE NOTIFICAÇÃO (OPCIONAL - USADO PELO SEU SCRIPT) -->
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
