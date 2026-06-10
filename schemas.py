@@ -1,6 +1,8 @@
 from pydantic import BaseModel, ConfigDict, Field
-from datetime import datetime
+from typing import Union
+from datetime import datetime, date
 from typing import Optional, Any
+
 
 # =========================================================================
 # --- MIXIN COM TOLERÂNCIA TOTAL A DIVERGÊNCIAS ---
@@ -173,7 +175,12 @@ class OcorrenciaBase(SafeModel):
     id_colaboradores: int
     id_produtos: int
     numero_ocorrencias: int = Field(default=0)
-    data_ocorrencias: str
+    
+    # CORREÇÃO CRÍTICA: Permite que o Pydantic aceite tanto a String enviada pelo front 
+    # quanto o datetime retornado pelo SQLAlchemy sem estourar ResponseValidationError
+    data_ocorrencias: Union[datetime, date, str]
+    data_prazo: Optional[Union[datetime, date, str]] = Field(default=None)
+    
     lote_produtos: Optional[str] = Field(default="0")
     numero_nota: Optional[int] = Field(default=0)
     problema: Optional[str] = Field(default="")
@@ -183,7 +190,6 @@ class OcorrenciaBase(SafeModel):
     falha_quem: Optional[str] = Field(default="")
     observacoes: Optional[str] = Field(default="")
     acao_corretiva: Optional[str] = Field(default="")
-    data_prazo: Optional[str] = Field(default=None)
     situacao: Optional[str] = Field(default="Pendente")
     foto: Optional[str] = Field(default=None)
 
@@ -193,6 +199,5 @@ class OcorrenciaCreate(OcorrenciaBase):
 class OcorrenciaUpdate(OcorrenciaBase):
     pass  
 
-# Modelo de leitura final sem a propriedade id_ocorrencias
 class Ocorrencia(OcorrenciaBase, TimestampMixin):
     pass
