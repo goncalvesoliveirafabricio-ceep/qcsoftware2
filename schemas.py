@@ -194,6 +194,3 @@ class OcorrenciaCreate(OcorrenciaBase):
 
 class OcorrenciaUpdate(OcorrenciaBase):
     pass  # Mantém os mesmos padrões para atualizações parciais ou totais
-
-class Ocorrencia(OcorrenciaBase, TimestampMixin):
-    id_ocorrencias: int  # Alinhado com o padrão de chaves primárias do seu banco

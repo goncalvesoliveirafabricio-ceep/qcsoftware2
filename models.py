@@ -80,11 +80,7 @@ class Permissao(Base):
     ativo = Column(Boolean, default=True, server_default=text("true"), nullable=True)
 
 class Ocorrencia(Base):
-    __tablename__ = "ocorrencias"
-    
-    # Adicionada chave primária individual e limpa para a Ocorrência
-    id_ocorrencias = Column(Integer, primary_key=True, index=True)
-    
+    __tablename__ = "ocorrencias"    
     # Colunas comuns e chaves estrangeiras tratadas adequadamente
     data_ocorrencias = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     id_maquinas = Column(Integer, ForeignKey("maquinas.id_maquinas"), nullable=False)
