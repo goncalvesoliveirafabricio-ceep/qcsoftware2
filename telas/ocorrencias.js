@@ -6,13 +6,16 @@ const ITENS_POR_PAGINA = 10;
 // =========================================================================
 // VARIÁVEIS DE CONTROLE DE ESTADO PARA OCORRENCIAS
 // =========================================================================
-let todasOcorrencias = [];       // Armazena a lista bruta vinda da API
-let OcorrenciasFiltradas = [];   // Armazena o resultado da busca por nome
-let paginaAtualOcorrencias = 1;  // Controle de paginação exclusivo
-let listaDeOcorrencias = [];     // Declarada globalmente para evitar o erro "is not defined"
-let listaDeCargos = [];          // Adicionado fallback para evitar erro de referência se não declarada global em outro arquivo
+let todasOcorrencias = [];       
+let OcorrenciasFiltradas = [];   
+let paginaAtualOcorrencias = 1;  
+let listaDeOcorrencias = [];     
+let listaDeCargos = [];          
 
-// CORREÇÃO CRÍTICA: Auxiliar para obter data local formatada no Fuso de Brasília (UTC-3)
+// Variável global para reter a foto em memória de forma segura
+let FOTO_OCORRENCIA_BASE64 = null;
+
+// Auxiliar para obter data local formatada no Fuso de Brasília (UTC-3)
 function obterDataHoraAtualLocal() {
     const agora = new Date();
     const formatador = new Intl.DateTimeFormat('pt-BR', {
@@ -50,51 +53,28 @@ async function carregarMaquinasNoSelect() {
         if (res.ok) {
             const maquinas = await res.json();
             window.listaDeMaquinas = maquinas;
-
-            // 1. Ordena as máquinas em ordem alfabética pelo nome
             maquinas.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
-            
-            // 2. Vincula o input de busca ao datalist
             inputBusca.setAttribute('list', 'lista-maquinas-datalist');
 
-            // 3. Popula o datalist mapeando a chave em minúsculo do seu banco
             datalistMaquinas.innerHTML = maquinas.map(m => {
                 const id_Maquinas = m.id_maquinas || m.id;
                 return `<option value="${m.nome}" data-id="${id_Maquinas}"></option>`;
             }).join('');
 
-            // 4. FUNÇÃO REVERSA PARA A EDIÇÃO
             window.atualizarInputVisualMaquina = function(idAlvo) {
-                if (!idAlvo) {
-                    inputBusca.value = "";
-                    inputIdOculto.value = "";
-                    return;
-                }
+                if (!idAlvo) { inputBusca.value = ""; inputIdOculto.value = ""; return; }
                 const opcao = Array.from(datalistMaquinas.options).find(opt => opt.getAttribute('data-id')?.toString() === idAlvo?.toString());
-                if (opcao) {
-                    inputBusca.value = opcao.value;
-                    inputIdOculto.value = idAlvo;
-                } else {
-                    inputBusca.value = "";
-                    inputIdOculto.value = "";
-                }
+                if (opcao) { inputBusca.value = opcao.value; inputIdOculto.value = idAlvo; }
             };
 
-            // 5. Evento inteligente para capturar a seleção do usuário
             inputBusca.addEventListener('input', function() {
                 const valorDigitado = this.value.trim();
                 const opcaoSelecionada = Array.from(datalistMaquinas.options).find(opt => opt.value.trim() === valorDigitado);
-
-                if (opcaoSelecionada) {
-                    inputIdOculto.value = opcaoSelecionada.getAttribute('data-id');
-                } else {
-                    if (valorDigitado === "") inputIdOculto.value = "";
-                }
+                if (opcaoSelecionada) inputIdOculto.value = opcaoSelecionada.getAttribute('data-id');
+                else if (valorDigitado === "") inputIdOculto.value = "";
             });
         }
-    } catch (e) {
-        console.error("Erro ao carregar e ordenar máquinas para o formulário:", e);
-    }
+    } catch (e) { console.error("Erro ao carregar máquinas:", e); }
 }
 document.addEventListener('DOMContentLoaded', carregarMaquinasNoSelect);
 
@@ -113,9 +93,7 @@ async function carregarColaboradoresNoSelect() {
         if (res.ok) {
             const colaboradores = await res.json();
             window.listaDeColaboradores = colaboradores;
-
             colaboradores.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
-            
             inputBusca.setAttribute('list', 'lista-colaboradores-datalist');
 
             datalistColaboradores.innerHTML = colaboradores.map(c => {
@@ -124,35 +102,19 @@ async function carregarColaboradoresNoSelect() {
             }).join('');
 
             window.atualizarInputVisualColaboradores = function(idAlvo) {
-                if (!idAlvo) {
-                    inputBusca.value = "";
-                    inputIdOculto.value = "";
-                    return;
-                }
+                if (!idAlvo) { inputBusca.value = ""; inputIdOculto.value = ""; return; }
                 const opcao = Array.from(datalistColaboradores.options).find(opt => opt.getAttribute('data-id')?.toString() === idAlvo?.toString());
-                if (opcao) {
-                    inputBusca.value = opcao.value;
-                    inputIdOculto.value = idAlvo;
-                } else {
-                    inputBusca.value = "";
-                    inputIdOculto.value = "";
-                }
+                if (opcao) { inputBusca.value = opcao.value; inputIdOculto.value = idAlvo; }
             };
 
             inputBusca.addEventListener('input', function() {
                 const valorDigitado = this.value.trim();
                 const opcaoSelecionada = Array.from(datalistColaboradores.options).find(opt => opt.value.trim() === valorDigitado);
-
-                if (opcaoSelecionada) {
-                    inputIdOculto.value = opcaoSelecionada.getAttribute('data-id');
-                } else {
-                    if (valorDigitado === "") inputIdOculto.value = "";
-                }
+                if (opcaoSelecionada) inputIdOculto.value = opcaoSelecionada.getAttribute('data-id');
+                else if (valorDigitado === "") inputIdOculto.value = "";
             });
         }
-    } catch (e) {
-        console.error("Erro ao carregar e ordenar colaboradores para o formulário:", e);
-    }
+    } catch (e) { console.error("Erro ao carregar colaboradores:", e); }
 }
 document.addEventListener('DOMContentLoaded', carregarColaboradoresNoSelect);
 
@@ -171,9 +133,7 @@ async function carregarProdutosNoSelect() {
         if (res.ok) {
             const produtos = await res.json();
             window.listaDeProdutos = produtos;
-
             produtos.sort((a, b) => (a.nome || "").localeCompare(b.nome || ""));
-            
             inputBusca.setAttribute('list', 'lista-produtos-datalist');
 
             datalistProdutos.innerHTML = produtos.map(p => {
@@ -182,35 +142,19 @@ async function carregarProdutosNoSelect() {
             }).join('');
 
             window.atualizarInputVisualProdutos = function(idAlvo) {
-                if (!idAlvo) {
-                    inputBusca.value = "";
-                    inputIdOculto.value = "";
-                    return;
-                }
+                if (!idAlvo) { inputBusca.value = ""; inputIdOculto.value = ""; return; }
                 const opcao = Array.from(datalistProdutos.options).find(opt => opt.getAttribute('data-id')?.toString() === idAlvo?.toString());
-                if (opcao) {
-                    inputBusca.value = opcao.value;
-                    inputIdOculto.value = idAlvo;
-                } else {
-                    inputBusca.value = "";
-                    inputIdOculto.value = "";
-                }
+                if (opcao) { inputBusca.value = opcao.value; inputIdOculto.value = idAlvo; }
             };
 
             inputBusca.addEventListener('input', function() {
                 const valorDigitado = this.value.trim();
                 const opcaoSelecionada = Array.from(datalistProdutos.options).find(opt => opt.value.trim() === valorDigitado);
-
-                if (opcaoSelecionada) {
-                    inputIdOculto.value = opcaoSelecionada.getAttribute('data-id');
-                } else {
-                    if (valorDigitado === "") inputIdOculto.value = "";
-                }
+                if (opcaoSelecionada) inputIdOculto.value = opcaoSelecionada.getAttribute('data-id');
+                else if (valorDigitado === "") inputIdOculto.value = "";
             });
         }
-    } catch (e) {
-        console.error("Erro ao carregar e ordenar produtos para o formulário:", e);
-    }
+    } catch (e) { console.error("Erro ao carregar produtos:", e); }
 }
 document.addEventListener('DOMContentLoaded', carregarProdutosNoSelect);
 
@@ -220,43 +164,28 @@ document.addEventListener('DOMContentLoaded', carregarProdutosNoSelect);
 async function listarOcorrenciasCRUD() {
     try {
         const res = await fetch(`${API_URL}/ocorrencias/`, { cache: 'no-store' });
-
         if (!res.ok) throw new Error(`Erro no servidor: Status ${res.status}`);
 
         todasOcorrencias = await res.json();
-        
         const totalBadge = document.getElementById('total-ocorrencias') || document.querySelector('.badge');
         if (totalBadge) totalBadge.innerText = todasOcorrencias.length;
 
         filtrarEAtualizarTabelaOcorrencias();
     } catch (e) { 
-        console.error("Erro detalhado na requisição das Ocorrencias:", e); 
+        console.error("Erro na requisição das Ocorrencias:", e); 
         const tabela = document.getElementById('tabela-ocorrencias') || document.querySelector('tbody');
-        if (tabela) {
-            tabela.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">⚠️ Erro ao carregar ocorrencias.<br><small class="text-muted">Motivo: ${e.message}</small></td></tr>`;
-        }
+        if (tabela) tabela.innerHTML = `<tr><td colspan="6" class="text-center text-danger py-4">⚠️ Erro ao carregar ocorrencias.</td></tr>`;
     }
 }
 
 function filtrarEAtualizarTabelaOcorrencias() {
     const termoPesquisa = document.getElementById('pesquisa-ocorrencias')?.value.toLowerCase() || "";
-    
-    OcorrenciasFiltradas = todasOcorrencias.filter(c =>
-        c.nome && c.nome.toLowerCase().includes(termoPesquisa)
-    );
+    OcorrenciasFiltradas = todasOcorrencias.filter(c => c.nome && c.nome.toLowerCase().includes(termoPesquisa));
+    OcorrenciasFiltradas.sort((a, b) => (a.nome || "").localeCompare(b.nome || "", 'pt-BR', { sensitivity: 'base' }));
 
-    // ORDENAÇÃO ALFABÉTICA
-    OcorrenciasFiltradas.sort((a, b) =>
-        (a.nome || "").localeCompare(b.nome || "", 'pt-BR', { sensitivity: 'base' })
-    );
-
-    // ÚLTIMO CADASTRADO NO TOPO
     const ultimoCadastro = todasOcorrencias[todasOcorrencias.length - 1];
-
     if (ultimoCadastro) {
-        OcorrenciasFiltradas = OcorrenciasFiltradas.filter(
-            c => (c.id_ocorrencias ?? c.id) !== (ultimoCadastro.id_ocorrencias ?? ultimoCadastro.id)
-        );
+        OcorrenciasFiltradas = OcorrenciasFiltradas.filter(c => (c.id_ocorrencias ?? c.id) !== (ultimoCadastro.id_ocorrencias ?? ultimoCadastro.id));
         OcorrenciasFiltradas.unshift(ultimoCadastro);
     }
 
@@ -264,8 +193,7 @@ function filtrarEAtualizarTabelaOcorrencias() {
     if (paginaAtualOcorrencias > totalPaginas) paginaAtualOcorrencias = totalPaginas;
 
     const indiceInicial = (paginaAtualOcorrencias - 1) * ITENS_POR_PAGINA;
-    const indiceFinal = indiceInicial + ITENS_POR_PAGINA;
-    const ocorrenciasExibidas = OcorrenciasFiltradas.slice(indiceInicial, indiceFinal);
+    const ocorrenciasExibidas = OcorrenciasFiltradas.slice(indiceInicial, indiceInicial + ITENS_POR_PAGINA);
 
     renderizarTabelaOcorrencias(ocorrenciasExibidas);
     atualizarControlesPaginacaoOcorrencias(totalPaginas);
@@ -283,45 +211,16 @@ function renderizarTabelaOcorrencias(ocorrencias) {
     tabela.innerHTML = ocorrencias.map(c => {
         let idBruto = c.id_ocorrencias ?? c.id ?? c._id;
         const ocorrenciaId = idBruto !== undefined ? idBruto.toString().trim() : ""; 
+        if (!ocorrenciaId) return `<tr class="table-warning"><td colspan="6">⚠️ Erro: Registro sem ID válido</td></tr>`;
 
-        if (!ocorrenciaId) {
-            return `
-                <tr class="table-warning">
-                    <td><strong>${c.nome || "Sem Nome"}</strong></td>
-                    <td colspan="4" class="text-center">⚠️ Erro: Registro sem ID válido</td>
-                </tr>`;
-        }
-
-        const idRegistroAtual = idBruto;
-
-        const registroEstaAtivo = c.ativo === true || c.ativo === "true" || 
-                                  (c.ativo === undefined && (c.situacao === "Ativo" || String(c.situacao).toLowerCase() === "ativo")) ||
-                                  (c.ativo === undefined && c.situacao === undefined);
-
+        const registroEstaAtivo = c.ativo === true || c.ativo === "true" || (c.ativo === undefined && String(c.situacao).toLowerCase() === "ativo") || (c.ativo === undefined && c.situacao === undefined);
         let situacaoTratada = registroEstaAtivo ? "Ativo" : "Inativo";
-
-        c.situacaoTratada = situacaoTratada;
-        c.idUnificado = idRegistroAtual; 
-        c.ativo = registroEstaAtivo;     
 
         let nomeCargoExibicao = "-";
         const cargoBruto = c.cargos ?? c.cargo ?? c.id_cargos ?? c.id_cargo; 
-
-        if (cargoBruto) {
-            if (typeof cargoBruto === 'object') {
-                nomeCargoExibicao = cargoBruto.nome || "-";
-            } else if (Array.isArray(listaDeCargos)) {
-                const cargoEncontrado = listaDeCargos.find(cargo => {
-                    const idCargo = cargo.id_cargos ?? cargo.id ?? cargo._id;
-                    return idCargo == cargoBruto;
-                });
-                
-                if (cargoEncontrado) {
-                    nomeCargoExibicao = cargoEncontrado.nome;
-                } else {
-                    nomeCargoExibicao = `Cargo ${cargoBruto}`; 
-                }
-            }
+        if (cargoBruto && Array.isArray(listaDeCargos)) {
+            const cargoEncontrado = listaDeCargos.find(cargo => (cargo.id_cargos ?? cargo.id) == cargoBruto);
+            nomeCargoExibicao = cargoEncontrado ? cargoEncontrado.nome : `Cargo ${cargoBruto}`;
         }
 
         const badgeClasse = situacaoTratada === 'Ativo' ? 'bg-success-subtle text-success' : 'bg-secondary-subtle text-secondary';
@@ -334,16 +233,8 @@ function renderizarTabelaOcorrencias(ocorrencias) {
                 <td>${c.email || "-"}</td>
                 <td><span class="badge ${badgeClasse}">${situacaoTratada}</span></td>
                 <td class="text-end">
-                    <button class="btn btn-sm btn-outline-primary me-1 border-0"                     
-                            onclick="prepararEdicaoPorId('${ocorrenciaId}')" 
-                            title="Editar ocorrencia">
-                        <i class="bi bi-pencil"></i>
-                    </button>
-                    <button class="btn btn-sm btn-outline-danger border-0" 
-                            onclick="deletarItemGeral('ocorrencias', '${ocorrenciaId}')" 
-                            title="Excluir ocorrencia">
-                        <i class="bi bi-trash"></i>
-                    </button>
+                    <button class="btn btn-sm btn-outline-primary border-0" onclick="prepararEdicaoPorId('${ocorrenciaId}')"><i class="bi bi-pencil"></i></button>
+                    <button class="btn btn-sm btn-outline-danger border-0" onclick="deletarItemGeral('ocorrencias', '${ocorrenciaId}')"><i class="bi bi-trash"></i></button>
                 </td>
             </tr>
         `;
@@ -364,14 +255,11 @@ function atualizarControlesPaginacaoOcorrencias(totalPaginas) {
 // 3. SALVAR OU ATUALIZAR CADASTRO (CREATE / UPDATE)
 // =========================================================================
 document.getElementById('formOcorrencias')?.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    console.log("-> Botão Salvar clicado. Iniciando validação e envio...");
+    e.preventDefault(); // Impede o recarregamento instantâneo da página
     
     const campoId = document.getElementById('ocorrencias-id');
     const id = campoId ? campoId.value.trim() : "";
-    
-    const urlBase = typeof API_URL !== "undefined" ? API_URL : ""; 
-    const url = id ? `${urlBase}/ocorrencias/${id}` : `${urlBase}/ocorrencias/`;
+    const url = id ? `${API_URL}/ocorrencias/${id}` : `${API_URL}/ocorrencias/`;
     const metodo = id ? 'PUT' : 'POST';
 
     try {
@@ -379,15 +267,11 @@ document.getElementById('formOcorrencias')?.addEventListener('submit', async (e)
             const inputBusca = document.getElementById(idInputBusca);
             const inputHidden = document.getElementById(idInputHidden);
             const datalist = document.getElementById(idDatalist);
-            
             let idFinal = parseInt(inputHidden?.value, 10);
             
             if ((isNaN(idFinal) || idFinal <= 0) && inputBusca && inputBusca.value.trim() !== "" && datalist) {
                 const opcao = Array.from(datalist.options).find(opt => opt.value.trim() === inputBusca.value.trim());
-                if (opcao) {
-                    idFinal = parseInt(opcao.getAttribute('data-id') || opcao.id, 10);
-                    if (inputHidden) inputHidden.value = idFinal;
-                }
+                if (opcao) idFinal = parseInt(opcao.getAttribute('data-id'), 10);
             }
             return idFinal;
         };
@@ -400,28 +284,11 @@ document.getElementById('formOcorrencias')?.addEventListener('submit', async (e)
         if (isNaN(idColaboradoresInt) || idColaboradoresInt <= 0) { alert("Por favor, selecione um Colaborador válido."); return; }
         if (isNaN(idProdutosInt) || idProdutosInt <= 0) { alert("Por favor, selecione um Produto válido."); return; }
 
-        // CORREÇÃO CRÍTICA: Captura a foto diretamente do elemento visual preview (Base64) antes de qualquer limpeza
-        const imgPreview = document.getElementById('foto-preview');
-        let fotoBase64 = (imgPreview && imgPreview.src && imgPreview.src.startsWith('data:image')) ? imgPreview.src : null;
-
         const selectSituacao = document.getElementById('ocorrencias-situacao');
         let situacaoTexto = selectSituacao ? selectSituacao.value.trim() : "Pendente";
-        const situacaoLower = situacaoTexto.toLowerCase();
-        
-        if (situacaoLower === "em andamento") {
-            situacaoTexto = "Em andamento";
-        } else if (situacaoLower === "em análise" || situacaoLower === "em analise") {
-            situacaoTexto = "Em análise";
-        } else if (situacaoLower === "concluído" || situacaoLower === "concluido") {
-            situacaoTexto = "Concluído";
-        } else {
-            situacaoTexto = "Pendente"; 
-        }
 
         const campoDataOcorrencia = document.getElementById('ocorrencias-data')?.value;
-        let dataOcorrenciaIso = campoDataOcorrencia 
-            ? campoDataOcorrencia.replace('T', ' ') 
-            : new Date().toISOString().slice(0, 19).replace('T', ' ');
+        let dataOcorrenciaIso = campoDataOcorrencia ? campoDataOcorrencia.replace('T', ' ') : new Date().toISOString().slice(0, 19).replace('T', ' ');
 
         const campoDataPrazo = document.getElementById('ocorrencias-data-prazo')?.value;
         let dataPrazoTratada = campoDataPrazo && campoDataPrazo.trim() !== "" ? campoDataPrazo : null;
@@ -443,10 +310,8 @@ document.getElementById('formOcorrencias')?.addEventListener('submit', async (e)
             acao_corretiva: document.getElementById('ocorrencias-acao-corretiva')?.value || "",
             data_prazo: dataPrazoTratada, 
             situacao: situacaoTexto, 
-            foto: fotoBase64          
+            foto: FOTO_OCORRENCIA_BASE64 // Usa o Base64 persistido de forma limpa da memória global
         };
-
-        console.log(`[Envio API] Enviando dados via ${metodo}:`, payloadJSON);
 
         const res = await fetch(url, {
             method: metodo,
@@ -457,96 +322,42 @@ document.getElementById('formOcorrencias')?.addEventListener('submit', async (e)
         if (res.ok) { 
             dispararNotificacao(id ? "Ocorrência alterada com sucesso!" : "Nova ocorrência cadastrada com sucesso!", id ? "atualizar" : "criar");
 
-            // CORREÇÃO FLUXO DE SEGURANÇA: Reseta o formulário apenas após a confirmação da API
+            // LIMPEZA DA TELA APENAS AQUI (PÓS-SUCESSO DA API)
             document.getElementById('formOcorrencias').reset();
             
             const inputDataOcorrencia = document.getElementById('ocorrencias-data');
-            if (inputDataOcorrencia) {
-                inputDataOcorrencia.value = obterDataHoraAtualLocal();
-            }
+            if (inputDataOcorrencia) inputDataOcorrencia.value = obterDataHoraAtualLocal();
 
             if (campoId) campoId.value = ""; 
             document.getElementById('maquinas-nome').value = "";
             document.getElementById('produtos-nome').value = "";
             document.getElementById('colaboradores-nome').value = "";
             
-            if (selectSituacao) selectSituacao.value = "Pendente";
-
             document.getElementById('maquinas-nome-busca').value = "";
             document.getElementById('colaboradores-nome-busca').value = "";
             document.getElementById('produtos-nome-busca').value = "";
 
-            // Reseta a foto de forma visual limpa
             if (typeof resetarVisualFoto === "function") resetarVisualFoto();
 
             const tituloForm = document.getElementById('titulo-form-colab');
-            if (tituloForm) {
-                tituloForm.innerHTML = '<i class="sidebar-texto fa-solid fa-triangle-exclamation me-3"></i> Nova Ocorrência';
-            }
+            if (tituloForm) tituloForm.innerHTML = '<i class="sidebar-texto fa-solid fa-triangle-exclamation me-3"></i> Nova Ocorrência';
 
             if (typeof listarOcorrenciasCRUD === "function") listarOcorrenciasCRUD();
-
             window.scrollTo({ top: 0, behavior: 'smooth' });
         } else {
             alert("Erro ao salvar ocorrência no servidor.");
         }
     } catch (err) {
         console.error("Erro no processo de salvamento:", err);
-        alert("Ocorreu um erro interno ao tentar salvar.");
     }
 });
-
-// =========================================================================
-// FUNÇÕES AUXILIARES ISOLADAS CORRETAMENTE DO ESCOPO DO EVENTO SUBMIT
-// =========================================================================
-function salvarOcorrencia(dadosFormulario) {
-    const ehCriacao = true; 
-
-    fetch('https://qcsoftware2.onrender.com/ocorrencias/', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-        },
-        body: JSON.stringify(dadosFormulario)
-    })
-    .then(response => {
-        if (!response.ok) throw new Error('Erro na resposta do servidor');
-        return response.json();
-    })
-    .then(data => {
-        const mensagem = ehCriacao ? "Nova ocorrência cadastrada com sucesso!" : "Ocorrência alterada com sucesso!";
-        dispararNotificacao(mensagem, ehCriacao ? 'criar' : 'atualizar');
-
-        const formulario = document.getElementById('formOcorrencias') || document.getElementById('meuFormulario');
-        if (formulario) formulario.reset();
-    })
-    .catch(error => {
-        console.error('Erro retornado pelo servidor:', error);
-        alert("Erro ao salvar ocorrência.");
-    });
-}
 
 function dispararNotificacao(mensagem, acao = 'sucesso') {
     const elementoToast = document.getElementById('toast-cadastro');
     const textoToast = document.getElementById('toast-mensagem-texto');
-    const iconeToast = document.getElementById('toast-mensagem-icone');
-    
     if (!elementoToast || !textoToast) return;
-
-    elementoToast.classList.remove('bg-danger', 'bg-warning', 'bg-primary');
     elementoToast.className = "toast align-items-center text-white bg-success border-0 shadow";
-    
-    if (acao === 'criar') {
-        if (iconeToast) iconeToast.innerHTML = '<i class="bi bi-plus-circle-fill fs-5"></i>';
-    } else if (acao === 'atualizar') {
-        if (iconeToast) iconeToast.innerHTML = '<i class="bi bi-pencil-square fs-5"></i>';
-    } else {
-        if (iconeToast) iconeToast.innerHTML = '<i class="bi bi-check-circle-fill fs-5"></i>';
-    }
-
     textoToast.innerText = mensagem;
-
     if (typeof bootstrap !== "undefined" && bootstrap.Toast) {
         const bootstrapToast = new bootstrap.Toast(elementoToast, { delay: 3500 });
         bootstrapToast.show();
@@ -554,7 +365,7 @@ function dispararNotificacao(mensagem, acao = 'sucesso') {
 }
 
 // =========================================================================
-// 4. CONTROLE DE DRAG AND DROP E CLIQUE PARA FOTO (CELULAR E PC)
+// 4. CONTROLE DE CAMERA, GALERIA E ESTILIZAÇÃO DO CONTAINER DA FOTO
 // =========================================================================
 document.addEventListener('DOMContentLoaded', () => {
     const dropzone = document.getElementById('dropzone-foto');
@@ -566,30 +377,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!dropzone || !inputFoto) return;
 
-    // CORREÇÃO VISUAL: Estilização do tamanho para enquadrar perfeitamente no mobile
+    // ESTILO RESPONSIVO BLINDADO: Impede distorções no mobile ou estouro de layout
     if (fotoPreview) {
-        fotoPreview.style.maxWidth = "100%";
+        fotoPreview.style.width = "100%";
+        fotoPreview.style.maxWidth = "400px";
+        fotoPreview.style.height = "auto";
         fotoPreview.style.maxHeight = "250px"; 
         fotoPreview.style.objectFit = "contain"; 
         fotoPreview.style.borderRadius = "8px";
+        fotoPreview.style.display = "block";
+        fotoPreview.style.margin = "0 auto";
     }
 
-    // Abre câmera ou arquivos nativamente no celular ao clicar na dropzone
+    // Clique na dropzone dispara o seletor nativo do sistema
     dropzone.addEventListener('click', (e) => {
-        if (e.target.closest('#btn-remover-foto')) return;
+        if (e.target.closest('#btn-remover-foto') || e.target.id === 'btn-remover-foto') {
+            return; // Bloqueia abertura da câmera caso queira apenas excluir a foto
+        }
         inputFoto.click();
     });
 
-    // Efeito visual de arrastar arquivo (opcional para PC)
-    dropzone.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        dropzone.classList.add('border-primary');
-    });
-
-    dropzone.addEventListener('dragleave', () => {
-        dropzone.classList.remove('border-primary');
-    });
-
+    dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('border-primary'); });
+    dropzone.addEventListener('dragleave', () => { dropzone.classList.remove('border-primary'); });
     dropzone.addEventListener('drop', (e) => {
         e.preventDefault();
         dropzone.classList.remove('border-primary');
@@ -615,7 +424,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const reader = new FileReader();
         reader.onload = function(event) {
+            // Salva na variável global imediatamente e exibe a miniatura
+            FOTO_OCORRENCIA_BASE64 = event.target.result;
             if (fotoPreview) fotoPreview.src = event.target.result;
+            
             previewContainer?.classList.remove('d-none');
             uploadInstrucoes?.classList.add('d-none');
         };
@@ -628,13 +440,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     window.resetarVisualFoto = function() {
         inputFoto.value = "";
+        FOTO_OCORRENCIA_BASE64 = null; // Limpa a memória global
         if (fotoPreview) fotoPreview.src = "";
         previewContainer?.classList.add('d-none');
         uploadInstrucoes?.classList.remove('d-none');
     };
 
     btnRemover?.addEventListener('click', (e) => {
-        e.stopPropagation(); 
+        e.preventDefault();
+        e.stopPropagation(); // Impede a bolha de clique de abrir a câmera novamente
         window.resetarVisualFoto();
     });
 });
@@ -645,7 +459,6 @@ document.addEventListener('DOMContentLoaded', () => {
 (function() {
     function atualizarRelogio() {
         const agora = new Date();
-        
         const opcoesData = { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric' };
         const opcoesHora = { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hour12: false };
         
@@ -658,7 +471,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (elData) elData.textContent = dataStr;
         if (elHora) elHora.textContent = horaStr;
     }
-
     atualizarRelogio();
     setInterval(atualizarRelogio, 10000);
 })();
