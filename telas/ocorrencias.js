@@ -12,15 +12,27 @@ let paginaAtualOcorrencias = 1;  // Controle de paginação exclusivo
 let listaDeOcorrencias = [];     // Declarada globalmente para evitar o erro "is not defined"
 let listaDeCargos = [];          // Adicionado fallback para evitar erro de referência se não declarada global em outro arquivo
 
-// Auxiliar para obter data local formatada para o input datetime-local
+// CORREÇÃO CRÍTICA: Auxiliar para obter data local formatada no Fuso de Brasília (UTC-3)
 function obterDataHoraAtualLocal() {
     const agora = new Date();
-    const ano = agora.getFullYear();
-    const mes = String(agora.getMonth() + 1).padStart(2, '0');
-    const dia = String(agora.getDate()).padStart(2, '0');
-    const horas = String(agora.getHours()).padStart(2, '0');
-    const minutos = String(agora.getMinutes()).padStart(2, '0');
-    return `${ano}-${mes}-${dia}T${horas}:${minutos}`;
+    const formatador = new Intl.DateTimeFormat('pt-BR', {
+        timeZone: 'America/Sao_Paulo',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: false
+    });
+
+    const partes = formatador.formatToParts(agora);
+    const d = partes.find(p => p.type === 'day').value;
+    const m = partes.find(p => p.type === 'month').value;
+    const a = partes.find(p => p.type === 'year').value;
+    const h = partes.find(p => p.type === 'hour').value;
+    const min = partes.find(p => p.type === 'minute').value;
+
+    return `${a}-${m}-${d}T${h}:${min}`;
 }
 
 // =========================================================================
@@ -207,7 +219,6 @@ document.addEventListener('DOMContentLoaded', carregarProdutosNoSelect);
 // =========================================================================
 async function listarOcorrenciasCRUD() {
     try {
-        // CORREÇÃO: cache colocado dentro das opções do fetch de forma válida
         const res = await fetch(`${API_URL}/ocorrencias/`, { cache: 'no-store' });
 
         if (!res.ok) throw new Error(`Erro no servidor: Status ${res.status}`);
@@ -230,7 +241,6 @@ async function listarOcorrenciasCRUD() {
 function filtrarEAtualizarTabelaOcorrencias() {
     const termoPesquisa = document.getElementById('pesquisa-ocorrencias')?.value.toLowerCase() || "";
     
-    // CORREÇÃO: Padronizado para camelCase para conversar com o escopo global
     OcorrenciasFiltradas = todasOcorrencias.filter(c =>
         c.nome && c.nome.toLowerCase().includes(termoPesquisa)
     );
@@ -272,7 +282,7 @@ function renderizarTabelaOcorrencias(ocorrencias) {
 
     tabela.innerHTML = ocorrencias.map(c => {
         let idBruto = c.id_ocorrencias ?? c.id ?? c._id;
-        const ocorrenciaId = idBruto !== undefined ? idBruto.toString().trim() : ""; // CORREÇÃO: Variável unificada para evitar "not defined"
+        const ocorrenciaId = idBruto !== undefined ? idBruto.toString().trim() : ""; 
 
         if (!ocorrenciaId) {
             return `
@@ -390,24 +400,9 @@ document.getElementById('formOcorrencias')?.addEventListener('submit', async (e)
         if (isNaN(idColaboradoresInt) || idColaboradoresInt <= 0) { alert("Por favor, selecione um Colaborador válido."); return; }
         if (isNaN(idProdutosInt) || idProdutosInt <= 0) { alert("Por favor, selecione um Produto válido."); return; }
 
-        const inputFoto = document.getElementById('ocorrencias-foto-ocorrencia');
-        let fotoBase64 = ""; 
-
-        if (inputFoto && inputFoto.files && inputFoto.files[0]) {
-            const arquivo = inputFoto.files[0];
-            
-            if (arquivo.size > 5 * 1024 * 1024) {
-                alert("A imagem selecionada é muito pesada! Escolha uma foto de até 5MB.");
-                return; 
-            }
-
-            fotoBase64 = await new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onloadend = () => resolve(reader.result);
-                reader.onerror = (error) => reject(error);
-                reader.readAsDataURL(arquivo);
-            });
-        }
+        // CORREÇÃO CRÍTICA: Captura a foto diretamente do elemento visual preview (Base64) antes de qualquer limpeza
+        const imgPreview = document.getElementById('foto-preview');
+        let fotoBase64 = (imgPreview && imgPreview.src && imgPreview.src.startsWith('data:image')) ? imgPreview.src : null;
 
         const selectSituacao = document.getElementById('ocorrencias-situacao');
         let situacaoTexto = selectSituacao ? selectSituacao.value.trim() : "Pendente";
@@ -431,8 +426,6 @@ document.getElementById('formOcorrencias')?.addEventListener('submit', async (e)
         const campoDataPrazo = document.getElementById('ocorrencias-data-prazo')?.value;
         let dataPrazoTratada = campoDataPrazo && campoDataPrazo.trim() !== "" ? campoDataPrazo : null;
 
-        let fotoData = (typeof fotoBase64 !== "undefined" && fotoBase64 && fotoBase64.trim() !== "") ? fotoBase64 : null;
-
         const payloadJSON = {
             numero_ocorrencias: parseInt(document.getElementById('ocorrencias-numero')?.value, 10) || 0,
             data_ocorrencias: dataOcorrenciaIso,
@@ -450,7 +443,7 @@ document.getElementById('formOcorrencias')?.addEventListener('submit', async (e)
             acao_corretiva: document.getElementById('ocorrencias-acao-corretiva')?.value || "",
             data_prazo: dataPrazoTratada, 
             situacao: situacaoTexto, 
-            foto: fotoData          
+            foto: fotoBase64          
         };
 
         console.log(`[Envio API] Enviando dados via ${metodo}:`, payloadJSON);
@@ -462,10 +455,9 @@ document.getElementById('formOcorrencias')?.addEventListener('submit', async (e)
         });
         
         if (res.ok) { 
-            // Chame sua lógica de notificação aqui se necessário
             dispararNotificacao(id ? "Ocorrência alterada com sucesso!" : "Nova ocorrência cadastrada com sucesso!", id ? "atualizar" : "criar");
 
-            // Limpezas de tela pós-sucesso
+            // CORREÇÃO FLUXO DE SEGURANÇA: Reseta o formulário apenas após a confirmação da API
             document.getElementById('formOcorrencias').reset();
             
             const inputDataOcorrencia = document.getElementById('ocorrencias-data');
@@ -484,6 +476,7 @@ document.getElementById('formOcorrencias')?.addEventListener('submit', async (e)
             document.getElementById('colaboradores-nome-busca').value = "";
             document.getElementById('produtos-nome-busca').value = "";
 
+            // Reseta a foto de forma visual limpa
             if (typeof resetarVisualFoto === "function") resetarVisualFoto();
 
             const tituloForm = document.getElementById('titulo-form-colab');
@@ -552,7 +545,7 @@ function dispararNotificacao(mensagem, acao = 'sucesso') {
         if (iconeToast) iconeToast.innerHTML = '<i class="bi bi-check-circle-fill fs-5"></i>';
     }
 
-    textoToast.innerText = message = mensagem;
+    textoToast.innerText = mensagem;
 
     if (typeof bootstrap !== "undefined" && bootstrap.Toast) {
         const bootstrapToast = new bootstrap.Toast(elementoToast, { delay: 3500 });
@@ -573,11 +566,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!dropzone || !inputFoto) return;
 
-    // CORREÇÃO CRÍTICA: Faz a área cinza (dropzone) abrir a câmera/galeria ao ser clicada
+    // CORREÇÃO VISUAL: Estilização do tamanho para enquadrar perfeitamente no mobile
+    if (fotoPreview) {
+        fotoPreview.style.maxWidth = "100%";
+        fotoPreview.style.maxHeight = "250px"; 
+        fotoPreview.style.objectFit = "contain"; 
+        fotoPreview.style.borderRadius = "8px";
+    }
+
+    // Abre câmera ou arquivos nativamente no celular ao clicar na dropzone
     dropzone.addEventListener('click', (e) => {
-        // Evita abrir o seletor duas vezes se o usuário clicar diretamente no botão de remover
         if (e.target.closest('#btn-remover-foto')) return;
-        
         inputFoto.click();
     });
 
@@ -595,12 +594,11 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         dropzone.classList.remove('border-primary');
         if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-            inputFoto.files = e.dataTransfer.files; // Sincroniza os arquivos arrastados com o input
+            inputFoto.files = e.dataTransfer.files; 
             processarArquivoFoto(e.dataTransfer.files[0]);
         }
     });
 
-    // Função que processa a imagem e exibe a miniatura
     function processarArquivoFoto(arquivo) {
         if (!arquivo) return;
 
@@ -624,12 +622,10 @@ document.addEventListener('DOMContentLoaded', () => {
         reader.readAsDataURL(arquivo);
     }
 
-    // Escuta a mudança do input (quando o usuário tira a foto ou escolhe da galeria)
     inputFoto.addEventListener('change', (e) => {
         processarArquivoFoto(e.target.files[0]);
     });
 
-    // Função global de reset da foto
     window.resetarVisualFoto = function() {
         inputFoto.value = "";
         if (fotoPreview) fotoPreview.src = "";
@@ -638,35 +634,31 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     btnRemover?.addEventListener('click', (e) => {
-        e.stopPropagation(); // Evita que o clique para remover abra a câmera novamente
+        e.stopPropagation(); 
         window.resetarVisualFoto();
     });
 });
     
-    // -- DEFINIR DATA E HORA DE BRASÍLIA --
-     (function() {
-        function atualizarRelogio() {
-            const agora = new Date();
-            
-            // Força o fuso horário de Brasília de forma nativa no navegador
-            const opcoesData = { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric' };
-            const opcoesHora = { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hour12: false };
-            
-            const dataStr = agora.toLocaleDateString('pt-BR', opcoesData);
-            const horaStr = agora.toLocaleTimeString('pt-BR', opcoesHora);
-            
-            // Captura os elementos do HTML
-            const elData = document.getElementById('data-brasilia');
-            const elHora = document.getElementById('hora-brasilia');
-            
-            // Aplica os valores se eles existirem na tela
-            if (elData) elData.textContent = dataStr;
-            if (elHora) elHora.textContent = horaStr;
-        }
-
-        // Executa imediatamente assim que o HTML chega nesse ponto
-        atualizarRelogio();
+// =========================================================================
+// 5. MANTER RELÓGIO COM DATA E HORA DE BRASÍLIA NA SIDEBAR
+// =========================================================================
+(function() {
+    function atualizarRelogio() {
+        const agora = new Date();
         
-        // Mantém atualizando a cada 10 segundos
-        setInterval(atualizarRelogio, 10000);
-    })();
+        const opcoesData = { timeZone: 'America/Sao_Paulo', day: '2-digit', month: '2-digit', year: 'numeric' };
+        const opcoesHora = { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hour12: false };
+        
+        const dataStr = agora.toLocaleDateString('pt-BR', opcoesData);
+        const horaStr = agora.toLocaleTimeString('pt-BR', opcoesHora);
+        
+        const elData = document.getElementById('data-brasilia');
+        const elHora = document.getElementById('hora-brasilia');
+        
+        if (elData) elData.textContent = dataStr;
+        if (elHora) elHora.textContent = horaStr;
+    }
+
+    atualizarRelogio();
+    setInterval(atualizarRelogio, 10000);
+})();
