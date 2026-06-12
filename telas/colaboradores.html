@@ -17,8 +17,8 @@
             <i class="fas fa-chevron-left"></i>
         </button>
 
-        <div class="logo">
-            <img src="/telas/imagens/logo.png" alt="Logo">            
+        <div class="logo" style="display: flex !important; justify-content: center !important; align-items: center !important; width: 100% !important; padding: 15px !important; box-sizing: border-box !important;">
+            <img src="imagens/logo.png" alt="Logo" style="display: block !important; width: 85px !important; height: 85px !important; object-fit: contain !important;">
         </div>
 
         <div class="nav flex-column">                 
@@ -86,20 +86,21 @@
         <div class="row">
             <div class="col-12">
                 <div class="card shadow-sm p-4 border-0 bg-body">
+
+                    <div class="d-block w-100 text-end mt-2">
+                        <button type="submit"
+                                form="formColaboradores"
+                                class="btn btn-success btn-sm py-1 px-3 fw-bold d-inline-flex align-items-center"
+                                style="font-size: 0.95rem;">
+                            <i class="bi bi-floppy me-2"></i> Salvar
+                        </button>
+                    </div>
                     
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h4 class="mb-0 fw-bold text-body" id="titulo-form-colab">
-                            <i class="sidebar-texto fas fa-user me-3"></i> Novo Colaborador
-                        </h4>
+                            <i class="sidebar-texto fas fa-user me-3"></i> Colaborador
+                        </h4>                        
                         
-                        <div class="d-block w-100 text-end mt-2">
-                            <button type="submit"
-                                    form="formProdutos"
-                                    class="btn btn-success btn-sm py-1 px-3 fw-bold d-inline-flex align-items-center"
-                                    style="font-size: 0.95rem;">
-                                <i class="bi bi-floppy me-2"></i> Salvar
-                            </button>
-                        </div>
                     </div>
                     
                     <form id="formColaboradores" class="row g-3 align-items-end">
@@ -188,20 +189,23 @@
                 </tbody>
             </table>
         </div>
+
+        <!-- Controles de paginação adicionados para o gerenciamento de páginas -->
+        <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top">
+            <button class="btn btn-sm btn-outline-secondary rounded shadow-none" id="btn-anterior-cargos" disabled>
+                <i class="bi bi-chevron-left"></i> Anterior
+            </button>
+        
+            <span class="small text-muted" id="info-paginacao-cargos">Página 1 de 1</span>
+        
+            <button class="btn btn-sm btn-outline-secondary rounded shadow-none" id="btn-proximo-cargos" disabled>
+                Próximo <i class="bi bi-chevron-right"></i>
+            </button>
+        </div>
+        </div>
+
     </div>
 </section>
-                  
-            <div class="d-flex justify-content-between align-items-center mt-4">
-                <button class="btn btn-sm btn-outline-secondary" id="btn-anterior-colaboradores" disabled>
-                    <i class="bi bi-chevron-left"></i> Anterior
-                </button>
-                <span id="info-paginacao-colaboradores" class="text-muted small">Página 1 de 1</span>
-                <button class="btn btn-sm btn-outline-secondary" id="btn-proximo-colaboradores" disabled>
-                    Próximo <i class="bi bi-chevron-right"></i>
-                </button>
-            </div>
-        </div>
-    </section>
 </main>
 
 <!-- CONTENEUR PARA TOASTS DE NOTIFICAÇÃO (OPCIONAL - USADO PELO SEU SCRIPT) -->
