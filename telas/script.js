@@ -371,9 +371,9 @@ function prepararEdicaoProduto(p) {
         campoSituacao.value = ehInativo ? "false" : "true";
     }
     
-    const tituloForm = document.getElementById('titulo-form-prod');
+    const tituloForm = document.getElementById('titulo-form-produtos');
     if (tituloForm) {
-        tituloForm.innerHTML = '<i class="bi bi-pencil-square text-warning me-2"></i>Editando Produto';
+        tituloForm.innerHTML = '<i class="bi bi-pencil-square text-warning me-2"></i>Editar Produto';
     }
     
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -721,7 +721,7 @@ function prepararEdicaoCargo(c) {
     
     const tituloForm = document.getElementById('titulo-form-cargo');
     if (tituloForm) {
-        tituloForm.innerHTML = '<i class="bi bi-pencil-square text-warning me-2"></i>Editando Cargo';
+        tituloForm.innerHTML = '<i class="bi bi-pencil-square text-warning me-2"></i>Editar Cargo';
     }
     
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1125,7 +1125,7 @@ function carregarDadosNoFormMaquina(m) {
     // CASAMENTO DE ID: Altera o texto usando o ID 'titulo-form-maq'
     const tituloForm = document.getElementById('titulo-form-maq');
     if (tituloForm) {
-        tituloForm.innerHTML = '<i class="bi bi-pencil-square text-warning me-3"></i> Editando Máquina';
+        tituloForm.innerHTML = '<i class="bi bi-pencil-square text-warning me-3"></i> Editar Máquina';
     }
     
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1655,7 +1655,7 @@ window.prepararEdicaoPorId = function(id) {
     
     const tituloForm = document.getElementById('titulo-form-colab');
     if (tituloForm) {
-        tituloForm.innerHTML = '<i class="bi bi-pencil-square text-warning me-2"></i>Editando Colaborador';
+        tituloForm.innerHTML = '<i class="bi bi-pencil-square text-warning me-2"></i>Editar Colaborador';
     }
     
     window.scrollTo({ top: 0, behavior: 'smooth' });
