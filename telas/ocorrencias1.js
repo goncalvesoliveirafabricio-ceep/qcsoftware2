@@ -1,7 +1,7 @@
 // =========================================================================
 // CONFIGURAÇÕES GLOBAIS E CONTROLE DE ESTADO
 // =========================================================================
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "https://qcsoftware2.onrender.com";
 
 const ITENS_POR_PAGINA = 10;
 let paginaAtualOcorrencias = 1;  
