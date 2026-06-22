@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Q.C Software - Listagem de Ocorrências</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style2.css">
+</head>
+<body class="bg-body-tertiary text-body">
+
+    <div class="d-flex">
+        <nav id="sidebar" class="sidebar d-flex flex-column flex-shrink-0 position-fixed">
+            <button class="toggle-btn" onclick="toggleSidebar()">
+                <i id="toggle-icon" class="fas fa-chevron-left"></i>
+            </button>
+
+            <div class="logo" style="display: flex !important; justify-content: center !important; align-items: center !important; width: 100% !important; padding: 15px !important; box-sizing: border-box !important;">
+                <img src="imagens/logo.png" alt="Logo" style="display: block !important; width: 85px !important; height: 85px !important; object-fit: contain !important;">
+            </div>
+
+            <div class="nav flex-column">
+                
+                <a href="#" class="sidebar-link text-decoration-none p-3">
+                    <i class="sidebar-texto fa-solid fa-chart-line"></i>
+                    <span class="sidebar-texto">Dashboard</span>
+                </a> 
+                
+                <a href="/telas/produtos.html" class="sidebar-link text-decoration-none p-3">
+                    <i class="sidebar-texto fas fa-box me-3"></i>
+                    <span class="sidebar-texto">Produtos</span>
+                </a> 
+                
+                 <a href="/telas/maquinas.html" class="sidebar-link text-decoration-none p-3">
+                    <i class="sidebar-texto fas fa-industry me-2"></i>
+                    <span class="sidebar-texto">Máquinas</span>
+                </a>  
+
+                 <a href="/telas/cargos.html" class="sidebar-link text-decoration-none p-3">
+                    <i class="sidebar-texto fa fa-address-card me-2"></i>
+                    <span class="sidebar-texto">Cargos</span>
+                </a>
+
+                <a href="/telas/colaboradores.html" class="sidebar-link text-decoration-none p-3">
+                    <i class="sidebar-texto fa fa-user me-2"></i>
+                    <span class="sidebar-texto">Colaboradores</span>
+                </a>
+
+                <a href="/telas/monitoramento.html" class="sidebar-link text-decoration-none p-3">
+                    <i class="sidebar-texto fa-solid fa-list-check me-2"></i>
+                    <span class="sidebar-texto">Monitoramento</span>
+                </a>
+
+                <a href="https://qcsoftware3.onrender.com/" class="sidebar-link text-decoration-none p-3" target="_blank" rel="noopener noreferrer">
+                <i class="sidebar-texto fas fa-map-location-dot me-2"></i>
+                <span class="sidebar-texto">Mapa/Máquinas</span>
+                </a>
+
+                <div class="profile-section p-4 mt-auto">
+                    <div class="d-flex align-items-center">
+                        <div class="ms-3 profile-info">
+                            <h5 class="text-white mb-1">
+                                <i class="fa fa-user-circle"></i>
+                                <span id="usuario-nome">Colaborador Q.C Software</span>
+                            </h5>
+                            <h6 class="text-black mb-1">
+                                <i class="fa fa-address-card"></i>
+                                <span id="usuario-cargo">Líder de Produção</span>
+                            </h6>
+                            <h6 class="text-black mb-1">
+                                <i class="fa fa-calendar"></i>
+                                <span id="data-brasilia">--/--/----</span>
+                            </h6>
+                            <h6 class="text-black mb-0">
+                                <i class="fa fa-clock"></i>
+                                <span id="hora-brasilia">--:--</span> horas
+                            </h6>               
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
+        
+        <main class="main-content">
+            <div class="container-fluid mb-4 p-0">
+                <i class="sidebar-texto2 fa-solid fa-triangle-exclamation me-3 fw-bold"></i>
+                <span class="sidebar-texto2 fw-bold">Monitoramento das Ocorrências</span>
+            </div>
+
+<section class="filter-dashboard-bar">
+<div class="container my-5">
+    <div class="text-center mb-5">
+        <h2 class="fw-bold text-white">Q.C Software - Monitoramento</h2>
+        <p class="text-white-50">Selecione as opções abaixo:</p>
+    </div>
+
+    <div class="row g-4 justify-content-center">
+
+<div class="col-12 col-md-4 col-lg-3">
+    <a href="#" class="card h-100 text-center p-4 bg-dark text-white border-secondary nav-card shadow-sm text-decoration-none">
+        <div class="mb-3 icon-box">
+            <i class="fas fa-solid fa-user-check fa-3x"></i>
+        </div>
+        <h5 class="card-title mb-0 fw-bold">Colaborador</h5>
+    </a>
+</div>
+
+<div class="col-12 col-md-4 col-lg-3">
+    <a href="/telas/ocorrencias.html" class="card h-100 text-center p-4 bg-dark text-white border-secondary nav-card shadow-sm text-decoration-none">
+        <div class="mb-3 icon-box">
+            <i class="fas fa-triangle-exclamation fa-3x"></i>
+        </div>
+        <h5 class="card-title mb-0 fw-bold">Ocorrências</h5>
+    </a>
+</div>
+
+<div class="col-12 col-md-4 col-lg-3">
+    <a href="/telas/ocorrencias_listagem.html" class="card h-100 text-center p-4 bg-dark text-white border-secondary nav-card shadow-sm text-decoration-none">
+        <div class="mb-3 icon-box">
+            <i class="fas fa-solid fa-list-check fa-3x"></i>
+        </div>
+        <h5 class="card-title mb-0 fw-bold">Listagem</h5>
+    </a>
+</div>
+
+    </div>
+</div>
+
+</section>
+
+</main>
+
+</div>
+
+<script>
+function toggleSidebar() {
+    const sidebar = document.querySelector('.sidebar');
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+
+    if (isMobile) {
+        sidebar.classList.toggle('mobile-open');
+        sidebar.classList.add('collapsed');
+        return;
+    }
+
+    sidebar.classList.remove('mobile-open');
+    sidebar.classList.toggle('collapsed');
+}
+
+function initSidebarMobile() {
+    const sidebar = document.querySelector('.sidebar');
+    if (!sidebar) return;
+
+    if (window.matchMedia('(max-width: 768px)').matches) {
+        sidebar.classList.add('collapsed');
+        sidebar.classList.remove('mobile-open');
+    } else {
+        sidebar.classList.remove('mobile-open');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', initSidebarMobile);
+window.addEventListener('resize', initSidebarMobile);
+</script>  
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="ocorrencias1.js"></script>
+</body>
+</html>

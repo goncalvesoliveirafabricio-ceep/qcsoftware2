@@ -12,69 +12,76 @@
 <body class="bg-body-tertiary text-body">
 
     <div class="d-flex">
-    <nav class="sidebar d-flex flex-column flex-shrink-0 position-fixed">
-        <button class="toggle-btn" onclick="toggleSidebar()">
-            <i class="fas fa-chevron-left"></i>
-        </button>
+        <nav id="sidebar" class="sidebar d-flex flex-column flex-shrink-0 position-fixed">
+            <button class="toggle-btn" onclick="toggleSidebar()">
+                <i id="toggle-icon" class="fas fa-chevron-left"></i>
+            </button>
 
-        <div class="logo" style="display: flex !important; justify-content: center !important; align-items: center !important; width: 100% !important; padding: 15px !important; box-sizing: border-box !important;">
-            <img src="imagens/logo.png" alt="Logo" style="display: block !important; width: 85px !important; height: 85px !important; object-fit: contain !important;">
-        </div>
-
-        <div class="nav flex-column">                 
-            <a href="/telas/produtos.html" class="sidebar-link text-decoration-none p-3">
-                <i class="sidebar-texto fas fa-box me-3"></i>
-                <span class="sidebar-texto">Produtos</span>
-            </a> 
-            
-             <a href="/telas/maquinas.html" class="sidebar-link text-decoration-none p-3">
-                <i class="sidebar-texto fas fa-industry me-2"></i>
-                <span class="sidebar-texto">Máquinas</span>
-            </a>  
-
-             <a href="/telas/cargos.html" class="sidebar-link text-decoration-none p-3">
-                <i class="sidebar-texto fa fa-address-card me-2"></i>
-                <span class="sidebar-texto">Cargos</span>
-            </a>
-
-            <a href="/telas/colaboradores.html" class="sidebar-link text-decoration-none p-3">
-                <i class="sidebar-texto fa fa-user me-2"></i>
-                <span class="sidebar-texto">Colaboradores</span>
-            </a>
-
-            <a href="/telas/ocorrencias.html" class="sidebar-link text-decoration-none p-3">
-                <i class="sidebar-texto fa-solid fa-triangle-exclamation me-2"></i>
-                <span class="sidebar-texto">Ocorrências</span>
-            </a>
-
-            <div class="profile-section p-4 mt-auto">
-
-                <div class="d-flex align-items-center">
-    
-                    <div class="ms-3 profile-info">
-    
-                        <h5 class="text-white mb-1">
-                            <i class="fa fa-user-circle"></i>
-                            <span id="usuario-nome">Colaborador Q.C Software</span>
-                        </h5>
-    
-                        <h6 class="text-black mb-1">
-                            <i class="fa fa-address-card"></i>
-                            <span id="usuario-cargo">Líder de Produção</span>
-                        </h6>
-    
-                        <h6 class="text-black mb-1">
-                            <i class="fa fa-calendar"></i>
-                            <span id="data-brasilia">--/--/----</span>
-                        </h6>
-    
-                        <h6 class="text-black mb-0">
-                            <i class="fa fa-clock"></i>
-                            <span id="hora-brasilia">--:--</span> horas
-                        </h6>                
+            <div class="logo" style="display: flex !important; justify-content: center !important; align-items: center !important; width: 100% !important; padding: 15px !important; box-sizing: border-box !important;">
+                <img src="imagens/logo.png" alt="Logo" style="display: block !important; width: 85px !important; height: 85px !important; object-fit: contain !important;">
             </div>
-        </div>
-    </nav>
+
+            <div class="nav flex-column">
+                
+                <a href="#" class="sidebar-link text-decoration-none p-3">
+                    <i class="sidebar-texto fa-solid fa-chart-line"></i>
+                    <span class="sidebar-texto">Dashboard</span>
+                </a> 
+                
+                <a href="/telas/produtos.html" class="sidebar-link text-decoration-none p-3">
+                    <i class="sidebar-texto fas fa-box me-3"></i>
+                    <span class="sidebar-texto">Produtos</span>
+                </a> 
+                
+                 <a href="/telas/maquinas.html" class="sidebar-link text-decoration-none p-3">
+                    <i class="sidebar-texto fas fa-industry me-2"></i>
+                    <span class="sidebar-texto">Máquinas</span>
+                </a>  
+
+                 <a href="/telas/cargos.html" class="sidebar-link text-decoration-none p-3">
+                    <i class="sidebar-texto fa fa-address-card me-2"></i>
+                    <span class="sidebar-texto">Cargos</span>
+                </a>
+
+                <a href="/telas/colaboradores.html" class="sidebar-link text-decoration-none p-3">
+                    <i class="sidebar-texto fa fa-user me-2"></i>
+                    <span class="sidebar-texto">Colaboradores</span>
+                </a>
+
+                <a href="/telas/monitoramento.html" class="sidebar-link text-decoration-none p-3">
+                    <i class="sidebar-texto fa-solid fa-list-check me-2"></i>
+                    <span class="sidebar-texto">Monitoramento</span>
+                </a>
+
+                <a href="https://qcsoftware3.onrender.com/" class="sidebar-link text-decoration-none p-3" target="_blank" rel="noopener noreferrer">
+                <i class="sidebar-texto fas fa-map-location-dot me-2"></i>
+                <span class="sidebar-texto">Mapa/Máquinas</span>
+                </a>
+
+                <div class="profile-section p-4 mt-auto">
+                    <div class="d-flex align-items-center">
+                        <div class="ms-3 profile-info">
+                            <h5 class="text-white mb-1">
+                                <i class="fa fa-user-circle"></i>
+                                <span id="usuario-nome">Colaborador Q.C Software</span>
+                            </h5>
+                            <h6 class="text-black mb-1">
+                                <i class="fa fa-address-card"></i>
+                                <span id="usuario-cargo">Líder de Produção</span>
+                            </h6>
+                            <h6 class="text-black mb-1">
+                                <i class="fa fa-calendar"></i>
+                                <span id="data-brasilia">--/--/----</span>
+                            </h6>
+                            <h6 class="text-black mb-0">
+                                <i class="fa fa-clock"></i>
+                                <span id="hora-brasilia">--:--</span> horas
+                            </h6>               
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </nav>
 
     <main class="main-content">
     <div class="container-fluid mb-4">
