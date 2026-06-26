@@ -216,6 +216,17 @@
                     <canvas id="graficoBarras"></canvas>
                 </div>
             </div>
+
+            <div class="bg-[#140b33]/60 p-5 rounded-xl border border-[#1f1445]/50">
+                <h3 class="text-gray-200 font-bold text-lg mb-3 flex items-center gap-2">
+                    
+                    Ocorrências por Mês
+                </h3>
+                <div class="relative" style="height: 200px;">
+                    <canvas id="graficoMes"></canvas>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -384,30 +395,74 @@ async function carregarCatalogosAuxiliares() {
 }
 
 // 3. ATUALIZA O HISTÓRICO DE OCORRÊNCIAS (Correção definitiva contra duplicados)
+// Variável de controle global para a instância do novo gráfico (coloque no topo do seu script junto com as outras)
+let mesChart = null;
+
 async function atualizarDashboard(dados) {
-    const total = dados.length;
-    const pendentes = dados.filter(o => normalizarStatus(o.situacao) === 'pendente').length;
-    const emAndamento = dados.filter(o => normalizarStatus(o.situacao) === 'em andamento').length;
-    const concluidas = dados.filter(o => normalizarStatus(o.situacao) === 'concluida').length;
+    const total = dados ? dados.length : 0;
+    const pendentes = dados ? dados.filter(o => normalizarStatus(o.situacao) === 'pendente').length : 0;
+    const emAndamento = dados ? dados.filter(o => normalizarStatus(o.situacao) === 'em andamento').length : 0;
+    const concluidas = dados ? dados.filter(o => normalizarStatus(o.situacao) === 'concluida').length : 0;
     
+    // 1. Atualiza e garante os cards superiores sempre zerados (0) se não houver dados
     if(document.getElementById("cardTotal")) document.getElementById("cardTotal").innerText = total;
     if(document.getElementById("cardPendentes")) document.getElementById("cardPendentes").innerText = pendentes;
     if(document.getElementById("cardAndamento")) document.getElementById("cardAndamento").innerText = emAndamento;
     if(document.getElementById("cardConcluidas")) document.getElementById("cardConcluidas").innerText = concluidas;
 
     const tabelaCorpo = document.getElementById("tabelaOcorrencias");
+    const canvasPizza = document.getElementById('graficoPizza');
+    const canvasBarras = document.getElementById('graficoBarras');
+    const canvasMes = document.getElementById('graficoMes'); // Elemento do novo gráfico por mês
+
+    // Remove mensagens de "Sem informação" anteriores para evitar duplicações
+    document.querySelectorAll('.msg-vazio-grafico').forEach(el => el.remove());
+
+    // =========================================================================
+    // TRAVA CRÍTICA: SE NÃO HOUVER OCORRÊNCIAS NO PERÍODO DO FILTRO
+    // =========================================================================
+    if (!dados || dados.length === 0) {
+        // Aplica a mensagem padronizada no histórico (tabela)
+        if (tabelaCorpo) {
+            tabelaCorpo.innerHTML = `<tr><td colspan="5" class="py-6 text-gray-400 text-center text-base">Nenhuma informação localizada no período</td></tr>`;
+        }
+
+        // Destrói as instâncias ativas do Chart.js para limpar a tela totalmente
+        if (pizzaChart) { pizzaChart.destroy(); pizzaChart = null; }
+        if (barrasChart) { barrasChart.destroy(); barrasChart = null; }
+        if (mesChart) { mesChart.destroy(); mesChart = null; }
+
+        // Oculta todos os gráficos e adiciona o texto de aviso centralizado nos blocos
+        if (canvasPizza) {
+            canvasPizza.style.display = 'none';
+            canvasPizza.parentElement.insertAdjacentHTML('beforeend', `<div class="msg-vazio-grafico" style="text-align: center; padding: 60px 10px; color: #888; font-size: 14px;">Nenhuma informação localizada no período</div>`);
+        }
+
+        if (canvasBarras) {
+            canvasBarras.style.display = 'none';
+            canvasBarras.parentElement.insertAdjacentHTML('beforeend', `<div class="msg-vazio-grafico" style="text-align: center; padding: 60px 10px; color: #888; font-size: 14px;">Nenhuma informação localizada no período</div>`);
+        }
+
+        if (canvasMes) {
+            canvasMes.style.display = 'none';
+            canvasMes.parentElement.insertAdjacentHTML('beforeend', `<div class="msg-vazio-grafico" style="text-align: center; padding: 60px 10px; color: #888; font-size: 14px;">Nenhuma informação localizada no período</div>`);
+        }
+
+        return; // Interrompe totalmente o fluxo aqui!
+    }
+    // =========================================================================
+
+    // Se houver dados, garante que todos os canvas voltem a ficar visíveis
+    if (canvasPizza) canvasPizza.style.display = 'block';
+    if (canvasBarras) canvasBarras.style.display = 'block';
+    if (canvasMes) canvasMes.style.display = 'block';
     if (!tabelaCorpo) return;
     
-    // Força a limpeza imediata do elemento HTML
+    // Força a limpeza antes do loop de renderização
     tabelaCorpo.innerHTML = "";
     
     // Pega as últimas 5 ocorrências reais
     const ultimasOcorrencias = [...dados].reverse().slice(0, 5);
-
-    if (ultimasOcorrencias.length === 0) {
-        tabelaCorpo.innerHTML = `<tr><td colspan="5" class="py-6 text-gray-400 text-center text-base">Nenhuma ocorrência encontrada para o período.</td></tr>`;
-        return;
-    }
 
     // Sincroniza com o servidor correto (qcsoftware2) se necessário
     if (!window.listaDeProdutos || !window.listaDeProdutos.length || !window.listaDeMaquinas || !window.listaDeMaquinas.length) {
@@ -496,105 +551,165 @@ async function atualizarDashboard(dados) {
     // Aplica de uma única vez todas as linhas validadas no HTML da tabela
     tabelaCorpo.innerHTML = linhasHTML;
 
+    // Renderizações normais dos gráficos ativos
     if (typeof renderizarGraficoPizza === "function") renderizarGraficoPizza(pendentes, emAndamento, concluidas);
     if (typeof renderizarGraficoBarras === "function") renderizarGraficoBarras(dados);
+    if (typeof renderizarGraficoMes === "function") renderizarGraficoMes(dados);
 }
 
-    function normalizarStatus(status) {
-        if (!status) return 'pendente';
-        const s = status.toLowerCase().trim();
-        if (s.includes('pendente')) return 'pendente';
-        if (s.includes('andamento')) return 'em andamento';
-        if (s.includes('concluid') || s.includes('finalizad')) return 'concluida';
-        return s;
-    }
+function normalizarStatus(status) {
+    if (!status) return 'pendente';
+    const s = status.toLowerCase().trim();
+    if (s.includes('pendente')) return 'pendente';
+    if (s.includes('andamento')) return 'em andamento';
+    if (s.includes('concluid') || s.includes('finalizad')) return 'concluida';
+    return s;
+}
 
-    function renderizarGraficoPizza(pendentes, emAndamento, concluidas) {
-        const ctx = document.getElementById('graficoPizza').getContext('2d');
-        if (pizzaChart) pizzaChart.destroy();
+function renderizarGraficoPizza(pendentes, emAndamento, concluidas) {
+    const ctx = document.getElementById('graficoPizza').getContext('2d');
+    if (pizzaChart) pizzaChart.destroy();
 
-        pizzaChart = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: ['Pendentes', 'Em Andamento', 'Concluídas'],
-                datasets: [{
-                    data: [pendentes, emAndamento, concluidas],
-                    backgroundColor: ['#ef4444', '#eab308', '#22c55e'], 
-                    borderWidth: 0
-                }]
-            },
-            options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 14, font: { size: 12, weight: 'bold' }, padding: 15 } } } }
-        });
-    }
+    pizzaChart = new Chart(ctx, {
+        type: 'pie',
+        data: {
+            labels: ['Pendentes', 'Em Andamento', 'Concluídas'],
+            datasets: [{
+                data: [pendentes, emAndamento, concluidas],
+                backgroundColor: ['#ef4444', '#eab308', '#22c55e'], 
+                borderWidth: 0
+            }]
+        },
+        options: { plugins: { legend: { position: 'bottom', labels: { boxWidth: 14, font: { size: 12, weight: 'bold' }, padding: 15 } } } }
+    });
+}
 
-    function renderizarGraficoBarras(dados) {
-        const ctx = document.getElementById('graficoBarras').getContext('2d');
-        if (barrasChart) barrasChart.destroy();
+function renderizarGraficoBarras(dados) {
+    const ctx = document.getElementById('graficoBarras').getContext('2d');
+    if (barrasChart) barrasChart.destroy();
 
-        const agrupadoPorDia = {};
-        dados.forEach(o => {
-            const dataObj = o.data_ocorrencias || o.data_hora || o.data;
-            if(dataObj && String(dataObj).trim() !== 'string') {
-                const stringData = String(dataObj).slice(0, 10); 
-                const partes = stringData.split('-'); 
-                if(partes.length === 3) {
-                    const chaveOrdenacao = stringData; 
-                    const labelExibicao = `${partes[2]}/${partes[1]}`; 
-                    if (!agrupadoPorDia[chaveOrdenacao]) {
-                        agrupadoPorDia[chaveOrdenacao] = { label: labelExibicao, total: 0 };
-                    }
-                    agrupadoPorDia[chaveOrdenacao].total += 1;
+    const agrupadoPorDia = {};
+    dados.forEach(o => {
+        const dataObj = o.data_ocorrencias || o.data_hora || o.data;
+        if(dataObj && String(dataObj).trim() !== 'string') {
+            const stringData = String(dataObj).slice(0, 10); 
+            const partes = stringData.split('-'); 
+            if(partes.length === 3) {
+                const chaveOrdenacao = stringData; 
+                const labelExibicao = `${partes[2]}/${partes[1]}`; 
+                if (!agrupadoPorDia[chaveOrdenacao]) {
+                    agrupadoPorDia[chaveOrdenacao] = { label: labelExibicao, total: 0 };
                 }
+                agrupadoPorDia[chaveOrdenacao].total += 1;
             }
-        });
+        }
+    });
 
-        const chavesOrdenadas = Object.keys(agrupadoPorDia).sort().slice(-7);
-        const labels = chavesOrdenadas.map(chave => agrupadoPorDia[chave].label);
-        const valores = chavesOrdenadas.map(chave => agrupadoPorDia[chave].total);
+    const chavesOrdenadas = Object.keys(agrupadoPorDia).sort().slice(-7);
+    const labels = chavesOrdenadas.map(chave => agrupadoPorDia[chave].label);
+    const valores = chavesOrdenadas.map(chave => agrupadoPorDia[chave].total);
 
-        barrasChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: labels,
-                datasets: [{ label: 'Ocorrências', data: valores, backgroundColor: '#00f0ff', borderRadius: 5 }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: { 
-                    y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { font: { size: 11 }, stepSize: 1 } }, 
-                    x: { grid: { display: false }, ticks: { font: { size: 12, weight: 'bold' } } } 
+    barrasChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{ label: 'Ocorrências', data: valores, backgroundColor: '#00f0ff', borderRadius: 5 }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { 
+                y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { font: { size: 11 }, stepSize: 1 } }, 
+                x: { grid: { display: false }, ticks: { font: { size: 12, weight: 'bold' } } } 
+            }
+        }
+    });
+}
+
+// =========================================================================
+// FUNÇÃO DE RENDERIZAÇÃO: OCORRÊNCIAS POR MÊS (BARRAS DEITADAS)
+// =========================================================================
+function renderizarGraficoMes(dados) {
+    const ctx = document.getElementById('graficoMes').getContext('2d');
+    if (mesChart) mesChart.destroy();
+
+    const nomesMeses = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+    const agrupadoPorMes = {};
+
+    dados.forEach(o => {
+        const dataObj = o.data_ocorrencias || o.data_hora || o.data;
+        if(dataObj && String(dataObj).trim() !== 'string') {
+            const stringData = String(dataObj).slice(0, 10); 
+            const partes = stringData.split('-'); 
+            if(partes.length === 3) {
+                const ano = partes[0];
+                const mesIndex = parseInt(partes[1], 10) - 1;
+                const chaveOrdenacao = `${ano}-${partes[1]}`; 
+                const labelExibicao = `${nomesMeses[mesIndex]}/${ano.slice(-2)}`; 
+
+                if (!agrupadoPorMes[chaveOrdenacao]) {
+                    agrupadoPorMes[chaveOrdenacao] = { label: labelExibicao, total: 0 };
                 }
+                agrupadoPorMes[chaveOrdenacao].total += 1;
             }
-        });
-    }
+        }
+    });
+
+    const chavesOrdenadas = Object.keys(agrupadoPorMes).sort().slice(-6);
+    const labels = chavesOrdenadas.map(chave => agrupadoPorMes[chave].label);
+    const valores = chavesOrdenadas.map(chave => agrupadoPorMes[chave].total);
+
+    mesChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Mês',
+                data: valores,
+                backgroundColor: '#22c55e', // Verde
+                borderRadius: 5
+            }]
+        },
+        options: {
+            indexAxis: 'y', // Define o eixo indexador como Y (deixa as barras horizontais / deitadas)
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: { 
+                x: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { font: { size: 11 }, stepSize: 1 } }, 
+                y: { grid: { display: false }, ticks: { font: { size: 12, weight: 'bold' } } } 
+            }
+        }
+    });
+}
 
     function filtrarDados() {
-        const inicioInput = document.getElementById("dataInicio").value;
-        const fimInput = document.getElementById("dataFim").value;
+    const inicioInput = document.getElementById("dataInicio").value;
+    const fimInput = document.getElementById("dataFim").value;
 
-        if (!inicioInput && !fimInput) {
-            alert("Por favor, selecione ao menos uma data para filtrar.");
-            return;
-        }
-
-        let dadosFiltrados = dadosGlobais.filter(o => {
-            const dataObj = o.data_ocorrencias || o.data_hora || o.data;
-            if (!dataObj) return false;
-            const dataOcorrencia = String(dataObj).slice(0, 10);
-            
-            let atendeInicio = true;
-            let atendeFim = true;
-
-            if (inicioInput) atendeInicio = (dataOcorrencia >= inicioInput);
-            if (fimInput) atendeFim = (dataOcorrencia <= fimInput);
-
-            return atendeInicio && atendeFim;
-        });
-
-        atualizarDashboard(dadosFiltrados);
+    if (!inicioInput && !fimInput) {
+        alert("Por favor, selecione ao menos uma data para filtrar.");
+        return;
     }
+
+    let dadosFiltrados = dadosGlobais.filter(o => {
+        const dataObj = o.data_ocorrencias || o.data_hora || o.data;
+        if (!dataObj) return false;
+        const dataOcorrencia = String(dataObj).slice(0, 10);
+        
+        let atendeInicio = true;
+        let atendeFim = true;
+
+        if (inicioInput) atendeInicio = (dataOcorrencia >= inicioInput);
+        if (fimInput) atendeFim = (dataOcorrencia <= fimInput);
+
+        return atendeInicio && atendeFim;
+    });
+
+    // Apenas repassa. A função principal (atualizarDashboard) resolve tudo centralizado.
+    atualizarDashboard(dadosFiltrados);
+}
 
     function limparFiltros() {
         document.getElementById("dataInicio").value = "";
