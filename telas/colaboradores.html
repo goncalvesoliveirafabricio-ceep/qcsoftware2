@@ -133,12 +133,18 @@
                         </div>
         
                         <div class="col-md-4">
-                            <label class="form-label fw-semibold text-body">Cargos</label>                            
+                            <div class="d-flex align-items-center mb-2">
+                                <label class="form-label fw-semibold text-body mb-0 me-2">Cargos</label>
+                                
+                                <a href="/telas/cargos.html" target="_blank" class="btn btn-primary p-0 d-flex align-items-center justify-content-center rounded-2" style="width: 1.55rem; height: 1.55rem;">
+                                    <i class="bi bi-plus-lg" style="font-size: 0.85rem; -webkit-text-stroke: 0.5px;"></i>
+                                </a>
+                            </div>                            
                             <input type="text" 
-                                   class="form-select bg-body text-body shadow-none" 
-                                   id="colaboradores-cargo-busca" 
-                                   placeholder="Digite para buscar o cargo..." 
-                                   autocomplete="off">                            
+                                class="form-select bg-body text-body shadow-none" 
+                                id="colaboradores-cargo-busca" 
+                                placeholder="Digite para buscar o cargo..." 
+                                autocomplete="off">                            
                             <datalist id="lista-cargos-datalist"></datalist>                            
                             <input type="hidden" id="colaboradores-cargo" name="cargo_id">
                         </div>

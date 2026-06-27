@@ -317,12 +317,6 @@ function renderizarTabelaOcorrencias(ocorrencias) {
                             title="Editar">
                         <i class="bi bi-pencil"></i>
                     </button>
-                                        
-                    <button type="button" class="btn btn-sm btn-outline-danger border-0" 
-                            onclick="window.deletarItemGeral('ocorrencias', ${numeroOcoInt}, '${dataOriginalRaw}', ${fkMaquina}, ${fkColaborador}, ${fkProduto})" 
-                            title="Excluir">
-                        <i class="bi bi-trash"></i>
-                    </button>
 
                 </td>
             </tr>
@@ -1308,115 +1302,6 @@ if (document.readyState === 'loading') {
 } else {
     if (typeof vincularSalvamentoOcorrencia === 'function') vincularSalvamentoOcorrencia();
 }
-
-// =========================================================================
-// DELETAR REGISTRO COM TOAST DE CONFIRMAÇÃO (SEM ALERT/CONFIRM NATIVO)
-// =========================================================================
-window.deletarItemGeral = async function(endpoint, numeroOco, dataOco, idMaq, idColab, idProd) {
-    if (!numeroOco || !dataOco || !idMaq || !idColab || !idProd) {
-        dispararNotificacaoOcorrencia("Dados incompletos para efetuar a exclusão.", "danger");
-        return;
-    }
-
-    // 1. Procura ou cria o container de toasts
-    let container = document.getElementById('toast-container-sistema');
-    if (!container) {
-        container = document.createElement('div');
-        container.id = 'toast-container-sistema';
-        container.style.cssText = `
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            z-index: 9999;
-            display: flex;
-            flex-direction: column-reverse;
-            gap: 10px;
-        `;
-        document.body.appendChild(container);
-    }
-
-    // 2. Cria o Toast de Confirmação Especial
-    const toastConfirmacao = document.createElement('div');
-    toastConfirmacao.style.cssText = `
-        padding: 15px 20px;
-        border-radius: 6px;
-        color: #fff;
-        font-family: sans-serif;
-        background-color: #34495e; /* Cor escura para diferenciar de sucesso/erro */
-        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-        opacity: 0;
-        transform: translateY(20px);
-        transition: all 0.3s ease;
-        min-width: 280px;
-    `;
-
-    toastConfirmacao.innerHTML = `
-        <div style="margin-bottom: 10px; font-weight: bold;">Tem certeza que deseja excluir a ocorrência?</div>
-        <div style="display: flex; gap: 10px; justify-content: flex-end;">
-            <button id="btn-cancelar-del" class="btn btn-sm btn-light" style="padding: 2px 10px; font-size: 12px;">Não</button>
-            <button id="btn-confirmar-del" class="btn btn-sm btn-danger" style="padding: 2px 10px; font-size: 12px; font-weight: bold;">Sim</button>
-        </div>
-    `;
-
-    container.appendChild(toastConfirmacao);
-
-    // Animação de entrada
-    setTimeout(() => {
-        toastConfirmacao.style.opacity = "1";
-        toastConfirmacao.style.transform = "translateY(0)";
-    }, 10);
-
-    // Ação do botão Cancelar ("Não")
-    toastConfirmacao.querySelector('#btn-cancelar-del').addEventListener('click', () => {
-        toastConfirmacao.style.opacity = "0";
-        toastConfirmacao.style.transform = "translateY(20px)";
-        setTimeout(() => { toastConfirmacao.remove(); }, 300);
-    });
-
-    // Ação do botão Confirmar ("Sim, Excluir")
-    toastConfirmacao.querySelector('#btn-confirmar-del').addEventListener('click', async () => {
-        // Remove o toast de pergunta da tela
-        toastConfirmacao.remove();
-
-        let dataFormatada = dataOco.toString().replace(' ', 'T');
-        if (dataFormatada.length === 16) dataFormatada += ":00";
-
-        try {
-            const urlDelete = `${API_URL}/${endpoint}/?` +
-                `data_ocorrencias=${encodeURIComponent(dataFormatada)}&` +
-                `id_maquinas=${parseInt(idMaq, 10)}&` +
-                `id_colaboradores=${parseInt(idColab, 10)}&` +
-                `id_produtos=${parseInt(idProd, 10)}&` +
-                `numero_ocorrencias=${parseInt(numeroOco, 10)}`;
-
-            console.log("[DELETE] Executando em:", urlDelete);
-
-            const res = await fetch(urlDelete, {
-                method: 'DELETE'
-            });
-
-            if (res.ok) {
-                dispararNotificacaoOcorrencia(`Ocorrência Nº ${numeroOco} excluída com sucesso!`, "sucesso");
-                setTimeout(() => {
-                    if (typeof carregarDadosIniciais === 'function') {
-                        carregarDadosIniciais(); 
-                    } else if (typeof listarOcorrenciasCRUD === 'function') {
-                        listarOcorrenciasCRUD();
-                    } else {
-                        window.location.reload();
-                    }
-                }, 1200);
-            } else {
-                const detalheErro = await res.json().catch(() => ({}));
-                console.error(detalheErro);
-                dispararNotificacaoOcorrencia("Não foi possível excluir o registro solicitado.", "danger");
-            }
-        } catch (error) {
-            console.error(error);
-            dispararNotificacaoOcorrencia("Falha de rede ao tentar excluir.", "danger");
-        }
-    });
-};
 
 // =========================================================================
 // MANTER RELÓGIO COM DATA E HORA DE BRASÍLIA NA SIDEBAR
