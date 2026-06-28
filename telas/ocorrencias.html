@@ -23,7 +23,7 @@
 
             <div class="nav flex-column">
                 
-                <a href="#" class="sidebar-link text-decoration-none p-3">
+                <a href="/telas/dashboard.html" class="sidebar-link text-decoration-none p-3" target="_blank" rel="noopener noreferrer">
                     <i class="sidebar-texto fa-solid fa-chart-line"></i>
                     <span class="sidebar-texto">Dashboard</span>
                 </a> 
@@ -58,26 +58,21 @@
                 <span class="sidebar-texto">Mapa/Máquinas</span>
                 </a>
 
-                <div class="profile-section p-4 mt-auto">
-                    <div class="d-flex align-items-center">
-                        <div class="ms-3 profile-info">
-                            <h5 class="text-white mb-1">
-                                <i class="fa fa-user-circle"></i>
-                                <span id="usuario-nome">Colaborador Q.C Software</span>
-                            </h5>
-                            <h6 class="text-black mb-1">
-                                <i class="fa fa-address-card"></i>
-                                <span id="usuario-cargo">Líder de Produção</span>
-                            </h6>
-                            <h6 class="text-black mb-1">
-                                <i class="fa fa-calendar"></i>
-                                <span id="data-brasilia">--/--/----</span>
-                            </h6>
-                            <h6 class="text-black mb-0">
-                                <i class="fa fa-clock"></i>
-                                <span id="hora-brasilia">--:--</span> horas
-                            </h6>               
+                <div class="profile-section mt-auto" style="background: transparent; max-width: 220px; width: 100%; padding-left: 30px;">
+                <div class="d-flex p-0 text-start">
+                    <div class="profile-info">
+                        <div class="fw-bold mb-0" id="usuario-nome" style="color: #ffffff; font-size: 0.9rem; line-height: 1.1;">
+                            Colaborador Q.C Software
                         </div>
+                        <div class="mb-0" id="usuario-cargo" style="color: #000000; font-size: 0.8rem; line-height: 1.1;">
+                            Líder
+                        </div>
+                        <div class="mb-0" style="color: #000000; font-size: 0.8rem; line-height: 1.1;">
+                            Data: <span id="data-brasilia">--/--/----</span>
+                        </div>
+                        <div style="color: #000000; font-size: 0.8rem; line-height: 1.1;">
+                            Hora: <span id="hora-brasilia">--:--</span>
+                        </div>               
                     </div>
                 </div>
             </div>
@@ -137,8 +132,8 @@
             
                             <div class="col-md-4">
                                 <label class="form-label fw-semibold text-body">Máquina</label>
-                                <a href="/telas/maquinas.html" target="_blank" class="btn btn-sm btn-primary">
-                                    <i class="bi bi-plus-lg" style="font-size: 0.85rem; -webkit-text-stroke: 0.5px;"></i>
+                                <a href="/telas/maquinas.html" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-plus-lg" style="font-size: 0.85rem; -webkit-text-stroke: 0.5px;"></i> Novo
                                 </a>                      
                                 <input type="text" 
                                        class="form-select bg-body text-body shadow-none" 
@@ -153,8 +148,8 @@
                             
                             <div class="col-md-3">
                                 <label class="form-label fw-semibold text-body">Colaborador</label>
-                                <a href="/telas/colaboradores.html" target="_blank" class="btn btn-sm btn-primary">
-                                    <i class="bi bi-plus-lg" style="font-size: 0.85rem; -webkit-text-stroke: 0.5px;"></i>
+                                <a href="/telas/colaboradores.html" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-plus-lg" style="font-size: 0.85rem; -webkit-text-stroke: 0.5px;"></i> Novo
                                 </a>                            
                                 <input type="text" 
                                        class="form-select bg-body text-body shadow-none" 
@@ -169,8 +164,8 @@
                             
                             <div class="col-md-3">
                                 <label class="form-label fw-semibold text-body">Produto</label>
-                                <a href="/telas/produtos.html" target="_blank" class="btn btn-sm btn-primary">
-                                    <i class="bi bi-plus-lg" style="font-size: 0.85rem; -webkit-text-stroke: 0.5px;"></i>
+                                <a href="/telas/produtos.html" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-plus-lg" style="font-size: 0.85rem; -webkit-text-stroke: 0.5px;"></i> Novo
                                 </a>                            
                                 <input type="text" 
                                        class="form-select bg-body text-body shadow-none" 
@@ -293,7 +288,6 @@
                                 <select id="ocorrencias-situacao" class="form-select bg-body text-body shadow-none">
                                     <option value="Pendente">Pendente</option>
                                     <option value="Em andamento">Em andamento</option>
-                                    <option value="Em análise">Em análise</option>
                                     <option value="Concluído">Concluído</option>
                                 </select>
                             </div>

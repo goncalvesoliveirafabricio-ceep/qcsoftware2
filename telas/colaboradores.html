@@ -58,26 +58,21 @@
                 <span class="sidebar-texto">Mapa/Máquinas</span>
                 </a>
 
-                <div class="profile-section p-4 mt-auto">
-                    <div class="d-flex align-items-center">
-                        <div class="ms-3 profile-info">
-                            <h5 class="text-white mb-1">
-                                <i class="fa fa-user-circle"></i>
-                                <span id="usuario-nome">Colaborador Q.C Software</span>
-                            </h5>
-                            <h6 class="text-black mb-1">
-                                <i class="fa fa-address-card"></i>
-                                <span id="usuario-cargo">Líder de Produção</span>
-                            </h6>
-                            <h6 class="text-black mb-1">
-                                <i class="fa fa-calendar"></i>
-                                <span id="data-brasilia">--/--/----</span>
-                            </h6>
-                            <h6 class="text-black mb-0">
-                                <i class="fa fa-clock"></i>
-                                <span id="hora-brasilia">--:--</span> horas
-                            </h6>               
+                <div class="profile-section mt-auto" style="background: transparent; max-width: 220px; width: 100%; padding-left: 30px;">
+                <div class="d-flex p-0 text-start">
+                    <div class="profile-info">
+                        <div class="fw-bold mb-0" id="usuario-nome" style="color: #ffffff; font-size: 0.9rem; line-height: 1.1;">
+                            Colaborador Q.C Software
                         </div>
+                        <div class="mb-0" id="usuario-cargo" style="color: #000000; font-size: 0.8rem; line-height: 1.1;">
+                            Líder
+                        </div>
+                        <div class="mb-0" style="color: #000000; font-size: 0.8rem; line-height: 1.1;">
+                            Data: <span id="data-brasilia">--/--/----</span>
+                        </div>
+                        <div style="color: #000000; font-size: 0.8rem; line-height: 1.1;">
+                            Hora: <span id="hora-brasilia">--:--</span>
+                        </div>               
                     </div>
                 </div>
             </div>
@@ -136,9 +131,9 @@
                             <div class="d-flex align-items-center mb-2">
                                 <label class="form-label fw-semibold text-body mb-0 me-2">Cargos</label>
                                 
-                                <a href="/telas/cargos.html" target="_blank" class="btn btn-primary p-0 d-flex align-items-center justify-content-center rounded-2" style="width: 1.55rem; height: 1.55rem;">
-                                    <i class="bi bi-plus-lg" style="font-size: 0.85rem; -webkit-text-stroke: 0.5px;"></i>
-                                </a>
+                                <a href="/telas/cargos.html" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-plus-lg" style="font-size: 0.85rem; -webkit-text-stroke: 0.5px;"></i> Novo
+                                </a> 
                             </div>                            
                             <input type="text" 
                                 class="form-select bg-body text-body shadow-none" 
