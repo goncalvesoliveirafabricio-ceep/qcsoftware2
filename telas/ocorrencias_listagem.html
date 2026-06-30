@@ -79,9 +79,14 @@
         </nav>
         
         <main class="main-content">
-            <div class="container-fluid mb-4 p-0">
-                <i class="sidebar-texto2 fa-solid fa-triangle-exclamation me-3 fw-bold"></i>
-                <span class="sidebar-texto2 fw-bold">Listagem de Ocorrências</span>
+            <div class="container-fluid mb-4 p-0 d-flex justify-content-between align-items-center">
+                <div>
+                    <i class="sidebar-texto2 fa-solid fa-triangle-exclamation me-3 fw-bold"></i>
+                    <span class="sidebar-texto2 fw-bold">Listagem de Ocorrências</span>
+                </div>
+                <button onclick="prepararEImprimirRelatorio()" class="btn btn-outline-secondary">
+                    <i class="fas fa-print"></i> Imprimir
+                </button>
             </div>
 
 <section class="filter-dashboard-bar">
@@ -111,6 +116,7 @@
             <input type="date" id="filterDataFim" class="form-control form-control-lg px-2">
         </div>
     </div>
+
 </section>
 
             <section class="table-info-card-white">
@@ -205,7 +211,49 @@ function initSidebarMobile() {
 
 document.addEventListener('DOMContentLoaded', initSidebarMobile);
 window.addEventListener('resize', initSidebarMobile);
-</script>  
+</script>
+
+<script>
+    function prepararEImprimirRelatorio() {
+    // 1. Captura todas as linhas da tabela dentro do tbody
+    // Se a sua tabela tiver uma classe ou ID específico (ex: #tabelaOcorrencias), ajuste aqui.
+    const linhas = document.querySelectorAll("table tbody tr");
+    const dadosFiltrados = [];
+
+    linhas.forEach(linha => {
+        // Ignora linhas de carregamento ou mensagens de "Nenhum registro"
+        if (linha.querySelector(".sem-dados") || linha.innerText.includes("Nenhuma ocorrência") || linha.innerText.includes("Carregando")) {
+            return;
+        }
+
+        const colunas = linha.querySelectorAll("td");
+        
+        // Verifica se a linha tem colunas suficientes de dados
+        if (colunas.length >= 8) { 
+            // Captura o texto exato de cada célula baseado na ordem da sua tabela
+            const item = {
+                lote: colunas[0].innerText.trim(),
+                numero: colunas[1].innerText.trim(),
+                dataHora: colunas[2].innerText.trim(),
+                produto: colunas[3].innerText.trim(),
+                maquina: colunas[4].innerText.trim(),
+                ocorrencia: colunas[5].innerText.trim(),
+                colaborador: colunas[6].innerText.trim(),
+                situacao: colunas[7].innerText.trim(),
+                // Verifica se há um ícone azul de foto ativa/preenchido (fas) ou se tem imagem carregada
+                foto: colunas[8].querySelector(".fas.fa-image") || colunas[8].querySelector("img") ? true : false
+            };
+            dadosFiltrados.push(item);
+        }
+    });
+
+    // 2. Salva a lista filtrada no localStorage
+    localStorage.setItem("dadosFiltroRelatorio", JSON.stringify(dadosFiltrados));
+
+    // 3. Agora sim redireciona com segurança para a tela do relatório
+    window.location.href = "ocorrencias_relatorio.html";
+}
+</script>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="ocorrencias1.js"></script>
