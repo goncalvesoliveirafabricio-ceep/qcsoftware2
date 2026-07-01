@@ -402,7 +402,7 @@ async function atualizarDashboard(dados) {
     const total = dados ? dados.length : 0;
     const pendentes = dados ? dados.filter(o => normalizarStatus(o.situacao) === 'pendente').length : 0;
     const emAndamento = dados ? dados.filter(o => normalizarStatus(o.situacao) === 'em andamento').length : 0;
-    const concluidas = dados ? dados.filter(o => normalizarStatus(o.situacao) === 'concluida').length : 0;
+    const concluidas = dados ? dados.filter(o => normalizarStatus(o.situacao) === 'concluído').length : 0;
     
     // 1. Atualiza e garante os cards superiores sempre zerados (0) se não houver dados
     if(document.getElementById("cardTotal")) document.getElementById("cardTotal").innerText = total;
@@ -491,7 +491,7 @@ async function atualizarDashboard(dados) {
         
         if (statusNormalizado === 'pendente') bgStatusClass = 'bg-red-500/10 text-red-400 border border-red-500/20';
         else if (statusNormalizado === 'em andamento') bgStatusClass = 'bg-yellow-500/10 text-yellow-400 border border-yellow-500/20';
-        else if (statusNormalizado === 'concluida') bgStatusClass = 'bg-green-500/10 text-green-400 border border-green-500/20';
+        else if (statusNormalizado === 'concluído') bgStatusClass = 'bg-green-500/10 text-green-400 border border-green-500/20';
         
         const idProdOcorrencia = String(o.id_produtos ?? o.id_produto ?? '').trim();
         const idMaqOcorrencia = String(o.id_maquinas ?? o.id_maquina ?? '').trim();
